@@ -73,7 +73,9 @@ int main ( int argc, char *argv[] ) {
   if ( g_daemon_mode ) {
 
     // set a CWD somewhere else
+#if 0
     chdir ( "/tmp" );
+#endif
 
     // detach from terminal
     if ( ( i = fork() ) < 0 ) {
