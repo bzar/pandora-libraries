@@ -4,11 +4,18 @@
 #include <stdlib.h>         // for malloc, etc
 #include <unistd.h>         // for close
 
+#define _XOPEN_SOURCE 500
+#define __USE_XOPEN_EXTENDED
+#include <ftw.h> /* for nftw, tree walker */
+
 #include "pnd_notify.h"
+#include "pnd_pathiter.h"
 
 typedef struct {
   int fd;              // notify API file descriptor
 } pnd_notify_t;
+
+static int notify_handle;
 
 static void pnd_notify_hookup ( int fd );
 
@@ -41,6 +48,43 @@ void pnd_notify_shutdown ( pnd_notify_handle h ) {
   pnd_notify_t *p = (pnd_notify_t*) h;
 
   close ( p -> fd );
+
+  return;
+}
+
+static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
+				 int typeflag, struct FTW *ftwbuf )
+{
+
+  // only include directories
+  if ( ! ( typeflag & FTW_D ) ) {
+    return ( 0 ); // continue the tree walk
+  }
+
+  //printf ( "Implicitly watching dir '%s'\n", fpath );
+
+  inotify_add_watch ( notify_handle, fpath, IN_CREATE | IN_DELETE | IN_UNMOUNT );
+
+  return ( 0 ); // continue the tree walk
+}
+
+void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int flags ) {
+  pnd_notify_t *p = (pnd_notify_t*) h;
+
+  inotify_add_watch ( p -> fd, fullpath, IN_CREATE | IN_DELETE | IN_UNMOUNT );
+
+  if ( flags & PND_NOTIFY_RECURSE ) {
+
+    notify_handle = p -> fd;
+
+    nftw ( fullpath,             // path to descend
+	   pnd_notify_callback,  // callback to do processing
+	   10,                   // no more than X open fd's at once
+	   FTW_PHYS );           // do not follow symlinks
+
+    notify_handle = -1;
+
+  } // recurse
 
   return;
 }
