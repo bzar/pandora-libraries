@@ -19,6 +19,13 @@ extern "C" {
 
 #define PND_MOUNT_PATH "/mnt/apps/" /* all mounted PND images should be here.. /mnt/apps/myapp/... */
 
+// .desktop support
+#define PND_DOTDESKTOP_KEY "dotfiles.dotdesktoppath"
+#define PND_DOTDESKTOP_DEFAULT "/usr/share/applications"
+
+// apps
+#define PND_DEFAULT_WORKDIR "/tmp"
+
 /* pnd_apps_exec() is used to blindly launch an app, be it a .pnd file bundle or a plain executable
  * (shell, bin, whatever.) pndrun specifies the full path to the pnd_run sh script, which should be
  * found using searchpaths and locates.. see locatetest.c for a sample

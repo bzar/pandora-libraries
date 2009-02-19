@@ -11,6 +11,7 @@
 #include "pnd_pxml.h"
 #include "pnd_discovery.h"
 #include "pnd_pathiter.h"
+#include "pnd_apps.h"
 
 #warning "PND/PNZ support is not included yet; scripts need writing"
 #warning "  /usr/pandora/bin/pnd_valid.sh"
@@ -148,4 +149,69 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath ) {
   }
 
   return ( disco_box );
+}
+
+unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p ) {
+  char filename [ FILENAME_MAX ];
+  char buffer [ 1024 ];
+  FILE *f;
+
+  // specification
+  // http://standards.freedesktop.org/desktop-entry-spec
+
+  // validation
+
+  if ( ! p -> unique_id ) {
+    return ( 0 );
+  }
+
+  if ( ! p -> exec ) {
+    return ( 0 );
+  }
+
+  // set up
+
+  sprintf ( filename, "%s/%s.desktop", targetpath, p -> unique_id );
+
+  // emit
+
+  f = fopen ( filename, "w" );
+
+  if ( ! f ) {
+    return ( 0 );
+  }
+
+  if ( p -> title_en ) {
+    snprintf ( buffer, 1020, "Name=%s\n", p -> title_en );
+    fprintf ( f, "%s", buffer );
+  }
+
+  fprintf ( f, "Type=Application\n" );
+  fprintf ( f, "Version=1.0\n" );
+
+  if ( p -> icon ) {
+    snprintf ( buffer, 1020, "Icon=%s\n", p -> icon );
+    fprintf ( f, "%s", buffer );
+  }
+
+  if ( p -> description_en ) {
+    snprintf ( buffer, 1020, "Comment=%s\n", p -> description_en );
+    fprintf ( f, "%s", buffer );
+  }
+
+  if ( p -> startdir ) {
+    snprintf ( buffer, 1020, "Path=%s\n", p -> startdir );
+    fprintf ( f, "%s", buffer );
+  } else {
+    fprintf ( f, "Path=%s\n", PND_DEFAULT_WORKDIR );
+  }
+
+  if ( p -> exec ) {
+    snprintf ( buffer, 1020, "Exec=%s\n", p -> exec );
+    fprintf ( f, "%s", buffer );
+  }
+
+  fclose ( f );
+
+  return ( 1 );
 }

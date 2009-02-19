@@ -26,7 +26,8 @@ int main ( int argc, char *argv[] ) {
   pnd_notify_handle nh;
   char *configpath;
   char *appspath;
-  char *searchpath;
+  char *searchpath = NULL;
+  char *dotdesktoppath = NULL;
   int i;
 
   unsigned int interval_secs = 60;
@@ -77,8 +78,28 @@ int main ( int argc, char *argv[] ) {
     appspath = PND_APPS_SEARCHPATH;
   }
 
+  // attempt to figure out where to drop dotfiles
+  pnd_conf_handle desktoph;
+
+  desktoph = pnd_conf_fetch_by_id ( pnd_conf_desktop, configpath );
+
+  if ( desktoph ) {
+    dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_DOTDESKTOP_KEY );
+
+    if ( ! dotdesktoppath ) {
+      dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
+    }
+
+  } else {
+    dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
+  }
+
+  /* startup
+   */
+
   if ( ! g_daemon_mode ) {
     printf ( "Apps searchpath is '%s'\n", appspath );
+    printf ( ".desktop files emit to '%s'\n", dotdesktoppath );
   }
 
   /* set up notifies
@@ -121,7 +142,8 @@ int main ( int argc, char *argv[] ) {
       // has occurred; we should be clever, but we're not, so just re-brute force the
       // discovery and spit out .desktop files..
       if ( ! g_daemon_mode ) {
-	printf ( "Time to re-discover!\n" );
+	printf ( "Changes within watched paths .. performing re-discover!\n" );
+	printf ( "Path to emit .desktop files to: '%s'\n", dotdesktoppath );
       }
 
       // lets not eat up all the CPU

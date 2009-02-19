@@ -12,6 +12,7 @@ pnd_conf_filename_t pnd_conf_filenames[] = {
   { pnd_conf_conf,         PND_CONF_FILE },
   { pnd_conf_apps,         "apps" },
   { pnd_conf_startup,      "startup" },
+  { pnd_conf_desktop,      "desktop" },
   { pnd_conf_nil,          NULL },
 };
 

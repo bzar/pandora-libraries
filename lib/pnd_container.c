@@ -92,6 +92,8 @@ void *pnd_box_allocinsert ( pnd_box_handle box, char *key, unsigned int size ) {
     return ( NULL ); // must be getting bloody tight!
   }
 
+  memset ( n, '\0', sizeof(pnd_box_node_t) + size );
+
   if ( key ) {
     n -> key = strdup ( key );
   } else {

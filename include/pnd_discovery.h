@@ -31,6 +31,9 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath );
  * confusion.. it is not displayed. So no big deal.
  */
 
+// another struct? Have always intended discovery_t to have minimal members.. just enough to lead to an
+// application (PXML, xecutable, name); if the apps want more details, they can use the pnd_pxml code to
+// fetch the full PXML and get all the details. But I think we got out of control here :)
 typedef struct
 {
 	char *title_en;
@@ -79,6 +82,13 @@ typedef struct
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided
+
+// emit_dotdesktop() will determine a filename and create a FILENAME.desktop file in the targetpath
+// TODO: Copy the icon into this directory as well, if its source is a .pnd or info is in the dico struct
+unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p );
+
+// TODO: A way to release the disco-lists and reclaim RAM :)
+// TODO: A way to determine the list of excess .desktop files and remove them (ie: after poo.pnd is removed, ditch the .desktop)
 
 #ifdef __cplusplus
 } /* "C" */
