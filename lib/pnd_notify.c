@@ -71,7 +71,15 @@ static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
 void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int flags ) {
   pnd_notify_t *p = (pnd_notify_t*) h;
 
-  inotify_add_watch ( p -> fd, fullpath, IN_CREATE | IN_DELETE | IN_UNMOUNT );
+#if 1
+  inotify_add_watch ( p -> fd, fullpath,
+		      IN_CREATE | IN_DELETE | IN_UNMOUNT
+		      | IN_DELETE_SELF | IN_MOVE_SELF
+		      | IN_MOVED_FROM | IN_MOVED_TO
+		    );
+#else
+  inotify_add_watch ( p -> fd, fullpath, IN_ALL_EVENTS );
+#endif
 
   if ( flags & PND_NOTIFY_RECURSE ) {
 
@@ -104,8 +112,10 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
   int retcode;
 
   // don't block for long..
-  t.tv_sec = 1;
-  t.tv_usec = 0; //5000;
+  //t.tv_sec = 1;
+  //t.tv_usec = 0; //5000;
+  t.tv_sec = 0;
+  t.tv_usec = 5000;
 
   // only for our useful fd
   FD_ZERO ( &rfds );
@@ -147,7 +157,7 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
      */
 
     if ( e -> len ) {
-      printf ( "Got event against '%s'\n", e -> name );
+      //printf ( "Got event against '%s'\n", e -> name );
     }
 
     /* do it!

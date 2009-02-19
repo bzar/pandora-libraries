@@ -175,6 +175,8 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p ) {
 
   // emit
 
+  //printf ( "EMIT DOTDESKTOP '%s'\n", filename );
+
   f = fopen ( filename, "w" );
 
   if ( ! f ) {
@@ -210,6 +212,8 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p ) {
     snprintf ( buffer, 1020, "Exec=%s\n", p -> exec );
     fprintf ( f, "%s", buffer );
   }
+
+  fprintf ( f, "_Source=libpnd\n" ); // should we need to know 'who' created the file during trimming
 
   fclose ( f );
 

@@ -82,7 +82,7 @@ int main ( void) {
 	printf ( "  Clockspeed: %s\n", d -> clockspeed );
       }
 
-      pnd_emit_dotdesktop ( "/tmp", d );
+      //pnd_emit_dotdesktop ( "/tmp", d );
 
       // next!
       d = pnd_box_get_next ( d );
