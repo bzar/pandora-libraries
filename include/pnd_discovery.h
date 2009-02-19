@@ -88,7 +88,6 @@ void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could 
 unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p );
 
 // TODO: A way to release the disco-lists and reclaim RAM :)
-// TODO: A way to determine the list of excess .desktop files and remove them (ie: after poo.pnd is removed, ditch the .desktop)
 
 #ifdef __cplusplus
 } /* "C" */

@@ -1,0 +1,12 @@
+
+Some things to be done..
+
+- review pnd_tinyxml to ensure the PXML_FILENAME is csae insensitive as needed
+
+apps/pndnotifyd.c:// TODO: Catch HUP and reparse config
+apps/pndnotifyd.c:// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
+apps/pndnotifyd.c:// TODO: During daemon mode, should perhaps syslog or log errors
+apps/pndnotifyd.c:// TODO: Removing stale .desktop checks that .desktop was created by libpnd; see 'TBD' below
+include/pnd_discovery.h:// TODO: Copy the icon into this directory as well, if its source is a .pnd or info is in the dico struct
+include/pnd_discovery.h:// TODO: A way to release the disco-lists and reclaim RAM :)
+include/pnd_discovery.h:// TODO: A way to determine the list of excess .desktop files and remove them (ie: after poo.pnd is removed, ditch the .desktop)

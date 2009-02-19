@@ -12,11 +12,7 @@
 #include "pnd_discovery.h"
 #include "pnd_pathiter.h"
 #include "pnd_apps.h"
-
-#warning "PND/PNZ support is not included yet; scripts need writing"
-#warning "  /usr/pandora/bin/pnd_valid.sh"
-#warning "  /usr/pandora/bin/pnd_prepare.sh"
-#warning "  /usr/pandora/bin/pnd_unprepare.sh"
+#include "pnd_pndfiles.h"
 
 // need these 'globals' due to the way nftw and ftw work :/
 static pnd_box_handle disco_box;
@@ -61,14 +57,12 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     return ( 0 ); // skip directories and other non-regular files
   }
 
+  // PND/PNZ file and others may be valid as well .. but lets leave that for now
   if ( strcasecmp ( fpath + ftwbuf -> base, PXML_FILENAME ) == 0 ) {
     valid = 1;
+  } else if ( strcasecmp ( fpath + ftwbuf -> base, PND_PACKAGE_FILEEXT "\0" ) == 0 ) {
+    valid = 2;
   }
-
-  // PND file and others may be valid as well .. but lets leave that for now
-  //
-  // PND and PNZ and whatever
-  //
 
   // if not a file of interest, just keep looking until we run out
   if ( ! valid ) {
@@ -91,8 +85,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     }
 
     // look for any overrides, if requested
-#warning pnd_pxml_merge_override removed by Cpasjuste ...
-  //  pnd_pxml_merge_override ( pxmlh, disco_overrides );
+    pnd_pxml_merge_override ( pxmlh, disco_overrides );
 
     // check for validity and add to resultset if it looks executable
     if ( pnd_is_pxml_valid_app ( pxmlh ) ) {
@@ -109,9 +102,8 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     }
 
     // ditch pxml
-	pnd_pxml_delete ( pxmlh );
+    pnd_pxml_delete ( pxmlh );
 
-	return 0;
   } else if ( valid == 2 ) {
     // PND ... ??
   }

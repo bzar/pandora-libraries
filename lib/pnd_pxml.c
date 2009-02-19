@@ -14,11 +14,13 @@ void pnd_pxml_load(const char* pFilename, pnd_pxml_t *app);
 
 pnd_pxml_handle pnd_pxml_fetch ( char *fullpath ) {
 
-	pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
+  pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
 
-	pnd_pxml_load(fullpath, p);
+  memset ( p, '\0', sizeof(pnd_pxml_t) );
 
-	return (p);
+  pnd_pxml_load ( fullpath, p );
+
+  return ( p );
 }
 
 void pnd_pxml_delete ( pnd_pxml_handle h ) {
