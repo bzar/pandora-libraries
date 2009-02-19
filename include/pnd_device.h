@@ -21,6 +21,8 @@ extern "C" {
 unsigned char pnd_device_set_clock ( unsigned int c ); // returns >0 on success
 unsigned int pnd_device_get_clock ( void ); // not implemented, returns 0
 
+// LCD to set on/off
+
 // set one or more LEDs on
 
 // suspend/hibernate/etc
