@@ -19,6 +19,10 @@ static int notify_handle;
 
 static void pnd_notify_hookup ( int fd );
 
+#define PND_INOTIFY_MASK     IN_CREATE | IN_DELETE | IN_UNMOUNT \
+                             | IN_DELETE_SELF | IN_MOVE_SELF    \
+                             | IN_MOVED_FROM | IN_MOVED_TO
+
 pnd_notify_handle pnd_notify_init ( void ) {
   int fd;
   pnd_notify_t *p;
@@ -63,7 +67,7 @@ static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
 
   //printf ( "Implicitly watching dir '%s'\n", fpath );
 
-  inotify_add_watch ( notify_handle, fpath, IN_CREATE | IN_DELETE | IN_UNMOUNT );
+  inotify_add_watch ( notify_handle, fpath, PND_INOTIFY_MASK );
 
   return ( 0 ); // continue the tree walk
 }
@@ -72,11 +76,7 @@ void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int f
   pnd_notify_t *p = (pnd_notify_t*) h;
 
 #if 1
-  inotify_add_watch ( p -> fd, fullpath,
-		      IN_CREATE | IN_DELETE | IN_UNMOUNT
-		      | IN_DELETE_SELF | IN_MOVE_SELF
-		      | IN_MOVED_FROM | IN_MOVED_TO
-		    );
+  inotify_add_watch ( p -> fd, fullpath, PND_INOTIFY_MASK );
 #else
   inotify_add_watch ( p -> fd, fullpath, IN_ALL_EVENTS );
 #endif
