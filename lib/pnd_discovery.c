@@ -131,21 +131,21 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       pnd_disco_t *p;
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
-      if ( pnd_pxml_get_app_name ( pxmlh ) ) {
-	p -> title_en = strdup ( pnd_pxml_get_app_name ( pxmlh ) );
+      if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
+	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
       }
-      if ( pnd_pxml_get_icon_path ( pxmlh ) ) {
-	p -> icon = strdup ( pnd_pxml_get_icon_path ( pxmlh ) );
+      if ( pnd_pxml_get_icon ( pxmlh ) ) {
+	p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
       }
-      if ( pnd_pxml_get_exec_path ( pxmlh ) ) {
-	snprintf ( b, 1024, "pnd_run_magic %s", pnd_pxml_get_exec_path ( pxmlh ) );
+      if ( pnd_pxml_get_exec ( pxmlh ) ) {
+	snprintf ( b, 1024, "pnd_run_magic %s", pnd_pxml_get_exec ( pxmlh ) );
 	p -> exec = strdup ( b );
       }
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
 	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
       }
-      if ( pnd_pxml_get_primary_category ( pxmlh ) ) {
-	p -> main_category = strdup ( pnd_pxml_get_primary_category ( pxmlh ) );
+      if ( pnd_pxml_get_main_category ( pxmlh ) ) {
+	p -> main_category = strdup ( pnd_pxml_get_main_category ( pxmlh ) );
       }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
 	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 

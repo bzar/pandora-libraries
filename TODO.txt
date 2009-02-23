@@ -13,6 +13,8 @@ Some things to be done..
 
 - make accrused PXML from pnd-buffer growable, not locked at 32k/X size
 
+- make sensible override code, so it picks up all fields... or compares fields; not just copies _en
+
 apps/pndnotifyd.c:// TODO: Catch HUP and reparse config
 apps/pndnotifyd.c:// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
 apps/pndnotifyd.c:// TODO: During daemon mode, should perhaps syslog or log errors
