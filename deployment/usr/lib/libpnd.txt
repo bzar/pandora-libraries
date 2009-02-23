@@ -1,0 +1,42 @@
+
+Overview
+--------
+
+libpnd is a basic collection of functions and tools to make working Pandora-specific
+operations easier; to wit, it is hoped multiple applications will make use of this
+library rather than re-implement similar functionality and lead to problems down the
+road. (Instead we can run into problems together and thus clobberize them.)
+
+The library is broken into parts:
+
+include	    - include these files to make use of the lib
+lib	    - the code that produces the lib
+test	    - mini tools to test various pieces of the lib in isolation
+bin	    - test tools
+testdata/   - for testing /etc/pandora; will contain 'conf' dir, for example
+
+Revisions
+---------
+
+The initial version of this code will be very limited and meant to kick-start further
+work, yet provide basic functionaliy.
+
+TODO
+----
+
+o We need an actual matchbox plugin that uses this lib to obtain app list
+
+o PND-file handling, so iso/cram/zip app bundles actually work when pnd_apps_exec()'d
+
+o PXML parser has to actually be an XML parser
+
+o UNICODE support? ie: paths and filenames and app-names..
+
+Nice to do:
+
+o Handle regexp's or globbing in searchpaths, so can do tricks like /mnt/*/app etc
+
+jeff
+
+PS: Yes, I know, the entire thing could be done in 20 lines of perl, but we wanted C to
+maximize availability.
