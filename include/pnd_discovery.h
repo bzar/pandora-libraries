@@ -34,8 +34,10 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath );
 // another struct? Have always intended discovery_t to have minimal members.. just enough to lead to an
 // application (PXML, xecutable, name); if the apps want more details, they can use the pnd_pxml code to
 // fetch the full PXML and get all the details. But I think we got out of control here :)
-typedef struct
-{
+typedef struct {
+  // base
+  char *path_to_object; // full path to the PXML.xml or awesomeapp.pnd file
+  // strdup'd from PXML
   char *title_en;
   char *unique_id;
   char *icon;

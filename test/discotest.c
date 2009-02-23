@@ -63,6 +63,8 @@ int main ( void) {
 
       printf ( "App: %s\n", pnd_box_get_key ( d ) );
 
+      printf ( "  Base path: %s\n", d -> path_to_object );
+
       if ( d -> title_en ) {
 	printf ( "  Name: %s\n", d -> title_en );
       }

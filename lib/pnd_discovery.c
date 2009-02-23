@@ -127,10 +127,14 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
     // check for validity and add to resultset if it looks executable
     if ( pnd_is_pxml_valid_app ( pxmlh ) ) {
-      //char b [ 1024 ]; // TBD: also lame
       pnd_disco_t *p;
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
+
+      // base path
+      p -> path_to_object = strdup ( fpath );
+
+      // PXML fields
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
 	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
       }
@@ -139,8 +143,6 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( pnd_pxml_get_exec ( pxmlh ) ) {
 	p -> exec = strdup ( pnd_pxml_get_exec ( pxmlh ) );
-	//snprintf ( b, 1024, "pnd_run_magic %s", pnd_pxml_get_exec ( pxmlh ) );
-	//p -> exec = strdup ( b );
       }
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
 	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
