@@ -96,6 +96,10 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		if ( s ) {
 		  strcpy ( s, strdup(pElem->GetText()));
 		  app->icon = strdup(anotherbuffer);
+		} else if ( ( s = strrchr ( anotherbuffer, '/' ) ) ) {
+		  s += 1;
+		  strcpy ( s, strdup(pElem->GetText()));
+		  app->exec = strdup(anotherbuffer);
 		}
 	}
 
