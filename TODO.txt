@@ -1,6 +1,10 @@
 
 Some things to be done..
 
+- put in code to fetch clock speed, and add clock speed handler to pnd_apps_exec
+
+- remove -u's from pnd_apps_exec and pnd_emit_dotdesktop
+
 - replace brute force memcmp() in pnd pnd with a fancy pants CS alg
 
 - review pnd_tinyxml to ensure the PXML_FILENAME is csae insensitive as needed

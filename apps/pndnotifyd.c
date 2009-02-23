@@ -25,6 +25,7 @@
 #include "pnd_notify.h"
 #include "../lib/pnd_pathiter.h"
 #include "pnd_discovery.h"
+#include "pnd_locate.h"
 
 static unsigned char g_daemon_mode = 0;
 
@@ -40,6 +41,10 @@ int main ( int argc, char *argv[] ) {
   // behaviour
   unsigned char scanonlaunch = 1;
   unsigned int interval_secs = 20;
+  // pnd runscript
+  char *run_searchpath;
+  char *run_script;
+  char *pndrun;
   // misc
   int i;
 
@@ -138,6 +143,39 @@ int main ( int argc, char *argv[] ) {
     dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
   }
 
+  // try to locate a runscript
+
+  if ( apph ) {
+    run_searchpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH_KEY );
+    run_script = pnd_conf_get_as_char ( apph, PND_PNDRUN_KEY );
+    pndrun = NULL;
+
+    if ( ! run_searchpath ) {
+      run_searchpath = PND_APPS_SEARCHPATH;
+      run_script = PND_PNDRUN_FILENAME;
+    }
+
+  } else {
+    run_searchpath = NULL;
+    run_script = NULL;
+    pndrun = PND_PNDRUN_DEFAULT;
+  }
+
+  if ( ! pndrun ) {
+    pndrun = pnd_locate_filename ( run_searchpath, run_script );
+
+    if ( ! pndrun ) {
+      pndrun = PND_PNDRUN_DEFAULT;
+    }
+
+  }
+
+  if ( ! g_daemon_mode ) {
+    if ( run_searchpath ) printf ( "Locating pnd run in %s\n", run_searchpath );
+    if ( run_script ) printf ( "Locating pnd runscript as %s\n", run_script );
+    if ( pndrun ) printf ( "Default pndrun is %s\n", pndrun );
+  }
+
   /* startup
    */
 
@@ -214,7 +252,7 @@ int main ( int argc, char *argv[] ) {
 	  }
 
 	  // create the .desktop file
-	  if ( pnd_emit_dotdesktop ( dotdesktoppath, d ) ) {
+	  if ( pnd_emit_dotdesktop ( dotdesktoppath, pndrun, d ) ) {
 	    // add a watch onto the newly created .desktop?
 #if 0
 	    char buffer [ FILENAME_MAX ];

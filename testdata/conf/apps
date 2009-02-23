@@ -12,4 +12,4 @@ searchpath	~/pxml-overrides:./testdata/apps-override
 # [pnd] defines where to locate the pnd support scripts, so the user may override pnd_run.sh without clobbering built in
 [pnd]
 searchpath	/mnt/sd1/pandora/scripts:/mnt/sd2/pandora/scripts:./testdata/scripts
-default		pndrun.sh
+runscript	pnd_run.sh

@@ -24,17 +24,17 @@ int main ( int argc, char *argv[] ) {
   apph = pnd_conf_fetch_by_id ( pnd_conf_apps, configpath );
 
   if ( apph ) {
-    pndpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH );
+    pndpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH_KEY );
 
     printf ( "Found a path in apps config: '%s'\n", pndpath );
 
     if ( ! pndpath ) {
-      pndpath = PND_PNDRUN_SEARCHPATH;
+      pndpath = PND_PNDRUN_SEARCHPATH_KEY;
     }
 
   } else {
     // couldn't find a useful app search path so use the default
-    pndpath = PND_PNDRUN_SEARCHPATH;
+    pndpath = PND_PNDRUN_SEARCHPATH_KEY;
   }
 
   // given a searchpath (Default or configured), try to find pnd_run.sh; if not

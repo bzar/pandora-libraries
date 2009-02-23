@@ -128,11 +128,16 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     // check for validity and add to resultset if it looks executable
     if ( pnd_is_pxml_valid_app ( pxmlh ) ) {
       pnd_disco_t *p;
+      char *fixpxml;
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
 
       // base path
       p -> path_to_object = strdup ( fpath );
+
+      if ( ( fixpxml = strcasestr ( p -> path_to_object, PXML_FILENAME ) ) ) {
+	*fixpxml = '\0'; // if this is not a .pnd, lop off the PXML.xml at the end
+      }
 
       // PXML fields
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
@@ -201,7 +206,7 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath ) {
   return ( disco_box );
 }
 
-unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p ) {
+unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t *p ) {
   char filename [ FILENAME_MAX ];
   char buffer [ 1024 ];
   FILE *f;
@@ -263,7 +268,7 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p ) {
 #endif
 
   if ( p -> exec ) {
-    snprintf ( buffer, 1020, "Exec=%s\n", p -> exec );
+    snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -u\n", pndrun, p -> path_to_object, p -> exec );
     fprintf ( f, "%s", buffer );
   }
 

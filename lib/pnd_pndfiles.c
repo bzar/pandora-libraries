@@ -45,7 +45,7 @@ unsigned char pnd_pnd_seek_pxml ( FILE *f ) {
 
   while ( 1 ) {
 
-    printf ( "find pxml; pos %u readable %u\n", pos, readable );
+    //printf ( "find pxml; pos %u readable %u\n", pos, readable );
 
     // seek into this blocks position
     fseek ( f, pos, SEEK_SET );
@@ -58,7 +58,7 @@ unsigned char pnd_pnd_seek_pxml ( FILE *f ) {
     // performing brute force strategy here.
     if ( ( match = pnd_match_binbuf ( b, readable, PXML_TAGHEAD ) ) ) {
       fseek ( f, pos + ( match - b ), SEEK_SET );
-      printf ( "  match found at %u\n", pos + ( match - b ) );
+      //printf ( "  match found at %u\n", pos + ( match - b ) );
       free ( b );
       return ( 1 );
     }

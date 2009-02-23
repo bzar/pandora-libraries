@@ -38,7 +38,7 @@
 	<build>2</build>
 </version>
 
-<exec>program.exe</exec>
+<exec>./my_ls</exec>
 
 <category>
 	<main>Main category</main>

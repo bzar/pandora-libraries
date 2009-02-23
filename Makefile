@@ -20,12 +20,13 @@ LIB = libpnd.a
 SOLIB = libpnd.so.1         # canonicle name
 SOLIB1 = libpnd.so.1.0.1    # versioned name
 XMLOBJ = lib/tinyxml/tinystr.o lib/tinyxml/tinyxml.o lib/tinyxml/tinyxmlerror.o lib/tinyxml/tinyxmlparser.o
-ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o
+ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o pnd_apps.o
 
 all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd
 
 clean:
 	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop
+	find . -name "*~*" -exec rm {} \; -print
 
 libpnd.a:	${ALLOBJ} ${XMLOBJ}
 	${AR} r ${LIB} ${ALLOBJ} ${XMLOBJ}

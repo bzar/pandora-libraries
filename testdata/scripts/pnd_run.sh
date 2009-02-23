@@ -48,7 +48,7 @@ oCWD=$(pwd)
  
 #detect fs
 if [ $DFS = ISO ]; then
-        mntline="mount -o loop $PND /mnt/pnd/$BASENAME"
+        mntline="mount -o loop,exec,umask=777 $PND /mnt/pnd/$BASENAME"
         echo "Filetype is $DFS"
 elif [ $DFS = Zip ]; then
         mntline="fuse-zip $PND /mnt/pnd/$BASENAME -oro" #should be reight now
@@ -85,7 +85,7 @@ if [ ! $UNION ] ; then
                 $mntline #mount the pnd/folder
                 #mount -t unionfs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro unionfs /mnt/utmp/$BASENAME #union mount
                 #aufs, one of those should work, bit unsure.
-                mount -t aufs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro none /mnt/utmp/$BASENAME #aufs?
+                mount -t aufs -o exec,umask=777,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro none /mnt/utmp/$BASENAME #aufs?
                 #mount -t aufs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro aufs /mnt/utmp/$BASENAME #aufs?
                 "
         else

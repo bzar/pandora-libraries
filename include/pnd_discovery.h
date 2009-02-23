@@ -51,7 +51,7 @@ void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could 
 
 // emit_dotdesktop() will determine a filename and create a FILENAME.desktop file in the targetpath
 // TODO: Copy the icon into this directory as well, if its source is a .pnd or info is in the dico struct
-unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p );
+unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t *p );
 
 // TODO: A way to release the disco-lists and reclaim RAM :)
 
