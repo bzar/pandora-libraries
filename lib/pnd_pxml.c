@@ -9,8 +9,7 @@
 
 #include "pnd_pxml.h"
 #include "pnd_pathiter.h"
-
-void pnd_pxml_load(const char* pFilename, pnd_pxml_t *app);
+#include "pnd_tinyxml.h"
 
 pnd_pxml_handle pnd_pxml_fetch ( char *fullpath ) {
 
@@ -18,7 +17,22 @@ pnd_pxml_handle pnd_pxml_fetch ( char *fullpath ) {
 
   memset ( p, '\0', sizeof(pnd_pxml_t) );
 
-  pnd_pxml_load ( fullpath, p );
+  if ( ! pnd_pxml_load ( fullpath, p ) ) {
+    return ( 0 );
+  }
+
+  return ( p );
+}
+
+pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
+
+  pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
+
+  memset ( p, '\0', sizeof(pnd_pxml_t) );
+
+  if ( ! pnd_pxml_parse ( filename, buffer, strlen ( buffer ), p ) ) {
+    return ( 0 );
+  }
 
   return ( p );
 }

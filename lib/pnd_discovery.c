@@ -106,6 +106,12 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
   } else if ( valid == 2 ) {
     // PND ... ??
+    printf ( "PND: disco callback encountered '%s'\n", fpath );
+
+    // is this a valid .pnd file? The filename is a candidate already, but verify..
+    // .. presence of PXML appeneded, or at least contained within?
+    // .. presence of an icon appended after PXML?
+
   }
 
   return ( 0 ); // continue the tree walk
@@ -188,17 +194,21 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, pnd_disco_t *p ) {
     fprintf ( f, "%s", buffer );
   }
 
+#if 0
   if ( p -> description_en ) {
     snprintf ( buffer, 1020, "Comment=%s\n", p -> description_en );
     fprintf ( f, "%s", buffer );
   }
+#endif
 
+#if 0
   if ( p -> startdir ) {
     snprintf ( buffer, 1020, "Path=%s\n", p -> startdir );
     fprintf ( f, "%s", buffer );
   } else {
     fprintf ( f, "Path=%s\n", PND_DEFAULT_WORKDIR );
   }
+#endif
 
   if ( p -> exec ) {
     snprintf ( buffer, 1020, "Exec=%s\n", p -> exec );

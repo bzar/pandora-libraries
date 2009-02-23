@@ -13,6 +13,7 @@ RM = rm
 VPATH = lib test apps
 CFLAG_SO = -fPIC #-fPIC not always needed, but good to have
 CFLAGS = -Wall -I./include -g ${CFLAG_SO}
+CXXFLAGS = -Wall -I./include -g ${CFLAG_SO}
 
 # code
 LIB = libpnd.a 

@@ -9,6 +9,8 @@ extern "C" {
 // this code is for very basic PXML.xml file parsing
 
 #define PXML_FILENAME "PXML.xml" /* a specification defined name */
+#define PXML_TAGHEAD "<PXML>" /* case insensitive */
+#define PXML_TAGFOOT "</PXML>" /* case insensitive */
 
 // use this handle to interact with PXML; this hides the mechanics of parsing a PXML file so that
 // it can be upgraded with impacting applications
@@ -17,6 +19,7 @@ typedef void* pnd_pxml_handle;
 /* pxml_fetch() will return NULL on fail, otherwise a valid handle which may be further queried
  */
 pnd_pxml_handle pnd_pxml_fetch ( char *fullpath );
+pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer );
 void pnd_pxml_delete ( pnd_pxml_handle h );
 
 /* overrides() allow for customization of a PXML that persists; ie: An application might be sitting

@@ -1,20 +1,54 @@
+
 #include "tinyxml/tinyxml.h"
 #include "../include/pnd_pxml.h"
+#include "pnd_tinyxml.h"
 
 extern "C" {
 
-void pnd_pxml_load(const char* pFilename, pnd_pxml_t *app)
-{
+unsigned char pnd_pxml_load ( const char* pFilename, pnd_pxml_t *app ) {
+  FILE *f;
+  char *b;
+  unsigned int len;
 
-	TiXmlDocument doc(pFilename);
-	if (!doc.LoadFile()) return;
+  f = fopen ( pFilename, "r" );
+
+  if ( ! f ) {
+    return ( 0 );
+  }
+
+  fseek ( f, 0, SEEK_END );
+
+  len = ftell ( f );
+
+  fseek ( f, 0, SEEK_SET );
+
+  b = (char*) malloc ( len );
+
+  if ( ! b ) {
+    fclose ( f );
+    return ( 0 );
+  }
+
+  fread ( b, 1, len, f );
+
+  return ( pnd_pxml_parse ( pFilename, b, len, app ) );
+}
+
+unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int length, pnd_pxml_t *app ) {
+
+  //TiXmlDocument doc(pFilename);
+  //if (!doc.LoadFile()) return;
+
+  TiXmlDocument doc;
+
+  doc.Parse ( buffer );
 
 	TiXmlHandle hDoc(&doc);
 	TiXmlElement* pElem;
 	TiXmlHandle hRoot(0);
 
 	pElem=hDoc.FirstChildElement().Element();
-	if (!pElem) return;
+	if (!pElem) return ( 0 );
 	hRoot=TiXmlHandle(pElem);
 
 	pElem = hRoot.FirstChild( "title" ).FirstChildElement("en").Element();
@@ -276,7 +310,8 @@ void pnd_pxml_load(const char* pFilename, pnd_pxml_t *app)
 	{	
 		app->startdir = strdup(pElem->GetText());
 	}
+
+	return ( 1 );
 }
 
-}
-
+} // extern C

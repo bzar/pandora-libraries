@@ -36,49 +36,12 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath );
 // fetch the full PXML and get all the details. But I think we got out of control here :)
 typedef struct
 {
-	char *title_en;
-	char *title_de;
-	char *title_it;
-	char *title_fr;
-	char *unique_id;
-	char *standalone;
-	char *icon;
-	char *description_en;
-	char *description_de;
-	char *description_it;
-	char *description_fr;
-	char *previewpic1;
-	char *previewpic2;
-	char *author_name;
-	char *author_website;
-	char *version_major;
-	char *version_minor;
-	char *version_release;
-	char *version_build;
-	char *exec;
-	char *main_category;
-	char *subcategory1;
-	char *subcategory2;
-	char *altcategory;
-	char *altsubcategory1;
-	char *altsubcategory2;
-	char *osversion_major;
-	char *osversion_minor;
-	char *osversion_release;
-	char *osversion_build;
-	char *associationitem1_name;
-	char *associationitem1_filetype;
-	char *associationitem1_parameter;
-	char *associationitem2_name;
-	char *associationitem2_filetype;
-	char *associationitem2_parameter;
-	char *associationitem3_name;
-	char *associationitem3_filetype;
-	char *associationitem3_parameter;
-	char *clockspeed;
-	char *background;
-	char *startdir;
-
+  char *title_en;
+  char *unique_id;
+  char *icon;
+  char *exec;
+  char *main_category;
+  char *clockspeed;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided

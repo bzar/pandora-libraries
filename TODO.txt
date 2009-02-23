@@ -3,6 +3,8 @@ Some things to be done..
 
 - review pnd_tinyxml to ensure the PXML_FILENAME is csae insensitive as needed
 
+- make pnd_pndfiles seek of PXML more efficient; fread ( 1, nmemb ) gotta be slow :)
+
 apps/pndnotifyd.c:// TODO: Catch HUP and reparse config
 apps/pndnotifyd.c:// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
 apps/pndnotifyd.c:// TODO: During daemon mode, should perhaps syslog or log errors
