@@ -90,6 +90,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	pElem=hRoot.FirstChild("icon").Element();
 	if (pElem)
 	{	
+#if 0
 		char anotherbuffer [ FILENAME_MAX ];
 		strcpy ( anotherbuffer, pFilename );
 		char *s = strstr ( anotherbuffer, PXML_FILENAME );
@@ -99,8 +100,10 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		} else if ( ( s = strrchr ( anotherbuffer, '/' ) ) ) {
 		  s += 1;
 		  strcpy ( s, strdup(pElem->GetText()));
-		  app->exec = strdup(anotherbuffer);
+		  app->icon = strdup(anotherbuffer);
 		}
+#endif
+		app->icon = strdup ( pElem->GetText() );
 	}
 
 	pElem = hRoot.FirstChild( "description" ).FirstChildElement("en").Element();
@@ -178,9 +181,11 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	pElem=hRoot.FirstChild("exec").Element();
 	if (pElem)
 	{	
+#if 0
 		char anotherbuffer [ FILENAME_MAX ];
 		strcpy ( anotherbuffer, pFilename );
 		char *s = strstr ( anotherbuffer, PXML_FILENAME );
+		printf ( "exec %s\n", pElem->GetText() );
 		if ( s ) {
 		  strcpy ( s, strdup(pElem->GetText()));
 		  app->exec = strdup(anotherbuffer);
@@ -189,6 +194,8 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		  strcpy ( s, strdup(pElem->GetText()));
 		  app->exec = strdup(anotherbuffer);
 		}
+#endif
+		app->exec = strdup ( pElem->GetText() );
 	}	
 
 	pElem = hRoot.FirstChild( "category" ).FirstChildElement("main").Element();

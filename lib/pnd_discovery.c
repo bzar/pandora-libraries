@@ -127,7 +127,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
     // check for validity and add to resultset if it looks executable
     if ( pnd_is_pxml_valid_app ( pxmlh ) ) {
-      char b [ 1024 ]; // TBD: also lame
+      //char b [ 1024 ]; // TBD: also lame
       pnd_disco_t *p;
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
@@ -138,8 +138,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
       }
       if ( pnd_pxml_get_exec ( pxmlh ) ) {
-	snprintf ( b, 1024, "pnd_run_magic %s", pnd_pxml_get_exec ( pxmlh ) );
-	p -> exec = strdup ( b );
+	p -> exec = strdup ( pnd_pxml_get_exec ( pxmlh ) );
+	//snprintf ( b, 1024, "pnd_run_magic %s", pnd_pxml_get_exec ( pxmlh ) );
+	//p -> exec = strdup ( b );
       }
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
 	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
@@ -149,6 +150,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
 	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 
+      }
+      if ( pnd_pxml_get_startdir ( pxmlh ) ) {
+	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) ); 
       }
 
     } else {

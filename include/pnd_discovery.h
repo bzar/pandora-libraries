@@ -42,6 +42,7 @@ typedef struct
   char *exec;
   char *main_category;
   char *clockspeed;
+  char *startdir;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided

@@ -78,6 +78,9 @@ int main ( void) {
       if ( d -> exec ) {
 	printf ( "  Executable: %s\n", d -> exec );
       }
+      if ( d -> startdir ) {
+	printf ( "  Start dir: %s\n", d -> startdir );
+      }
       if ( d -> clockspeed ) {
 	printf ( "  Clockspeed: %s\n", d -> clockspeed );
       }
