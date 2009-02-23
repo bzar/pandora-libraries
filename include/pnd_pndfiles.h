@@ -18,11 +18,21 @@ extern "C" {
 // either if the goods are near the end. How big is an average .png for an average icon
 // size?
 #define PND_PXML_WINDOW_SIZE 4096
+#define PND_PXML_WINDOW_FRACTIONAL ( PND_PXML_WINDOW_SIZE - 10 )
 
 // pnd_seek_pxml should vaguely work like fseek, trying to position at begin of the appended/found PXML
 // On return of 0, assuming nothing.
 // On 1, assume that the FILE pointer is positioned for next read to pull in the PXML line by line
 unsigned char pnd_pnd_seek_pxml ( FILE *f );
+
+// accrue_pxml will read through the given FILE * until it finds </PXML> (case insensitively)
+// Returns 1 on success (</PXML> found), leaving file pointer after the </PXML>\n
+// Returns 0 on failure (likely file pointer is at the end of the file, having sought out the </PXML>
+unsigned char pnd_pnd_accrue_pxml ( FILE *f, char *target, unsigned int maxlen );
+
+// pnd_match_binbuf will find a case insensitve string within a binary buffer (ie: strcasestr will
+// only work in a non-binary buffer.) Brute force zombies ahead!
+char *pnd_match_binbuf ( char *haystack, unsigned int maxlen, char *needle );
 
 #ifdef __cplusplus
 } /* "C" */

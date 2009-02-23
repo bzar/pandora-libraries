@@ -112,12 +112,19 @@ unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
 
   // for now, lets just verify the exec-path is valid
+
   //printf ( "exec is '%s'\n", p -> exec );
 
+  return ( 1 );
+
+  // even this is complicated by pnd_run.sh semantics .. can't check if it exists
+  // during discovery, since it is not mounted yet..
+#if 0
   struct stat buf;
   if ( stat ( p -> exec, &buf ) == 0 ) {
     return ( 1 ); // path is present
   }
+#endif
 
   return ( 0 );
 }

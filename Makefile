@@ -20,7 +20,7 @@ LIB = libpnd.a
 SOLIB = libpnd.so.1         # canonicle name
 SOLIB1 = libpnd.so.1.0.1    # versioned name
 XMLOBJ = lib/tinyxml/tinystr.o lib/tinyxml/tinyxml.o lib/tinyxml/tinyxmlerror.o lib/tinyxml/tinyxmlparser.o
-ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o
+ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o
 
 all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd
 

@@ -1,12 +1,13 @@
+<?xml version="1.0"?>
 <PXML>
 <title>
-	<en>sample 3</en>
+	<en>x86 ls</en>
 	<de>Program Title in German Language</de>
 	<fr>Program Title in French Language</fr>
 	<it>Program Title in Italian Language</it>
 </title>
 
-<unique_id>256twinky</unique_id>
+<unique_id>123456x86ls</unique_id>
 
 <standalone>Yes</standalone>
 
@@ -83,4 +84,3 @@
 <startdir>../differentdir</startdir>
 
 </PXML>
-

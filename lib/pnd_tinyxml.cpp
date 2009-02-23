@@ -93,8 +93,10 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		char anotherbuffer [ FILENAME_MAX ];
 		strcpy ( anotherbuffer, pFilename );
 		char *s = strstr ( anotherbuffer, PXML_FILENAME );
-		strcpy ( s, strdup(pElem->GetText()));
-		app->icon = strdup(anotherbuffer);
+		if ( s ) {
+		  strcpy ( s, strdup(pElem->GetText()));
+		  app->icon = strdup(anotherbuffer);
+		}
 	}
 
 	pElem = hRoot.FirstChild( "description" ).FirstChildElement("en").Element();
@@ -175,8 +177,14 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		char anotherbuffer [ FILENAME_MAX ];
 		strcpy ( anotherbuffer, pFilename );
 		char *s = strstr ( anotherbuffer, PXML_FILENAME );
-		strcpy ( s, strdup(pElem->GetText()));
-		app->exec = strdup(anotherbuffer);
+		if ( s ) {
+		  strcpy ( s, strdup(pElem->GetText()));
+		  app->exec = strdup(anotherbuffer);
+		} else if ( ( s = strrchr ( anotherbuffer, '/' ) ) ) {
+		  s += 1;
+		  strcpy ( s, strdup(pElem->GetText()));
+		  app->exec = strdup(anotherbuffer);
+		}
 	}	
 
 	pElem = hRoot.FirstChild( "category" ).FirstChildElement("main").Element();

@@ -1,9 +1,17 @@
 
 Some things to be done..
 
+- replace brute force memcmp() in pnd pnd with a fancy pants CS alg
+
 - review pnd_tinyxml to ensure the PXML_FILENAME is csae insensitive as needed
+- fix pnd_tinyxml.. why does it need 'if ( s )' protection. it assumes some filename weird stuff
+    - why does it need filenames at all for icons/etc?!
+
+- fix is_pxml_valid_app() .. right now it always returns 1!
 
 - make pnd_pndfiles seek of PXML more efficient; fread ( 1, nmemb ) gotta be slow :)
+
+- make accrused PXML from pnd-buffer growable, not locked at 32k/X size
 
 apps/pndnotifyd.c:// TODO: Catch HUP and reparse config
 apps/pndnotifyd.c:// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
