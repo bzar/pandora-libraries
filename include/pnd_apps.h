@@ -24,7 +24,7 @@ extern "C" {
 #define PND_DOTDESKTOP_DEFAULT "/usr/share/applications"
 
 // apps
-#define PND_DEFAULT_WORKDIR "/tmp"
+#define PND_DEFAULT_WORKDIR "./"
 
 /* pnd_apps_exec() is used to blindly launch an app, be it a .pnd file bundle or a plain executable
  * (shell, bin, whatever.) pndrun specifies the full path to the pnd_run sh script, which should be

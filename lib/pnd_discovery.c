@@ -290,7 +290,7 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
   }
 #endif
 
-#if 0
+#if 0 // we let pnd_run.sh handle this
   if ( p -> startdir ) {
     snprintf ( buffer, 1020, "Path=%s\n", p -> startdir );
     fprintf ( f, "%s", buffer );
@@ -300,11 +300,24 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 #endif
 
   if ( p -> exec ) {
+
+    // basics
     if ( p -> object_type == pnd_object_type_directory ) {
-      snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -u\n", pndrun, p -> object_path, p -> exec );
+      snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -u", pndrun, p -> object_path, p -> exec );
     } else if ( p -> object_type == pnd_object_type_pnd ) {
-      snprintf ( buffer, 1020, "Exec=%s -p %s/%s -e %s -u\n", pndrun, p -> object_path, p -> object_filename, p -> exec );
+      snprintf ( buffer, 1020, "Exec=%s -p %s/%s -e %s -u", pndrun, p -> object_path, p -> object_filename, p -> exec );
     }
+
+    // start dir
+    if ( p -> startdir ) {
+      strncat ( buffer, " -s ", 1020 );
+      strncat ( buffer, p -> startdir, 1020 );
+    }
+
+    // newline
+    strncat ( buffer, "\n", 1020 );
+
+    // emit
     fprintf ( f, "%s", buffer );
   }
 
