@@ -33,6 +33,7 @@ extern "C" {
  * NOTE: clock speed will be set prior to invoking the script, and set back on exit
  * NOTE: No values can be except clockspeed; a 0 clockspeed means 'leave alone'. Set startdoir to "." instead of NULL.
  * fork() is implied; calling this function does not kill this process :)
+ * NOTE: PAss in the full path to the awesomeapp.pnd or to the directory containing PXML.xml (not the PXML.xml itself.)
  */
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id, char *rel_exec, char *rel_startdir, unsigned int clockspeed );
 

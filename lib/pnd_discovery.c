@@ -1,6 +1,7 @@
 
 #include <stdio.h> /* for FILE etc */
 #include <stdlib.h> /* for malloc */
+#include <unistd.h> /* for unlink */
 
 #define __USE_GNU /* for strcasestr */
 #include <string.h> /* for making ftw.h happy */
@@ -151,10 +152,17 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
 
-      // base path
-      p -> path_to_object = strdup ( fpath );
-      if ( ( fixpxml = strcasestr ( p -> path_to_object, PXML_FILENAME ) ) ) {
+      // base paths
+      p -> object_path = strdup ( fpath );
+
+      if ( ( fixpxml = strcasestr ( p -> object_path, PXML_FILENAME ) ) ) {
 	*fixpxml = '\0'; // if this is not a .pnd, lop off the PXML.xml at the end
+      } else if ( ( fixpxml = strrchr ( p -> object_path, '/' ) ) ) {
+	*(fixpxml+1) = '\0'; // for pnd, lop off to last /
+      }
+
+      if ( ( fixpxml = strrchr ( fpath, '/' ) ) ) {
+	p -> object_filename = strdup ( fixpxml + 1 );
       }
 
       // png icon path
@@ -292,7 +300,11 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 #endif
 
   if ( p -> exec ) {
-    snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -u\n", pndrun, p -> path_to_object, p -> exec );
+    if ( p -> object_type == pnd_object_type_directory ) {
+      snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -u\n", pndrun, p -> object_path, p -> exec );
+    } else if ( p -> object_type == pnd_object_type_pnd ) {
+      snprintf ( buffer, 1020, "Exec=%s -p %s/%s -e %s -u\n", pndrun, p -> object_path, p -> object_filename, p -> exec );
+    }
     fprintf ( f, "%s", buffer );
   }
 
@@ -304,12 +316,21 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 }
 
 unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
-  char buffer [ FILENAME_MAX ];
+  char buffer [ FILENAME_MAX ]; // target filename
+  char from [ FILENAME_MAX ];   // source filename
   char bits [ 8 * 1024 ];
   unsigned int bitlen;
+  FILE *pnd, *target;
 
-  // filename
-  sprintf ( buffer, "%s/%u.png", targetpath, p -> unique_id );
+  // prelim
+  if ( ( p -> object_type == pnd_object_type_pnd ) &&
+       ( ! p -> pnd_icon_pos ) )
+  {
+    return ( 0 ); // discover code didn't find it, so FAIL
+  }
+
+  // filenames
+  sprintf ( buffer, "%s/%s.png", targetpath, p -> unique_id ); // target
 
   // first.. are we looking through a pnd file or a dir?
   if ( p -> object_type == pnd_object_type_directory ) {
@@ -318,14 +339,11 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   } else if ( p -> object_type == pnd_object_type_pnd ) {
     // if we can get it from pnd file, copy it into destination
 
-    if ( ! p -> pnd_icon_pos ) {
-      return ( 0 ); // discover code didn't find it, so FAIL
-    }
-
-    FILE *pnd, *target;
     unsigned int len;
 
-    pnd = fopen ( p -> path_to_object, "r" );
+    sprintf ( from, "%s/%s", p -> object_path, p -> object_filename ); // target
+
+    pnd = fopen ( from, "r" );
 
     if ( ! pnd ) {
       return ( 0 );

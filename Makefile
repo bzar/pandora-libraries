@@ -25,7 +25,7 @@ ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_
 all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png
 	find . -name "*~*" -exec rm {} \; -print
 
 # component targets

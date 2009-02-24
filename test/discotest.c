@@ -32,8 +32,8 @@ int main ( int argc, char *argv[] ) {
     } else {
       printf ( "%s [-e] [-i] [-d]\n", argv [ 0 ] );
       printf ( "-e\tOptional. Attempt to exec a random app.\n" );
-      printf ( "-i\tOptional. Attempt to dump icon files from the end of pnd's to /tmp.\n" );
-      printf ( "-d\tOptional. Attempt to dump dotdesktop files from the end of pnd's to /tmp.\n" );
+      printf ( "-i\tOptional. Attempt to dump icon files from the end of pnd's to ./testdata/dotdesktop.\n" );
+      printf ( "-d\tOptional. Attempt to dump dotdesktop files from the end of pnd's to ./testdata/dotdesktop.\n" );
       exit ( 0 );
     }
 
@@ -119,7 +119,7 @@ int main ( int argc, char *argv[] ) {
 
       printf ( "App: %s (type %u)\n", pnd_box_get_key ( d ), d -> object_type );
 
-      printf ( "  Base path: %s\n", d -> path_to_object );
+      printf ( "  Base path: %s filename: %s\n", d -> object_path, d -> object_filename );
 
       if ( d -> title_en ) {
 	printf ( "  Name: %s\n", d -> title_en );
@@ -147,11 +147,11 @@ int main ( int argc, char *argv[] ) {
       }
 
       if ( do_dotdesktop ) {
-	pnd_emit_dotdesktop ( "/tmp", pndrun, d );
+	pnd_emit_dotdesktop ( "./testdata/dotdesktop", pndrun, d );
       }
 
       if ( do_icon ) {
-	pnd_emit_icon ( "/tmp", d );
+	pnd_emit_icon ( "./testdata/dotdesktop", d );
       }
 
       // next!
@@ -176,7 +176,14 @@ int main ( int argc, char *argv[] ) {
 	d = pnd_box_get_next ( d );
 
 	if ( d ) {
-	  pnd_apps_exec ( pndrun, d -> path_to_object, d -> unique_id, d -> exec, d -> startdir, atoi ( d -> clockspeed ) );
+	  char fullpath [ FILENAME_MAX ];
+	  if ( d -> object_type == pnd_object_type_directory ) {
+	    sprintf ( fullpath, "%s", d -> object_path );
+	  } else if ( d -> object_type == pnd_object_type_pnd ) {
+	    sprintf ( fullpath, "%s/%s", d -> object_path, d -> object_filename );
+	  }
+	  printf ( "Trying to exec '%s'\n", fullpath );
+	  pnd_apps_exec ( pndrun, fullpath, d -> unique_id, d -> exec, d -> startdir, atoi ( d -> clockspeed ) );
 	}
       }
 

@@ -5,10 +5,9 @@
 # -s startdir
 # arguments can be inside -e, -a is optional
  
-############################# dont forget to remove the echos! ############################
  
 # parse arguments
-TEMP=`getopt -o p:e:a:b:u::s: --long p-long,e-long:,a-long: -- "$@"`
+TEMP=`getopt -o p:e:a:b:s:u:: --long p-long,e-long:,a-long: -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -47,13 +46,13 @@ oCWD=$(pwd)
  
 #detect fs
 if [ $DFS = ISO ]; then
-        mntline="mount -o loop,fmask=000 $PND /mnt/pnd/$BASENAME"
+        mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
         echo "Filetype is $DFS"
 elif [ $DFS = Zip ]; then
         mntline="fuse-zip $PND /mnt/pnd/$BASENAME -o ro,fmask=000"
         echo "Filetype is $DFS"
 elif [ $DFS = directory ]; then
-        mntline="mount --bind -o ro,fmask=000 $PND /mnt/pnd/$BASENAME"
+        mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
 #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
         echo "Filetype is $DFS"
 else
@@ -63,47 +62,47 @@ fi
  
 #create mountpoints
  
-if [ ! -d /mnt/pnd/$BASENAME ]; then echo "mkdir -p /mnt/pnd/$BASENAME "; fi
-if [ ! -d $MOUNTPOINT/appdata/$BASENAME ]; then echo "mkdir -p $MOUNTPOINT/appdata/$BASENAME "; fi
-if [ ! -d /mnt/utmp/$BASENAME ]; then echo "mkdir -p /mnt/utmp/$BASENAME "; fi 
+if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi
+if [ ! -d $MOUNTPOINT/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/appdata/$BASENAME; fi
+if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi 
  
 #mount
 if [ ! $UNION ] ; then
         #is the union already mounted? if not mount evrything, else launch the stuff
-        mount | grep "on /mnt/utmp/$BASENAME type" > /dev/null
+        mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
         if [ ! $? -eq 0 ]; then 
- 
+                echo "mounting union!"
                 $mntline #mount the pnd/folder
-                #mount -t unionfs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro unionfs /mnt/utmp/$BASENAME #union mount
-                #aufs, one of those should work, bit unsure.
-                mount -t aufs -o exec,fmask=000,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro none /mnt/utmp/$BASENAME #aufs?
-                #mount -t aufs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro aufs /mnt/utmp/$BASENAME #aufs?
+ 
+                sudo mount -t aufs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw:/mnt/pnd/$BASENAME=ro none /mnt/utmp/$BASENAME # put union on top
  
         else
-                echo "doh!"
+                echo "Union already mounted"
         fi
  
  
         #start app
         cd /mnt/utmp/$BASENAME
         if [ $STARTDIR ]; then cd $STARTDIR; fi
-        $EXENAME $ARGUMENTS 
+        ./$EXENAME $ARGUMENTS 
         #app exited
+        cd $oCWD
  
 else
  
         $mntline
         cd /mnt/pnd/$BASENAME
         if [ $STARTDIR ]; then cd $STARTDIR; fi
-        $EXENAME $ARGUMENTS 
+        echo $(pwd)
+        ./$EXENAME $ARGUMENTS 
+        cd $oCWD
 fi
  
 #clean up
-umount /mnt/utmp/$BASENAME
+if [ ! $UNION ] ; then sudo umount /mnt/utmp/$BASENAME; fi
+if [ $UNION ] ; then sudo umount /mnt/pnd/$BASENAME; fi
 if [ $? -eq 0 ]; then 
- 
-        umount /mnt/pnd/$BASENAME
-        rmdir /mnt/pnd/$BASENAME
-        rmdir /mnt/utmp/$BASENAME
- 
+        sudo umount /mnt/pnd/$BASENAME
+        sudo rmdir /mnt/pnd/$BASENAME
+        if [ ! $UNION ] ; then  sudo rmdir /mnt/utmp/$BASENAME; fi
 fi

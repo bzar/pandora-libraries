@@ -30,6 +30,8 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id, cha
   argv [ f++ ] = fullpath;
   argv [ f++ ] = "-e";
   argv [ f++ ] = rel_exec;
+  argv [ f++ ] = "-s";
+  argv [ f++ ] = rel_startdir;
   // skip -a (arguments) for now
 
   //argv [ f++ ] = "-b";
