@@ -308,7 +308,7 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     fprintf ( f, "%s", buffer );
   }
 
-  fprintf ( f, "_Source=libpnd\n" ); // should we need to know 'who' created the file during trimming
+  fprintf ( f, "%s\n", PND_DOTDESKTOP_SOURCE ); // should we need to know 'who' created the file during trimming
 
   fclose ( f );
 

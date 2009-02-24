@@ -12,6 +12,7 @@
 #include <stdio.h>     // for stdio
 #include <unistd.h>    // for exit()
 #include <stdlib.h>    // for exit()
+#define __USE_GNU /* for strcasestr */
 #include <string.h>
 #include <time.h>      // for time()
 #include <ctype.h>     // for isdigit()
@@ -251,15 +252,42 @@ int main ( int argc, char *argv[] ) {
 	    printf ( "Found app: %s\n", pnd_box_get_key ( d ) );
 	  }
 
-	  // attempt to create icon files; if successful, alter the disco struct to contain new
-	  // path, otherwise leave it alone (since it could be a generic icon reference..)
-	  if ( pnd_emit_icon ( dotdesktoppath, d ) ) {
-	    // success; fix up icon path to new one..
-	    free ( d -> icon );
-	    char buffer [ FILENAME_MAX ];
-	    sprintf ( buffer, "%s/%s.png", dotdesktoppath, d -> unique_id );
-	    d -> icon = strdup ( buffer );
-	  }
+	  // check if icon already exists (from a previous extraction say); if so, we needn't
+	  // do it again
+	  char existingpath [ FILENAME_MAX ];
+	  sprintf ( existingpath, "%s/%s.png", dotdesktoppath, d -> unique_id );
+
+	  struct stat dirs;
+	  if ( stat ( existingpath, &dirs ) == 0 ) {
+	    // icon seems to exist, so just crib the location into the .desktop
+
+	    if ( ! g_daemon_mode ) {
+	      printf ( "  Found icon already existed, so reusing it! %s\n", existingpath );
+	    }
+
+	    if ( d -> icon ) {
+	      free ( d -> icon );
+	    }
+	    d -> icon = strdup ( existingpath );
+
+	  } else {
+	    // icon seems unreadable or does not exist; lets try to create it..
+
+	    if ( ! g_daemon_mode ) {
+	      printf ( "  Icon not already present, so trying to write it! %s\n", existingpath );
+	    }
+
+	    // attempt to create icon files; if successful, alter the disco struct to contain new
+	    // path, otherwise leave it alone (since it could be a generic icon reference..)
+	    if ( pnd_emit_icon ( dotdesktoppath, d ) ) {
+	      // success; fix up icon path to new one..
+	      if ( d -> icon ) {
+		free ( d -> icon );
+	      }
+	      d -> icon = strdup ( existingpath );
+	    }
+
+	  } // icon already exists?
 
 	  // create the .desktop file
 	  if ( pnd_emit_dotdesktop ( dotdesktoppath, pndrun, d ) ) {
@@ -312,14 +340,45 @@ int main ( int argc, char *argv[] ) {
 	      continue;
 	    }
 
+	    // figure out full path
+	    sprintf ( buffer, "%s/%s", dotdesktoppath, dirent -> d_name );
+
 	    // file was previously created by libpnd; check Source= line
-	    // TBD
+	    // logic: default to 'yes' (in case we can't open the file for some reason)
+	    //        if we can open the file, default to no and look for the source flag we added; if
+	    //          that matches then we know its libpnd created, otherwise assume not.
+	    unsigned char source_libpnd = 1;
+	    {
+	      char line [ 256 ];
+	      FILE *grep = fopen ( buffer, "r" );
+	      if ( grep ) {
+		source_libpnd = 0;
+		while ( fgets ( line, 255, grep ) ) {
+		  if ( strcasestr ( line, PND_DOTDESKTOP_SOURCE ) ) {
+		    source_libpnd = 2;
+		  }
+		} // while
+		fclose ( grep );
+	      }
+	    }
+	    if ( source_libpnd ) {
+	      if ( ! g_daemon_mode ) {
+		printf ( "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
+	      }
+	    } else {
+	      if ( ! g_daemon_mode ) {
+		printf ( "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
+	      }
+	      continue; // skip deleting it
+	    }
 
 	    // file is 'new'?
-	    sprintf ( buffer, "%s/%s", dotdesktoppath, dirent -> d_name );
 	    if ( stat ( buffer, &dirs ) == 0 ) {
 	      if ( dirs.st_mtime >= createtime ) {
-		continue;
+		if ( ! g_daemon_mode ) {
+		  printf ( "File '%s' seems 'new', so leave it alone.\n", buffer );
+		}
+		continue; // skip deleting it
 	      }
 	    }
 
