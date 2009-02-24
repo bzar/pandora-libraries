@@ -1,28 +1,26 @@
 
 Some things to be done..
 
+- UNICODE everywhere.. this will be a lot of work I'm sure. (replacing all the char* and related consumers)
+
+- applist memleak; ie: all those disco_t apps returned are never free'd properly
+  include/pnd_discovery.h:// TODO: A way to release the disco-lists and reclaim RAM :)
+
 - put in code to fetch clock speed, and add clock speed handler to pnd_apps_exec
 
 - remove -u's from pnd_apps_exec and pnd_emit_dotdesktop
 
 - replace brute force memcmp() in pnd pnd with a fancy pants CS alg
+- make pnd_pndfiles seek of PXML more efficient; fread ( 1, nmemb ) gotta be slow :)
 
 - review pnd_tinyxml to ensure the PXML_FILENAME is csae insensitive as needed
-- fix pnd_tinyxml.. why does it need 'if ( s )' protection. it assumes some filename weird stuff
-    - why does it need filenames at all for icons/etc?!
 
 - fix is_pxml_valid_app() .. right now it always returns 1!
 
-- make pnd_pndfiles seek of PXML more efficient; fread ( 1, nmemb ) gotta be slow :)
-
-- make accrused PXML from pnd-buffer growable, not locked at 32k/X size
+- make accrued PXML from pnd-buffer growable, not locked at 32k/X size
 
 - make sensible override code, so it picks up all fields... or compares fields; not just copies _en
 
 apps/pndnotifyd.c:// TODO: Catch HUP and reparse config
 apps/pndnotifyd.c:// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
-apps/pndnotifyd.c:// TODO: During daemon mode, should perhaps syslog or log errors
-apps/pndnotifyd.c:// TODO: Removing stale .desktop checks that .desktop was created by libpnd; see 'TBD' below
-include/pnd_discovery.h:// TODO: Copy the icon into this directory as well, if its source is a .pnd or info is in the dico struct
-include/pnd_discovery.h:// TODO: A way to release the disco-lists and reclaim RAM :)
-include/pnd_discovery.h:// TODO: A way to determine the list of excess .desktop files and remove them (ie: after poo.pnd is removed, ditch the .desktop)
+  apps/pndnotifyd.c:// TODO: During daemon mode, should perhaps syslog or log errors
