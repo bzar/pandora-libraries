@@ -1,6 +1,7 @@
 
 #include <stdio.h> /* for printf, NULL */
 #include <stdlib.h> /* for free */
+#include <string.h> /* for strdup */
 
 #include "pnd_conf.h"
 #include "pnd_container.h"
@@ -146,12 +147,27 @@ int main ( int argc, char *argv[] ) {
 	printf ( "  Clockspeed: %s\n", d -> clockspeed );
       }
 
-      if ( do_dotdesktop ) {
-	pnd_emit_dotdesktop ( "./testdata/dotdesktop", pndrun, d );
+      if ( do_icon ) {
+	if ( pnd_emit_icon ( "./testdata/dotdesktop", d ) ) {
+	  printf ( "  -> icon dump succeeded\n" );
+
+	  // fix up icon path to new one..
+	  free ( d -> icon );
+	  char buffer [ FILENAME_MAX ];
+	  sprintf ( buffer, "%s/%s.png", "discotest-temp/", d -> unique_id );
+	  d -> icon = strdup ( buffer );
+
+	} else {
+	  printf ( "  -> icon dump failed\n" );
+	}
       }
 
-      if ( do_icon ) {
-	pnd_emit_icon ( "./testdata/dotdesktop", d );
+      if ( do_dotdesktop ) {
+	if ( pnd_emit_dotdesktop ( "./testdata/dotdesktop", pndrun, d ) ) {
+	  printf ( "  -> dotdesktop dump succeeded\n" );
+	} else {
+	  printf ( "  -> dotdesktop dump failed\n" );
+	}
       }
 
       // next!

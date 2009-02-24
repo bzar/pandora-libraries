@@ -322,77 +322,75 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   unsigned int bitlen;
   FILE *pnd, *target;
 
-  // prelim
+  // prelim .. if a pnd file, and no offset found, discovery code didn't locate icon.. so bail.
   if ( ( p -> object_type == pnd_object_type_pnd ) &&
        ( ! p -> pnd_icon_pos ) )
   {
     return ( 0 ); // discover code didn't find it, so FAIL
   }
 
-  // filenames
+  // determine filename for target
   sprintf ( buffer, "%s/%s.png", targetpath, p -> unique_id ); // target
 
-  // first.. are we looking through a pnd file or a dir?
+  /* first.. open the source file, by type of application:
+   * are we looking through a pnd file or a dir?
+   */
   if ( p -> object_type == pnd_object_type_directory ) {
-    // if we can find icon, copy it in from directory to destination
-
+    sprintf ( from, "%s/%s", p -> object_path, p -> icon );
   } else if ( p -> object_type == pnd_object_type_pnd ) {
-    // if we can get it from pnd file, copy it into destination
-
-    unsigned int len;
-
-    sprintf ( from, "%s/%s", p -> object_path, p -> object_filename ); // target
-
-    pnd = fopen ( from, "r" );
-
-    if ( ! pnd ) {
-      return ( 0 );
-    }
-
-    target = fopen ( buffer, "wb" );
-
-    if ( ! target ) {
-      fclose ( pnd );
-      return ( 0 );
-    }
-
-    fseek ( pnd, 0, SEEK_END );
-    len = ftell ( pnd );
-    //fseek ( pnd, 0, SEEK_SET );
-
-    fseek ( pnd, p -> pnd_icon_pos, SEEK_SET );
-
-    len -= p -> pnd_icon_pos;
-
-    while ( len ) {
-
-      if ( len > (8*1024) ) {
-	bitlen = (8*1024);
-      } else {
-	bitlen = len;
-      }
-
-      if ( fread ( bits, bitlen, 1, pnd ) != 1 ) {
-	fclose ( pnd );
-	fclose ( target );
-	unlink ( buffer );
-	return ( 0 );
-      }
-
-      if ( fwrite ( bits, bitlen, 1, target ) != 1 ) {
-	fclose ( pnd );
-	fclose ( target );
-	unlink ( buffer );
-	return ( 0 );
-      }
-
-      len -= bitlen;
-    } // while
-
-    fclose ( pnd );
-    fclose ( target );
-
+    sprintf ( from, "%s/%s", p -> object_path, p -> object_filename );
   }
+
+  pnd = fopen ( from, "r" );
+
+  if ( ! pnd ) {
+    return ( 0 );
+  }
+
+  unsigned int len;
+
+  target = fopen ( buffer, "wb" );
+
+  if ( ! target ) {
+    fclose ( pnd );
+    return ( 0 );
+  }
+
+  fseek ( pnd, 0, SEEK_END );
+  len = ftell ( pnd );
+  //fseek ( pnd, 0, SEEK_SET );
+
+  fseek ( pnd, p -> pnd_icon_pos, SEEK_SET );
+
+  len -= p -> pnd_icon_pos;
+
+  while ( len ) {
+
+    if ( len > (8*1024) ) {
+      bitlen = (8*1024);
+    } else {
+      bitlen = len;
+    }
+
+    if ( fread ( bits, bitlen, 1, pnd ) != 1 ) {
+      fclose ( pnd );
+      fclose ( target );
+      unlink ( buffer );
+      return ( 0 );
+    }
+
+    if ( fwrite ( bits, bitlen, 1, target ) != 1 ) {
+      fclose ( pnd );
+      fclose ( target );
+      unlink ( buffer );
+      return ( 0 );
+    }
+
+    len -= bitlen;
+  } // while
+
+  fclose ( pnd );
+  fclose ( target );
 
   return ( 1 );
 }

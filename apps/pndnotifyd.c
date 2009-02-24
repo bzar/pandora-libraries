@@ -251,6 +251,16 @@ int main ( int argc, char *argv[] ) {
 	    printf ( "Found app: %s\n", pnd_box_get_key ( d ) );
 	  }
 
+	  // attempt to create icon files; if successful, alter the disco struct to contain new
+	  // path, otherwise leave it alone (since it could be a generic icon reference..)
+	  if ( pnd_emit_icon ( dotdesktoppath, d ) ) {
+	    // success; fix up icon path to new one..
+	    free ( d -> icon );
+	    char buffer [ FILENAME_MAX ];
+	    sprintf ( buffer, "%s/%s.png", dotdesktoppath, d -> unique_id );
+	    d -> icon = strdup ( buffer );
+	  }
+
 	  // create the .desktop file
 	  if ( pnd_emit_dotdesktop ( dotdesktoppath, pndrun, d ) ) {
 	    // add a watch onto the newly created .desktop?
