@@ -31,12 +31,21 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath );
  * confusion.. it is not displayed. So no big deal.
  */
 
+typedef enum {
+  pnd_object_type_unknown = 0,
+  pnd_object_type_directory,
+  pnd_object_type_pnd,
+  pnd_object_type_max
+} pnd_object_type_t;
+
 // another struct? Have always intended discovery_t to have minimal members.. just enough to lead to an
 // application (PXML, xecutable, name); if the apps want more details, they can use the pnd_pxml code to
 // fetch the full PXML and get all the details. But I think we got out of control here :)
 typedef struct {
   // base
-  char *path_to_object; // full path to the PXML.xml or awesomeapp.pnd file
+  unsigned char object_type;   // see enum above
+  char *path_to_object;        // full path to the PXML.xml or awesomeapp.pnd file
+  unsigned int pnd_icon_pos;   // offset to the byte after end of PXML in a pnd file (should be icon if present)
   // strdup'd from PXML
   char *title_en;
   char *unique_id;
@@ -52,6 +61,10 @@ void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could 
 // emit_dotdesktop() will determine a filename and create a FILENAME.desktop file in the targetpath
 // TODO: Copy the icon into this directory as well, if its source is a .pnd or info is in the dico struct
 unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t *p );
+
+// emit_icon() will attempt to copy the icon from a PXML directory, or from a pnd file if appended,
+// to the given directory; returns 1 on sucess, otherwise is a fail.
+unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p );
 
 // TODO: A way to release the disco-lists and reclaim RAM :)
 

@@ -65,6 +65,7 @@ deploy:
 	cp bin/pndnotifyd deployment/usr/bin
 	cp testdata/scripts/* deployment/usr/pandora/scripts
 	# copy in freebee .pnd apps to /usr/pandora/apps
+	# add pndnotify to etc/rc/startup-whatever
 
 # test tool targets
 #

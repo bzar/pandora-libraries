@@ -52,8 +52,9 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
 static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 				int typeflag, struct FTW *ftwbuf )
 {
-  unsigned char valid = 0; // 1 for plaintext PXML, 2 for PND...
+  unsigned char valid = pnd_object_type_unknown;
   pnd_pxml_handle pxmlh = 0;
+  unsigned int pxml_close_pos = 0;
 
   //printf ( "disco root callback encountered '%s'\n", fpath );
 
@@ -66,9 +67,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
   // PND/PNZ file and others may be valid as well .. but lets leave that for now
   //   printf ( "%s %s\n", fpath + ftwbuf -> base, PND_PACKAGE_FILEEXT );
   if ( strcasecmp ( fpath + ftwbuf -> base, PXML_FILENAME ) == 0 ) {
-    valid = 1;
+    valid = pnd_object_type_directory;
   } else if ( strcasestr ( fpath + ftwbuf -> base, PND_PACKAGE_FILEEXT "\0" ) ) {
-    valid = 2;
+    valid = pnd_object_type_pnd;
   }
 
   // if not a file of interest, just keep looking until we run out
@@ -78,14 +79,14 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
   }
 
   // potentially a valid application
-  if ( valid == 1 ) {
+  if ( valid == pnd_object_type_directory ) {
     // Plaintext PXML file
     //printf ( "PXML: disco callback encountered '%s'\n", fpath );
 
     // pick up the PXML if we can
     pxmlh = pnd_pxml_fetch ( (char*) fpath );
 
-  } else if ( valid == 2 ) {
+  } else if ( valid == pnd_object_type_pnd ) {
     // PND ... ??
     FILE *f;
     char pxmlbuf [ 32 * 1024 ]; // TBD: assuming 32k pxml accrual buffer is a little lame
@@ -114,8 +115,26 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     //printf ( "buffer is %s\n", pxmlbuf );
     //fflush ( stdout );
 
+#if 1 // icon
+    // for convenience, lets skip along past trailing newlines/CR's in hopes of finding icon data?
+    {
+      unsigned int pos = ftell ( f );
+      char pngbuffer [ 16 ]; // \211 P N G \r \n \032 \n
+      pngbuffer [ 0 ] = 137;      pngbuffer [ 1 ] = 80;      pngbuffer [ 2 ] = 78;      pngbuffer [ 3 ] = 71;
+      pngbuffer [ 4 ] = 13;       pngbuffer [ 5 ] = 10;       pngbuffer [ 6 ] = 26;      pngbuffer [ 7 ] = 10;
+      if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
+	if ( memcmp ( pngbuffer, pngbuffer + 8, 8 ) == 0 ) {
+	  pxml_close_pos = pos;
+	}
+      }
+    } // icon
+#endif
+
     // by now, we have <PXML> .. </PXML>, try to parse..
     pxmlh = pnd_pxml_fetch_buffer ( (char*) fpath, pxmlbuf );
+
+    // done with file
+    fclose ( f );
 
   }
 
@@ -134,10 +153,15 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
       // base path
       p -> path_to_object = strdup ( fpath );
-
       if ( ( fixpxml = strcasestr ( p -> path_to_object, PXML_FILENAME ) ) ) {
 	*fixpxml = '\0'; // if this is not a .pnd, lop off the PXML.xml at the end
       }
+
+      // png icon path
+      p -> pnd_icon_pos = pxml_close_pos;
+
+      // type
+      p -> object_type = valid;
 
       // PXML fields
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
@@ -275,6 +299,82 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
   fprintf ( f, "_Source=libpnd\n" ); // should we need to know 'who' created the file during trimming
 
   fclose ( f );
+
+  return ( 1 );
+}
+
+unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
+  char buffer [ FILENAME_MAX ];
+  char bits [ 8 * 1024 ];
+  unsigned int bitlen;
+
+  // filename
+  sprintf ( buffer, "%s/%u.png", targetpath, p -> unique_id );
+
+  // first.. are we looking through a pnd file or a dir?
+  if ( p -> object_type == pnd_object_type_directory ) {
+    // if we can find icon, copy it in from directory to destination
+
+  } else if ( p -> object_type == pnd_object_type_pnd ) {
+    // if we can get it from pnd file, copy it into destination
+
+    if ( ! p -> pnd_icon_pos ) {
+      return ( 0 ); // discover code didn't find it, so FAIL
+    }
+
+    FILE *pnd, *target;
+    unsigned int len;
+
+    pnd = fopen ( p -> path_to_object, "r" );
+
+    if ( ! pnd ) {
+      return ( 0 );
+    }
+
+    target = fopen ( buffer, "wb" );
+
+    if ( ! target ) {
+      fclose ( pnd );
+      return ( 0 );
+    }
+
+    fseek ( pnd, 0, SEEK_END );
+    len = ftell ( pnd );
+    //fseek ( pnd, 0, SEEK_SET );
+
+    fseek ( pnd, p -> pnd_icon_pos, SEEK_SET );
+
+    len -= p -> pnd_icon_pos;
+
+    while ( len ) {
+
+      if ( len > (8*1024) ) {
+	bitlen = (8*1024);
+      } else {
+	bitlen = len;
+      }
+
+      if ( fread ( bits, bitlen, 1, pnd ) != 1 ) {
+	fclose ( pnd );
+	fclose ( target );
+	unlink ( buffer );
+	return ( 0 );
+      }
+
+      if ( fwrite ( bits, bitlen, 1, target ) != 1 ) {
+	fclose ( pnd );
+	fclose ( target );
+	unlink ( buffer );
+	return ( 0 );
+      }
+
+      len -= bitlen;
+    } // while
+
+    fclose ( pnd );
+    fclose ( target );
+
+  }
 
   return ( 1 );
 }
