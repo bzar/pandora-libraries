@@ -270,6 +270,8 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     return ( 0 );
   }
 
+  fprintf ( f, "%s\n", PND_DOTDESKTOP_HEADER );
+
   if ( p -> title_en ) {
     snprintf ( buffer, 1020, "Name=%s\n", p -> title_en );
     fprintf ( f, "%s", buffer );
