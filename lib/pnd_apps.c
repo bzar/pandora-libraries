@@ -20,6 +20,22 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 
   //printf ( "Entering pnd_apps_exec\n" );
 
+  if ( ! pndrun ) {
+    return ( 0 );
+  }
+
+  if ( ! fullpath ) {
+    return ( 0 );
+  }
+
+  if ( ! unique_id ) {
+    return ( 0 );
+  }
+
+  if ( ! rel_exec ) {
+    return ( 0 );
+  }
+
 #if 0
   printf ( "  runscript: %s\n", pndrun );
   printf ( "  path: %s\n", fullpath );
@@ -37,14 +53,20 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   argv [ f++ ] = fullpath;
   argv [ f++ ] = "-e";
   argv [ f++ ] = rel_exec;
-  argv [ f++ ] = "-s";
-  argv [ f++ ] = rel_startdir;
+  if ( rel_startdir ) {
+    argv [ f++ ] = "-s";
+    argv [ f++ ] = rel_startdir;
+  }
   // skip -a (arguments) for now
 
   //argv [ f++ ] = "-b";
   //argv [ f++ ] = baename;
 
-  argv [ f++ ] = "-u"; // no union for now
+  if ( options & PND_EXEC_OPTION_NOUNION ) {
+    argv [ f++ ] = "-n"; // no union for now
+  }
+
+  // finish
   argv [ f++ ] = NULL; // for execv
 
   // debug

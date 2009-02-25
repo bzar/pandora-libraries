@@ -29,6 +29,8 @@ extern "C" {
 /* pnd_apps_exec() is used to blindly launch an app, be it a .pnd file bundle or a plain executable
  * (shell, bin, whatever.) pndrun specifies the full path to the pnd_run sh script, which should be
  * found using searchpaths and locates.. see locatetest.c for a sample
+ * pnd_run, fullpath, unique_id, rel_exec required
+ * rel_startdir, clockspeed, options are optional
  * NOTE: Use pnd_locate function to locate the pnd_run, for example
  * NOTE: if specified, clock speed will be set prior to invoking the script, and set back on exit
  * NOTE: No values can be except clockspeed; a 0 clockspeed means 'leave alone'. Set startdoir to "." instead of NULL.
@@ -39,8 +41,8 @@ extern "C" {
  *   example: options = PND_EXEC_OPTION_BLOCK | PND_EXEC_OPTION_2;
  */
 #define PND_EXEC_OPTION_NIL        0
-#define PND_EXEC_OPTION_BLOCK      1
-#define PND_EXEC_OPTION_FUTURE     2
+#define PND_EXEC_OPTION_BLOCK      1 /* wait till children complete; note, children might fork on their own.. */
+#define PND_EXEC_OPTION_NOUNION    2 /* request pnd_run not use a union, just do the mount/run */
 #define PND_EXEC_OPTION_FUTURE2    4
 
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
