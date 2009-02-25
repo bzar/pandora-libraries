@@ -4,15 +4,22 @@
 #include <string.h> /* for memset */
 #include <unistd.h> /* for fork/exec */
 
+#include <sys/types.h> /* for wait */
+#include <sys/wait.h> /* for wait */
+
 #include "pnd_container.h"
 #include "pnd_pxml.h"
 #include "pnd_apps.h"
 
-unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id, char *rel_exec, char *rel_startdir, unsigned int clockspeed ) {
+unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
+			      char *rel_exec, char *rel_startdir,
+			      unsigned int clockspeed, unsigned int options )
+{
   char *argv [ 20 ];
   int f;
 
-  printf ( "Entering pnd_apps_exec\n" );
+  //printf ( "Entering pnd_apps_exec\n" );
+
 #if 0
   printf ( "  runscript: %s\n", pndrun );
   printf ( "  path: %s\n", fullpath );
@@ -59,7 +66,17 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id, cha
     execv ( pndrun, argv );
   } 
 
-  printf ( "Exiting pnd_apps_exec\n" );
+  // by definition, either error occurred or we are the original application.
+
+  // do we wish to wait until the child process completes? (we don't
+  // care if it crashed, was killed, was suspended, whatever.)
+  if ( options & PND_EXEC_OPTION_BLOCK ) {
+    int status = 0;
+    //waitpid ( f, &status. 0 /* no options */ );
+    wait ( &status );
+  }
+
+  // printf ( "Exiting pnd_apps_exec\n" );
 
   return ( 1 );
 }

@@ -199,7 +199,7 @@ int main ( int argc, char *argv[] ) {
 	    sprintf ( fullpath, "%s/%s", d -> object_path, d -> object_filename );
 	  }
 	  printf ( "Trying to exec '%s'\n", fullpath );
-	  pnd_apps_exec ( pndrun, fullpath, d -> unique_id, d -> exec, d -> startdir, atoi ( d -> clockspeed ) );
+	  pnd_apps_exec ( pndrun, fullpath, d -> unique_id, d -> exec, d -> startdir, atoi ( d -> clockspeed ), PND_EXEC_OPTION_BLOCK );
 	}
       }
 
