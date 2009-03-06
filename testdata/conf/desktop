@@ -3,4 +3,5 @@
 # Desktop configuration
 
 [dotfiles]
-dotdesktoppath	./testdata/dotdesktop	# path for pndnotifyd to spit .desktop files into
+#dotdesktoppath	./testdata/dotdesktop	# path for pndnotifyd to spit .desktop files into
+dotdesktoppath	~/.applications		# path for pndnotifyd to spit .desktop files into

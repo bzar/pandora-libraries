@@ -9,6 +9,7 @@
 #include "pnd_pxml.h"
 #include "pnd_discovery.h"
 #include "pnd_locate.h"
+#include "pnd_utility.h"
 
 int main ( int argc, char *argv[] ) {
   char *configpath;
@@ -212,6 +213,11 @@ int main ( int argc, char *argv[] ) {
   if ( apph ) {
     pnd_box_delete ( apph );
   }
+
+  // extra testing - tilde-substitution
+  char *p = strdup ( "~/.applications" );
+  printf ( "Tilde substitution: in '%s'\n", p );
+  printf ( "                   out '%s'\n", pnd_expand_tilde ( p ) );
 
   return ( 0 );
 }

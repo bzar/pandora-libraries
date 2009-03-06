@@ -27,6 +27,7 @@
 #include "../lib/pnd_pathiter.h"
 #include "pnd_discovery.h"
 #include "pnd_locate.h"
+#include "pnd_utility.h"
 
 static unsigned char g_daemon_mode = 0;
 
@@ -176,6 +177,14 @@ int main ( int argc, char *argv[] ) {
     if ( run_script ) printf ( "Locating pnd runscript as %s\n", run_script );
     if ( pndrun ) printf ( "Default pndrun is %s\n", pndrun );
   }
+
+  /* handle globbing or variable substitution
+   */
+  dotdesktoppath = pnd_expand_tilde ( strdup ( dotdesktoppath ) );
+
+  /* validate paths
+   */
+  mkdir ( dotdesktoppath, 0777 );
 
   /* startup
    */
