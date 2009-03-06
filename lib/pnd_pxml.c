@@ -211,6 +211,10 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
   signed char retval = 0;
   pnd_pxml_handle mergeh;
 
+  if ( ! pnd_pxml_get_unique_id ( h ) ) {
+    return ( -1 ); // no unique-id present, so can't use it to name potential override files
+  }
+
   SEARCHPATH_PRE
   {
 
