@@ -25,7 +25,7 @@ ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_
 all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd
 	find . -name "*~*" -exec rm {} \; -print
 
 # component targets
@@ -47,10 +47,9 @@ pndnotifyd:	pndnotifyd.o ${SOLIB1}
 
 pnd:
 	# build x86_ls with icon
-	cd testdata/pndsample; ../scripts/pnd_make.sh x86_ls.pnd x86_ls/PXML.xml x86_ls
-	cd testdata/pndsample; cat x86_ls/zeldaicon.png >> x86_ls.pnd
+	cd testdata/pndsample; ../scripts/pnd_make.sh -p x86_ls.pnd -d x86_ls -i x86_ls/zeldaicon.png -x x86_ls/PXML.xml
 	# build x86_echo with no icon
-	cd testdata/pndsample; ../scripts/pnd_make.sh x86_echo.pnd x86_echo/PXML.xml x86_echo
+	cd testdata/pndsample; ../scripts/pnd_make.sh -p x86_echo.pnd -d x86_echo -x x86_echo/PXML.xml
 
 deploy: 
 	# populate deployment directory for copying into image bakes
@@ -60,12 +59,15 @@ deploy:
 	mkdir -p deployment/usr/bin
 	mkdir -p deployment/usr/pandora/apps
 	mkdir -p deployment/usr/pandora/scripts
+	mkdir -p deployment/etc/init.d/
 	# copy in goodies
 	cp libpnd* deployment/usr/lib
 	cp bin/pndnotifyd deployment/usr/bin
 	cp testdata/scripts/* deployment/usr/pandora/scripts
 	# copy in freebee .pnd apps to /usr/pandora/apps
 	# add pndnotify to etc/rc/startup-whatever
+	cp testdata/sh/pndnotifyd deployment/etc/init.d/pndnotifyd
+	cp testdata/sh/sudoers deployment/etc/sudoers
 
 # test tool targets
 #
