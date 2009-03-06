@@ -24,7 +24,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     // copy tilde in
     strcat ( temp, home );
     // copy stuff after tilde in
-    strcat ( temp, s + 1 );
+    strcat ( temp, p + 1 );
     // swap ptrs
     free ( s );
     s = temp;
