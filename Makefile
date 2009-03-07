@@ -5,8 +5,8 @@
 
 # tools
 CC = ${CROSSCOMPILE}gcc
-AR = ar
-RANLIB = ranlib
+AR = ${CROSSCOMPILE}ar
+RANLIB = ${CROSSCOMPILE}ranlib
 RM = rm
 
 # environment
