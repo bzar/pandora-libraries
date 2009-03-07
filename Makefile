@@ -26,6 +26,7 @@ all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd
 
 clean:
 	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd
+	${RM} -rf deployment/media
 	find . -name "*~*" -exec rm {} \; -print
 
 # component targets
@@ -60,6 +61,9 @@ deploy:
 	mkdir -p deployment/usr/pandora/apps
 	mkdir -p deployment/usr/pandora/scripts
 	mkdir -p deployment/etc/init.d/
+	# premake the directories that SD's mount onto; makes pndnotifyd life easier
+	mkdir -p deployment/media/mmcblk0p1
+	mkdir -p deployment/media/mmcblk1p1
 	# copy in goodies
 	cp libpnd* deployment/usr/lib
 	cp bin/pndnotifyd deployment/usr/bin
