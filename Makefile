@@ -4,7 +4,7 @@
 #
 
 # tools
-CC = gcc
+CC = ${CROSSCOMPILE}gcc
 AR = ar
 RANLIB = ranlib
 RM = rm
