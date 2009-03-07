@@ -13,3 +13,4 @@ searchpath	~/pxml-overrides
 [pnd]
 searchpath	/media/*/pandora/scripts:/usr/pandora/scripts
 runscript	pnd_run.sh
+hupscript	pnd_hup.sh

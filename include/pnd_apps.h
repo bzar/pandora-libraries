@@ -14,6 +14,9 @@ extern "C" {
 #define PND_PNDRUN_FILENAME "pnd_run.sh"
 #define PND_PNDRUN_DEFAULT "./testdata/scripts/pnd_run.sh"
 
+#define PND_PNDHUP_KEY "pnd.hupscript"
+#define PND_PNDHUP_FILENAME "pnd_hup.sh"
+
 #define PND_PXML_OVERRIDE_SEARCHPATH "~/pxml-overrides"
 #define PND_PXML_OVERRIDE_KEY "overrides.searchpath"
 

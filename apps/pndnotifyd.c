@@ -46,6 +46,7 @@ char *dotdesktoppath = NULL;
 char *run_searchpath;
 char *run_script;
 char *pndrun;
+char *pndhup = NULL;
 // notifier handle
 pnd_notify_handle nh = 0;
 
@@ -78,6 +79,7 @@ int main ( int argc, char *argv[] ) {
       printf ( "-n\tDo not scan on launch; default is to run a scan for apps when %s is invoked.\n", argv [ 0 ] );
       printf ( "##\tA numeric value is interpreted as number of seconds between checking for filesystem changes. Default %u.\n",
 	       interval_secs );
+      printf ( "Signal: HUP the process to force reload of configuration and reset the notifier watch paths\n" );
       exit ( 0 );
     }
 
@@ -138,7 +140,12 @@ int main ( int argc, char *argv[] ) {
 
   /* set up notifies
    */
+
+  // if we're gong to scan on launch, it'll set things right up and then set up notifications.
+  // if no scan on launch, we need to set the notif's up now.
+  //if ( ! scanonlaunch ) {
   setup_notifications();
+  //}
 
   /* daemon main loop
    */
@@ -160,6 +167,7 @@ int main ( int argc, char *argv[] ) {
       // has occurred; we should be clever, but we're not, so just re-brute force the
       // discovery and spit out .desktop files..
       if ( ! g_daemon_mode ) {
+	printf ( "------------------------------------------------------\n" );
 	printf ( "Changes within watched paths .. performing re-discover!\n" );
       }
 
@@ -326,10 +334,18 @@ int main ( int argc, char *argv[] ) {
 
       } // purge old .desktop files
 
+      // if we've got a hup script located, lets invoke it
+      if ( pndhup ) {
+	if ( ! g_daemon_mode ) {
+	  printf ( "Invoking hup script '%s'.\n", pndhup );
+	}
+	pnd_exec_no_wait_1 ( pndhup, NULL );
+      }
+
       // since its entirely likely new directories have been found (ie: SD with a directory structure was inserted)
       // we should re-apply watches to catch all these new directories; ie: user might use on-device browser to
       // drop in new applications, or use the shell to juggle them around, or any number of activities.
-      setup_notifications();
+      //setup_notifications();
 
     } // need to rediscover?
 
@@ -391,7 +407,7 @@ void consume_configuration ( void ) {
     dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
   }
 
-  // try to locate a runscript
+  // try to locate a runscript and optional hupscript
 
   if ( apph ) {
     run_searchpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH_KEY );
@@ -418,10 +434,29 @@ void consume_configuration ( void ) {
 
   }
 
+  if ( apph && run_searchpath ) {
+    char *t;
+
+    if ( ( t = pnd_conf_get_as_char ( apph, PND_PNDHUP_KEY ) ) ) {
+      pndhup = pnd_locate_filename ( run_searchpath, t );
+#if 0 // don't enable this; if no key in config, we don't want to bother hupping
+    } else {
+      pndhup = pnd_locate_filename ( run_searchpath, PND_PNDHUP_FILENAME );
+#endif
+    }
+
+  }
+
+  // debug
   if ( ! g_daemon_mode ) {
     if ( run_searchpath ) printf ( "Locating pnd run in %s\n", run_searchpath );
     if ( run_script ) printf ( "Locating pnd runscript as %s\n", run_script );
-    if ( pndrun ) printf ( "Default pndrun is %s\n", pndrun );
+    if ( pndrun ) printf ( "pndrun is %s\n", pndrun );
+    if ( pndhup ) {
+      printf ( "pndhup is %s\n", pndhup );
+    } else {
+      printf ( "No pndhup found (which is fine.)\n" );
+    }
   }
 
   /* handle globbing or variable substitution
@@ -442,12 +477,17 @@ void setup_notifications ( void ) {
   // if this is first time through, we can just set it up; for subsequent times
   // through, we need to close existing fd and re-open it, since we're too lame
   // to store the list of watches and 'rm' them
+#if 1
   if ( nh ) {
     pnd_notify_shutdown ( nh );
+    nh = 0;
   }
+#endif
 
   // set up a new set of notifies
-  nh = pnd_notify_init();
+  if ( ! nh ) {
+    nh = pnd_notify_init();
+  }
 
   if ( ! nh ) {
     if ( ! g_daemon_mode ) {
@@ -478,6 +518,10 @@ void setup_notifications ( void ) {
 }
 
 void sighup_handler ( int n ) {
+
+  if ( ! g_daemon_mode ) {
+    printf ( "---[ SIGHUP received ]---\n" );
+  }
 
   // reparse config files
   consume_configuration();

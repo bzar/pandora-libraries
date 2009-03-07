@@ -13,3 +13,4 @@ searchpath	~/pxml-overrides:./testdata/apps-override
 [pnd]
 searchpath	/mnt/sd?/pandora/scripts:./testdata/scripts
 runscript	pnd_run.sh
+hupscript	pnd_hup.sh

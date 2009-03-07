@@ -2,6 +2,7 @@
 #include <stdio.h> /* for FILE etc */
 #include <stdlib.h> /* for malloc */
 #include <string.h> /* for making ftw.h happy */
+#include <unistd.h> /* for fork exec */
 
 #include "pnd_utility.h"
 
@@ -31,4 +32,29 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
   } // while finding matches
 
   return ( s );
+}
+
+void pnd_exec_no_wait_1 ( char *fullpath, char *arg1 ) {
+  int i;
+
+  if ( ( i = fork() ) < 0 ) {
+    printf ( "ERROR: Couldn't fork()\n" );
+    return;
+  }
+
+  if ( i ) {
+    return; // parent process, don't care
+  }
+
+  // child process, do something
+  if ( arg1 ) {
+    execl ( fullpath, fullpath, arg1, (char*) NULL );
+  } else {
+    execl ( fullpath, fullpath, (char*) NULL );
+  }
+
+  // getting here is an error
+  //printf ( "Error attempting to run %s\n", fullpath );
+
+  return;
 }
