@@ -9,9 +9,13 @@
 ### END INIT INFO
  
 PID=`pidof -o %PPID -x pndnotifyd`
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/user/libpnd/pandora-libraries #remove
-export LD_LIBRARY_PATH #remove
-PNDNOTIFY='/home/user/libpnd/pandora-libraries/bin/pndnotifyd' #adjust
+
+# for testing
+#LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/user/libpnd/pandora-libraries #remove
+#export LD_LIBRARY_PATH #remove
+#PNDNOTIFY='/home/user/libpnd/pandora-libraries/bin/pndnotifyd' #adjust
+
+PNDNOTIFY='/usr/bin/pndnotifyd'
  
 case "$1" in
 start)
