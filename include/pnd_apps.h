@@ -6,16 +6,18 @@
 extern "C" {
 #endif
 
-#define PND_APPS_SEARCHPATH "/mnt/sd1/pandora/apps:/mnt/sd2/pandora/apps:./testdata/apps"
+// default application searchpath (and key to look it up in config)
+#define PND_APPS_SEARCHPATH "/media/*/pandora/apps:/usr/pandora/apps"
 #define PND_APPS_KEY "autodiscovery.searchpath"
+
+// default notify searchpath (and key to look it up in config)
+#define PND_APPS_NOTIFYPATH "/media:/media/*/pandora/apps:/usr/pandora/apps"
+#define PND_APPS_NOTIFY_KEY "autodiscovery.notifypath"
 
 #define PND_PNDRUN_SEARCHPATH_KEY "pnd.searchpath"
 #define PND_PNDRUN_KEY "pnd.runscript"
 #define PND_PNDRUN_FILENAME "pnd_run.sh"
-#define PND_PNDRUN_DEFAULT "./testdata/scripts/pnd_run.sh"
-
-#define PND_PNDHUP_KEY "pnd.hupscript"
-#define PND_PNDHUP_FILENAME "pnd_hup.sh"
+#define PND_PNDRUN_DEFAULT "/usr/pandora/scripts/pnd_run.sh"
 
 #define PND_PXML_OVERRIDE_SEARCHPATH "~/pxml-overrides"
 #define PND_PXML_OVERRIDE_KEY "overrides.searchpath"
@@ -24,7 +26,7 @@ extern "C" {
 
 // .desktop support
 #define PND_DOTDESKTOP_KEY "dotfiles.dotdesktoppath"
-#define PND_DOTDESKTOP_DEFAULT "/usr/share/applications"
+#define PND_DOTDESKTOP_DEFAULT "~/.applications"
 
 // apps
 #define PND_DEFAULT_WORKDIR "./"

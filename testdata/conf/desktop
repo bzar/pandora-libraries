@@ -5,3 +5,6 @@
 [dotfiles]
 #dotdesktoppath	./testdata/dotdesktop	# path for pndnotifyd to spit .desktop files into
 dotdesktoppath	~/.applications		# path for pndnotifyd to spit .desktop files into
+
+[launcher]
+hupscript	pnd_hup.sh

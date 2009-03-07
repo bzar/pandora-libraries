@@ -28,6 +28,7 @@
 #include "pnd_discovery.h"
 #include "pnd_locate.h"
 #include "pnd_utility.h"
+#include "pnd_desktop.h"
 
 // this piece of code was simpler once; but need to grow it a bit and in a rush
 // moving all these to globals rather than refactor the code a bit; tsk tsk..
@@ -42,11 +43,12 @@ char *overridespath;
 // daemon stuff
 char *searchpath = NULL;
 char *dotdesktoppath = NULL;
+char *notifypath = NULL;
 // pnd runscript
-char *run_searchpath;
-char *run_script;
-char *pndrun;
-char *pndhup = NULL;
+char *run_searchpath; // searchpath to find pnd_run.sh
+char *run_script;     // name of pnd_run.sh script from config
+char *pndrun;         // full path to located pnd_run.sh
+char *pndhup = NULL;  // full path to located pnd_hup.sh
 // notifier handle
 pnd_notify_handle nh = 0;
 
@@ -124,6 +126,7 @@ int main ( int argc, char *argv[] ) {
     printf ( "Apps searchpath is '%s'\n", appspath );
     printf ( "PXML overrides searchpath is '%s'\n", overridespath );
     printf ( ".desktop files emit to '%s'\n", dotdesktoppath );
+    printf ( "Notify searchpath is '%s'\n", notifypath );
   }
 
   /* set up signal handler
@@ -373,6 +376,7 @@ void consume_configuration ( void ) {
   apph = pnd_conf_fetch_by_id ( pnd_conf_apps, configpath );
 
   if ( apph ) {
+
     appspath = pnd_conf_get_as_char ( apph, PND_APPS_KEY );
 
     if ( ! appspath ) {
@@ -385,10 +389,17 @@ void consume_configuration ( void ) {
       overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
     }
 
+    notifypath = pnd_conf_get_as_char ( apph, PND_APPS_NOTIFY_KEY );
+
+    if ( ! notifypath ) {
+      notifypath = PND_APPS_NOTIFYPATH;
+    }
+
   } else {
     // couldn't find a useful app search path so use the default
     appspath = PND_APPS_SEARCHPATH;
     overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
+    notifypath = PND_APPS_NOTIFYPATH;
   }
 
   // attempt to figure out where to drop dotfiles
@@ -434,10 +445,10 @@ void consume_configuration ( void ) {
 
   }
 
-  if ( apph && run_searchpath ) {
+  if ( desktoph && run_searchpath ) {
     char *t;
 
-    if ( ( t = pnd_conf_get_as_char ( apph, PND_PNDHUP_KEY ) ) ) {
+    if ( ( t = pnd_conf_get_as_char ( desktoph, PND_PNDHUP_KEY ) ) ) {
       pndhup = pnd_locate_filename ( run_searchpath, t );
 #if 0 // don't enable this; if no key in config, we don't want to bother hupping
     } else {
@@ -472,7 +483,7 @@ void consume_configuration ( void ) {
 }
 
 void setup_notifications ( void ) {
-  searchpath = appspath;
+  searchpath = notifypath;
 
   // if this is first time through, we can just set it up; for subsequent times
   // through, we need to close existing fd and re-open it, since we're too lame

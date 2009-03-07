@@ -4,6 +4,7 @@
 
 [autodiscovery]
 searchpath	/mnt/sd?/pandora/apps:./testdata/app?	# path to depth-search for PXMLs
+notifypath	/media:/media/*/pandora/apps:./testdata/app?
 
 # PXMLs may be overridden .. ie: overrides are a subset of PXML, where the values are copied over the full PXML
 [overrides]
@@ -13,4 +14,3 @@ searchpath	~/pxml-overrides:./testdata/apps-override
 [pnd]
 searchpath	/mnt/sd?/pandora/scripts:./testdata/scripts
 runscript	pnd_run.sh
-hupscript	pnd_hup.sh
