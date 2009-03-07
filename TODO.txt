@@ -1,5 +1,5 @@
 
-Some things to be done..
+Some things to be done.. (see also the main wiki 'todo' page)
 
 - UNICODE everywhere.. this will be a lot of work I'm sure. (replacing all the char* and related consumers)
 

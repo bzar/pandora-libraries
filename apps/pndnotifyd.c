@@ -7,7 +7,6 @@
 // TODO: Catch HUP and reparse config
 // TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
 // TODO: During daemon mode, should perhaps syslog or log errors
-// TODO: Removing stale .desktop checks that .desktop was created by libpnd; see 'TBD' below
 
 #include <stdio.h>     // for stdio
 #include <unistd.h>    // for exit()
@@ -19,6 +18,7 @@
 #include <sys/types.h> // for umask
 #include <sys/stat.h>  // for umask
 #include <dirent.h>    // for opendir()
+#include <signal.h>    // for sigaction
 
 #include "pnd_conf.h"
 #include "pnd_container.h"
@@ -29,24 +29,35 @@
 #include "pnd_locate.h"
 #include "pnd_utility.h"
 
+// this piece of code was simpler once; but need to grow it a bit and in a rush
+// moving all these to globals rather than refactor the code a bit; tsk tsk..
+
+// op mode; emitting stdout or no?
 static unsigned char g_daemon_mode = 0;
 
+// like discotest
+char *configpath;
+char *appspath;
+char *overridespath;
+// daemon stuff
+char *searchpath = NULL;
+char *dotdesktoppath = NULL;
+// pnd runscript
+char *run_searchpath;
+char *run_script;
+char *pndrun;
+// notifier handle
+pnd_notify_handle nh = 0;
+
+// decl's
+void consume_configuration ( void );
+void setup_notifications ( void );
+void sighup_handler ( int n );
+
 int main ( int argc, char *argv[] ) {
-  pnd_notify_handle nh;
-  // like discotest
-  char *configpath;
-  char *appspath;
-  char *overridespath;
-  // daemon stuff
-  char *searchpath = NULL;
-  char *dotdesktoppath = NULL;
   // behaviour
   unsigned char scanonlaunch = 1;
-  unsigned int interval_secs = 20;
-  // pnd runscript
-  char *run_searchpath;
-  char *run_script;
-  char *pndrun;
+  unsigned int interval_secs = 10;
   // misc
   int i;
 
@@ -102,89 +113,7 @@ int main ( int argc, char *argv[] ) {
   /* parse configs
    */
 
-  // attempt to fetch a sensible default searchpath for configs
-  configpath = pnd_conf_query_searchpath();
-
-  // attempt to fetch the apps config to pick up a searchpath
-  pnd_conf_handle apph;
-
-  apph = pnd_conf_fetch_by_id ( pnd_conf_apps, configpath );
-
-  if ( apph ) {
-    appspath = pnd_conf_get_as_char ( apph, PND_APPS_KEY );
-
-    if ( ! appspath ) {
-      appspath = PND_APPS_SEARCHPATH;
-    }
-
-    overridespath = pnd_conf_get_as_char ( apph, PND_PXML_OVERRIDE_KEY );
-
-    if ( ! overridespath ) {
-      overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
-    }
-
-  } else {
-    // couldn't find a useful app search path so use the default
-    appspath = PND_APPS_SEARCHPATH;
-    overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
-  }
-
-  // attempt to figure out where to drop dotfiles
-  pnd_conf_handle desktoph;
-
-  desktoph = pnd_conf_fetch_by_id ( pnd_conf_desktop, configpath );
-
-  if ( desktoph ) {
-    dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_DOTDESKTOP_KEY );
-
-    if ( ! dotdesktoppath ) {
-      dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
-    }
-
-  } else {
-    dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
-  }
-
-  // try to locate a runscript
-
-  if ( apph ) {
-    run_searchpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH_KEY );
-    run_script = pnd_conf_get_as_char ( apph, PND_PNDRUN_KEY );
-    pndrun = NULL;
-
-    if ( ! run_searchpath ) {
-      run_searchpath = PND_APPS_SEARCHPATH;
-      run_script = PND_PNDRUN_FILENAME;
-    }
-
-  } else {
-    run_searchpath = NULL;
-    run_script = NULL;
-    pndrun = PND_PNDRUN_DEFAULT;
-  }
-
-  if ( ! pndrun ) {
-    pndrun = pnd_locate_filename ( run_searchpath, run_script );
-
-    if ( ! pndrun ) {
-      pndrun = PND_PNDRUN_DEFAULT;
-    }
-
-  }
-
-  if ( ! g_daemon_mode ) {
-    if ( run_searchpath ) printf ( "Locating pnd run in %s\n", run_searchpath );
-    if ( run_script ) printf ( "Locating pnd runscript as %s\n", run_script );
-    if ( pndrun ) printf ( "Default pndrun is %s\n", pndrun );
-  }
-
-  /* handle globbing or variable substitution
-   */
-  dotdesktoppath = pnd_expand_tilde ( strdup ( dotdesktoppath ) );
-
-  /* validate paths
-   */
-  mkdir ( dotdesktoppath, 0777 );
+  consume_configuration();
 
   /* startup
    */
@@ -195,34 +124,21 @@ int main ( int argc, char *argv[] ) {
     printf ( ".desktop files emit to '%s'\n", dotdesktoppath );
   }
 
+  /* set up signal handler
+   */
+  sigset_t ss;
+  sigemptyset ( &ss );
+
+  struct sigaction siggy;
+  siggy.sa_handler = sighup_handler;
+  siggy.sa_mask = ss; /* implicitly blocks the origin signal */
+  siggy.sa_flags = 0; /* don't need anything */
+
+  sigaction ( SIGHUP, &siggy, NULL );
+
   /* set up notifies
    */
-  searchpath = appspath;
-
-  nh = pnd_notify_init();
-
-  if ( ! nh ) {
-    if ( ! g_daemon_mode ) {
-      printf ( "INOTIFY failed to init.\n" );
-    }
-    exit ( -1 );
-  }
-
-  if ( ! g_daemon_mode ) {
-    printf ( "INOTIFY is up.\n" );
-  }
-
-  SEARCHPATH_PRE
-  {
-
-    if ( ! g_daemon_mode ) {
-      printf ( "Watching path '%s' and its descendents.\n", buffer );
-    }
-
-    pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
-
-  }
-  SEARCHPATH_POST
+  setup_notifications();
 
   /* daemon main loop
    */
@@ -245,7 +161,6 @@ int main ( int argc, char *argv[] ) {
       // discovery and spit out .desktop files..
       if ( ! g_daemon_mode ) {
 	printf ( "Changes within watched paths .. performing re-discover!\n" );
-	printf ( "Path to emit .desktop files to: '%s'\n", dotdesktoppath );
       }
 
       // run the discovery
@@ -371,22 +286,28 @@ int main ( int argc, char *argv[] ) {
 	      }
 	    }
 	    if ( source_libpnd ) {
+#if 0
 	      if ( ! g_daemon_mode ) {
 		printf ( "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
 	      }
+#endif
 	    } else {
+#if 0
 	      if ( ! g_daemon_mode ) {
 		printf ( "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
 	      }
+#endif
 	      continue; // skip deleting it
 	    }
 
 	    // file is 'new'?
 	    if ( stat ( buffer, &dirs ) == 0 ) {
 	      if ( dirs.st_mtime >= createtime ) {
+#if 0
 		if ( ! g_daemon_mode ) {
 		  printf ( "File '%s' seems 'new', so leave it alone.\n", buffer );
 		}
+#endif
 		continue; // skip deleting it
 	      }
 	    }
@@ -394,7 +315,7 @@ int main ( int argc, char *argv[] ) {
 	    // by this point, the .desktop file must be 'old' and created by pndnotifyd
 	    // previously, so can remove it
 	    if ( ! g_daemon_mode ) {
-	      printf ( "File '%s' seems to not belong; removing it.\n", dirent -> d_name );
+	      printf ( "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
 	    }
 	    unlink ( buffer );
 
@@ -404,6 +325,11 @@ int main ( int argc, char *argv[] ) {
 	}
 
       } // purge old .desktop files
+
+      // since its entirely likely new directories have been found (ie: SD with a directory structure was inserted)
+      // we should re-apply watches to catch all these new directories; ie: user might use on-device browser to
+      // drop in new applications, or use the shell to juggle them around, or any number of activities.
+      setup_notifications();
 
     } // need to rediscover?
 
@@ -418,4 +344,146 @@ int main ( int argc, char *argv[] ) {
   pnd_notify_shutdown ( nh );
 
   return ( 0 );
+}
+
+void consume_configuration ( void ) {
+
+  // attempt to fetch a sensible default searchpath for configs
+  configpath = pnd_conf_query_searchpath();
+
+  // attempt to fetch the apps config to pick up a searchpath
+  pnd_conf_handle apph;
+
+  apph = pnd_conf_fetch_by_id ( pnd_conf_apps, configpath );
+
+  if ( apph ) {
+    appspath = pnd_conf_get_as_char ( apph, PND_APPS_KEY );
+
+    if ( ! appspath ) {
+      appspath = PND_APPS_SEARCHPATH;
+    }
+
+    overridespath = pnd_conf_get_as_char ( apph, PND_PXML_OVERRIDE_KEY );
+
+    if ( ! overridespath ) {
+      overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
+    }
+
+  } else {
+    // couldn't find a useful app search path so use the default
+    appspath = PND_APPS_SEARCHPATH;
+    overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
+  }
+
+  // attempt to figure out where to drop dotfiles
+  pnd_conf_handle desktoph;
+
+  desktoph = pnd_conf_fetch_by_id ( pnd_conf_desktop, configpath );
+
+  if ( desktoph ) {
+    dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_DOTDESKTOP_KEY );
+
+    if ( ! dotdesktoppath ) {
+      dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
+    }
+
+  } else {
+    dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
+  }
+
+  // try to locate a runscript
+
+  if ( apph ) {
+    run_searchpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH_KEY );
+    run_script = pnd_conf_get_as_char ( apph, PND_PNDRUN_KEY );
+    pndrun = NULL;
+
+    if ( ! run_searchpath ) {
+      run_searchpath = PND_APPS_SEARCHPATH;
+      run_script = PND_PNDRUN_FILENAME;
+    }
+
+  } else {
+    run_searchpath = NULL;
+    run_script = NULL;
+    pndrun = PND_PNDRUN_DEFAULT;
+  }
+
+  if ( ! pndrun ) {
+    pndrun = pnd_locate_filename ( run_searchpath, run_script );
+
+    if ( ! pndrun ) {
+      pndrun = PND_PNDRUN_DEFAULT;
+    }
+
+  }
+
+  if ( ! g_daemon_mode ) {
+    if ( run_searchpath ) printf ( "Locating pnd run in %s\n", run_searchpath );
+    if ( run_script ) printf ( "Locating pnd runscript as %s\n", run_script );
+    if ( pndrun ) printf ( "Default pndrun is %s\n", pndrun );
+  }
+
+  /* handle globbing or variable substitution
+   */
+  dotdesktoppath = pnd_expand_tilde ( strdup ( dotdesktoppath ) );
+
+  /* validate paths
+   */
+  mkdir ( dotdesktoppath, 0777 );
+
+  // done
+  return;
+}
+
+void setup_notifications ( void ) {
+  searchpath = appspath;
+
+  // if this is first time through, we can just set it up; for subsequent times
+  // through, we need to close existing fd and re-open it, since we're too lame
+  // to store the list of watches and 'rm' them
+  if ( nh ) {
+    pnd_notify_shutdown ( nh );
+  }
+
+  // set up a new set of notifies
+  nh = pnd_notify_init();
+
+  if ( ! nh ) {
+    if ( ! g_daemon_mode ) {
+      printf ( "INOTIFY failed to init.\n" );
+    }
+    exit ( -1 );
+  }
+
+#if 0
+  if ( ! g_daemon_mode ) {
+    printf ( "INOTIFY is up.\n" );
+  }
+#endif
+
+  SEARCHPATH_PRE
+  {
+
+    if ( ! g_daemon_mode ) {
+      printf ( "Watching path '%s' and its descendents.\n", buffer );
+    }
+
+    pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
+
+  }
+  SEARCHPATH_POST
+
+  return;
+}
+
+void sighup_handler ( int n ) {
+
+  // reparse config files
+  consume_configuration();
+
+  // re set up the notifier watches
+  setup_notifications();
+
+  return;
 }

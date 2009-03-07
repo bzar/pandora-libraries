@@ -53,6 +53,8 @@ void pnd_notify_shutdown ( pnd_notify_handle h ) {
 
   close ( p -> fd );
 
+  free ( p );
+
   return;
 }
 
