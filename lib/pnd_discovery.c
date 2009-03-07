@@ -256,6 +256,14 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     return ( 0 );
   }
 
+  if ( ! targetpath ) {
+    return ( 0 );
+  }
+
+  if ( ! pndrun ) {
+    return ( 0 );
+  }
+
   // set up
 
   sprintf ( filename, "%s/%s.desktop", targetpath, p -> unique_id );
@@ -305,9 +313,9 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 
     // basics
     if ( p -> object_type == pnd_object_type_directory ) {
-      snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -u", pndrun, p -> object_path, p -> exec );
+      snprintf ( buffer, 1020, "Exec=%s -p %s -e %s -n", pndrun, p -> object_path, p -> exec );
     } else if ( p -> object_type == pnd_object_type_pnd ) {
-      snprintf ( buffer, 1020, "Exec=%s -p %s/%s -e %s -u", pndrun, p -> object_path, p -> object_filename, p -> exec );
+      snprintf ( buffer, 1020, "Exec=%s -p %s/%s -e %s -n", pndrun, p -> object_path, p -> object_filename, p -> exec );
     }
 
     // start dir
