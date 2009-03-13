@@ -3,8 +3,8 @@
 # Desktop configuration
 
 [dotfiles]
-#dotdesktoppath	/usr/share/applications/	# path for pndnotifyd to spit .desktop files into
-dotdesktoppath	~/.applications/	# path for pndnotifyd to spit .desktop files into
+dotdesktoppath	/usr/share/applications/	# path for pndnotifyd to spit .desktop files into (run as root)
+#dotdesktoppath	~/.applications/	# path for pndnotifyd to spit .desktop files into (run as a user)
 
 [launcher]
 hupscript	pnd_hup.sh
