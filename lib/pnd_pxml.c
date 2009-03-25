@@ -40,38 +40,30 @@ pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
 void pnd_pxml_delete ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
 
-  if ( p -> title_en ) {
-    free ( p -> title_en );
+  int i;
+  if (p->titles) {
+    for (i = 0; i < p->titles_c; i++)
+    {
+      free(p->titles[i].language);
+      free(p->titles[i].string);
+    }
+    free(p->titles);
   }
-  if ( p -> title_de ) {
-    free ( p -> title_de );
+
+  if (p->descriptions) {
+    for (i = 0; i < p->descriptions_c; i++)
+    {
+      free(p->descriptions[i].language);
+      free(p->descriptions[i].string);
+    }
+    free(p->descriptions);
   }
-  if ( p -> title_it ) {
-    free ( p -> title_it );
-  }
-  if ( p -> title_fr ) {
-    free ( p -> title_fr );
-  }
-  if ( p -> unique_id ) {
-    free ( p -> unique_id );
-  }
+
   if ( p -> standalone ) {
     free ( p -> standalone );
   }
   if ( p -> icon ) {
     free ( p -> icon );
-  }
-  if ( p -> description_en ) {
-    free ( p -> description_en );
-  }
-  if ( p -> description_de ) {
-    free ( p -> description_de );
-  }
-  if ( p -> description_it ) {
-    free ( p -> description_it );
-  }
-  if ( p -> description_fr ) {
-    free ( p -> description_fr );
   }
   if ( p -> previewpic1 ) {
     free ( p -> previewpic1 );
@@ -167,25 +159,50 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
     free ( p -> startdir );
   }
 
+  free(p); /*very important!*/
+
   return;
 }
 
 void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v ) {
+  /* 
+   * Please do not use this function if it can be avoided; it is only here for compatibility.
+   * The function might fail on low memory, and there's no way for the user to know when this happens.
+   */
   pnd_pxml_t *p = (pnd_pxml_t*) h;
-  if ( p -> title_en ) {
-    free ( p -> title_en );
-    p -> title_en = NULL;
+  char has_en_field = 0;
+  int i;
+
+  if (!v) return; /*TODO: add error information? Make it possible to set the string to NULL?*/
+
+  for (i = 0; i < p->titles_c; i++)
+  {
+    if (strncmp("en", p->titles[i].language, 2) == 0) /*strict comparison; match "en_US", "en_GB" etc... All these are set.*/
+    {
+      free(p->titles[i].string);
+      p->titles[i].string = strdup(v);
+      has_en_field = 1;
+    }
   }
 
-  if ( v ) {
-    p -> title_en = strdup ( v );
+  if (!has_en_field)
+  {
+    p->titles_c++;
+    if (p->titles_c > p->titles_alloc_c) //we don't have enough strings allocated
+    {
+      p->titles_alloc_c <<= 1;
+      p->titles = (pnd_localized_string_t *)realloc((void*)p->titles, p->titles_alloc_c);
+      if (!p->titles) return; //errno = ENOMEM
+    }
+    p->titles[p->titles_c - 1].language = "en_US";
+    p->titles[p->titles_c - 1].string = strdup(v);
   }
 
   return;
 }
 
 unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  //pnd_pxml_t *p = (pnd_pxml_t*) h; //unused atm
 
   // for now, lets just verify the exec-path is valid
 
@@ -241,24 +258,48 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
   return ( retval );
 }
 
+char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int strings_c, char *iso_lang)
+{
+  int i;
+  int similarity_weight = 0xff; /*Set to something Really Bad in the beginning*/
+  char *best_match = NULL;
+
+  for(i = 0; i < strings_c; i++)
+  {
+    int new_weight = abs(strcmp(strings[i].language, iso_lang));
+    if (new_weight < similarity_weight)
+    {
+      similarity_weight = new_weight;
+      best_match = strings[i].string;
+    }
+  }
+
+  if ( best_match ) {
+    return strdup(best_match);
+  }
+
+  return ( NULL );
+}
+
+char *pnd_pxml_get_app_name ( pnd_pxml_handle h, char *iso_lang ) {
+  pnd_pxml_t *p = (pnd_pxml_t *) h;
+  return pnd_pxml_get_best_localized_string(p->titles, p->titles_c, iso_lang);
+}
+
 char *pnd_pxml_get_app_name_en ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> title_en );
+  return pnd_pxml_get_app_name(h, "en");
 }
 
 char *pnd_pxml_get_app_name_de ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> title_de );
+  return pnd_pxml_get_app_name(h, "de");
 }
 
 char *pnd_pxml_get_app_name_it ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> title_it );
+  return pnd_pxml_get_app_name(h, "it");
 }
 
 char *pnd_pxml_get_app_name_fr ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> title_fr );
+  return pnd_pxml_get_app_name(h, "fr");
 }
 
 char *pnd_pxml_get_unique_id ( pnd_pxml_handle h ) {
@@ -276,24 +317,25 @@ char *pnd_pxml_get_icon ( pnd_pxml_handle h ) {
   return ( p -> icon );
 }
 
+char *pnd_pxml_get_app_description ( pnd_pxml_handle h, char *iso_lang ) {
+  pnd_pxml_t *p = (pnd_pxml_t *) h;
+  return pnd_pxml_get_best_localized_string(p->descriptions, p->descriptions_c, iso_lang);
+}
+
 char *pnd_pxml_get_description_en ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> description_en );
+  return pnd_pxml_get_app_description(h, "en");
 }
 
 char *pnd_pxml_get_description_de ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> description_de );
+  return pnd_pxml_get_app_description(h, "de");
 }
 
 char *pnd_pxml_get_description_it ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> description_it );
+  return pnd_pxml_get_app_description(h, "it");
 }
 
 char *pnd_pxml_get_description_fr ( pnd_pxml_handle h ) {
-  pnd_pxml_t *p = (pnd_pxml_t*) h;
-  return ( p -> description_fr );
+  return pnd_pxml_get_app_description(h, "fr");
 }
 
 char *pnd_pxml_get_previewpic1 ( pnd_pxml_handle h ) {

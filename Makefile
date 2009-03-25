@@ -22,10 +22,10 @@ SOLIB1 = libpnd.so.1.0.1    # versioned name
 XMLOBJ = lib/tinyxml/tinystr.o lib/tinyxml/tinyxml.o lib/tinyxml/tinyxmlerror.o lib/tinyxml/tinyxmlparser.o
 ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o pnd_apps.o pnd_utility.o pnd_desktop.o
 
-all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd
+all: ${SOLIB} ${LIB} conftest discotest notifytest locatetest pndnotifyd rawpxmltest
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd
 	${RM} -rf deployment/media
 	find . -name "*~*" -exec rm {} \; -print
 
@@ -87,3 +87,6 @@ notifytest:	notifytest.o ${LIB}
 
 locatetest:	locatetest.o ${SOLIB1}
 	${CC} -lstdc++ -o bin/locatetest locatetest.o ${SOLIB1}
+
+rawpxmltest:    rawpxmltest.o ${LIB}
+	${CC} -lstdc++ -o bin/rawpxmltest rawpxmltest.o ${LIB}

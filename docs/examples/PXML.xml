@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PXML xmlns="http://openpandora.org/namespaces/PXML" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="jeff.sample.3" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
-  <title lang="en_US">Sample App 3</title>
-  <title lang="de_DE">Sample App 3 - German</title>
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="youruniqueID" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+  <title lang="en_US">Program Title</title>
+  <title lang="de_DE">German Program Title</title>
 
   <exec background="true" startdir="/usr/share/icons/" standalone="true" command="program.exe"/>
 
-  <icon src="zeldaicon.png"/>
+  <icon src="program.png"/>
 
   <description lang="en_US">This is the English Description of the file.</description>
   <description lang="de_DE">This would be the German description.</description>

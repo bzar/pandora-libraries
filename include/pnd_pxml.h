@@ -9,7 +9,7 @@ extern "C" {
 // this code is for very basic PXML.xml file parsing
 
 #define PXML_FILENAME "PXML.xml" /* a specification defined name */
-#define PXML_TAGHEAD "<PXML>" /* case insensitive */
+#define PXML_TAGHEAD "<PXML" /* case insensitive; allow for trailing attributes */
 #define PXML_TAGFOOT "</PXML>" /* case insensitive */
 
 // use this handle to interact with PXML; this hides the mechanics of parsing a PXML file so that
@@ -42,6 +42,7 @@ char *pnd_pxml_get_app_name_en ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_de ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_it ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_fr ( pnd_pxml_handle h );
+char *pnd_pxml_get_app_name ( pnd_pxml_handle h, char *iso_lang );
 char *pnd_pxml_get_unique_id ( pnd_pxml_handle h );
 char *pnd_pxml_get_standalone ( pnd_pxml_handle h );
 char *pnd_pxml_get_icon ( pnd_pxml_handle h );
@@ -49,6 +50,7 @@ char *pnd_pxml_get_description_en ( pnd_pxml_handle h );
 char *pnd_pxml_get_description_de ( pnd_pxml_handle h );
 char *pnd_pxml_get_description_it ( pnd_pxml_handle h );
 char *pnd_pxml_get_description_fr ( pnd_pxml_handle h );
+char *pnd_pxml_get_description ( pnd_pxml_handle h, char *iso_lang);
 char *pnd_pxml_get_previewpic1 ( pnd_pxml_handle h );
 char *pnd_pxml_get_previewpic2 ( pnd_pxml_handle h );
 char *pnd_pxml_get_author_name ( pnd_pxml_handle h );
@@ -90,17 +92,21 @@ unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ); // returns 1 when pxm
 
 typedef struct
 {
-	char *title_en;
-	char *title_de;
-	char *title_it;
-	char *title_fr;
+	char *language;
+	char *string;
+} pnd_localized_string_t;
+
+typedef struct
+{
+	pnd_localized_string_t *titles;
+	int titles_c;
+	int titles_alloc_c;
 	char *unique_id;
 	char *standalone;
 	char *icon;
-	char *description_en;
-	char *description_de;
-	char *description_it;
-	char *description_fr;
+	pnd_localized_string_t *descriptions;
+	int descriptions_c;
+	int descriptions_alloc_c;
 	char *previewpic1;
 	char *previewpic2;
 	char *author_name;

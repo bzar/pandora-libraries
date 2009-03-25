@@ -1,86 +1,43 @@
-<PXML>
-<title>
-	<en>sample 4</en>
-	<de>Program Title in German Language</de>
-	<fr>Program Title in French Language</fr>
-	<it>Program Title in Italian Language</it>
-</title>
+<?xml version="1.0" encoding="UTF-8"?>
+<PXML xmlns="http://openpandora.org/namespaces/PXML" 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="jeff.sample.4" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+  <title lang="en_US">Sample App 4 Alt Path</title>
+  <title lang="de_DE">Sample App 4 Alt Path - German</title>
 
-<unique_id>345jaloo</unique_id>
+  <exec background="true" startdir="/usr/share/icons/" standalone="true" command="program.exe"/>
 
-<standalone>Yes</standalone>
+  <icon src="viscountofadrilankha.png"/>
 
-<icon>zeldaicon.png</icon>
+  <description lang="en_US">This is the English Description of the file.</description>
+  <description lang="de_DE">This would be the German description.</description>
 
-<description>
-	<en>This is the [b]English Description[/b] of the file.
-            Can use [i]multiple lines[/i] and BBCode.</en>
-	<de>The German Description</de>
-	<it>The Italian Description</it>
-	<fr>The French Description</fr>
-</description>
+  <previewpics>
+    <pic src="./preview/pic1.jpg"/>
+    <pic src="./preview/pic2.jpg"/>
+  </previewpics>
 
-<previewpic>
-	<pic1>./preview/pic1.jpg</pic1>
-	<pic2>./preview/pic2.jpg</pic2>
-</previewpic>
+  <author name="EvilDragon" website="http://www.openpandora.org"/><!--Optional email and website, name required-->
 
-<author>
-	<name>EvilDragon</name>
-	<website>http://www.openpandora.org</website>
-</author>
+  <version major="1" minor="1" release="1" build="2"/><!--This program's version-->
+  <osversion major="1" minor="0" release="0" build="0"/><!--The minimum OS version required-->
 
-<version>
-	<major>1</major>
-	<minor>1</minor>
-	<release>1</release>
-	<build>2</build>
-</version>
+  <categories>
+    <category name="Main category"><!--category like "Games", "Graphics", "Internet" etc-->
+    <subcategory name="Subcategory 1"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
+    <subcategory name="Subcategory 2"/>
+    </category>
+    <category name="Alternative category">
+      <subcategory name="Alternative Subcategory 1"/>
+    </category>
+  </categories>
 
-<exec>program.exe</exec>
+  <associations>
+    <!--File associations, with a short description, an extension, and start params.-->
+    <association name="View Word File" filetype="application/msword" exec="-f %s -t doc"/>
+  </associations>
 
-<category>
-	<main>Main category</main>
-	<subcategory1>Subcategory 1</subcategory1>
-	<subcategory2>Subcategory 2</subcategory2>
-</category>
+  <clockspeed frequency="600"/><!--Frequency in Hz-->
 
-<altcategory>
-	<main>Alternate category</main>
-	<subcategory1>Alternate Subcategory 1</subcategory1>
-	<subcategory2>Alternate Subcategory 2</subcategory2>
-</altcategory>
-
-<osversion> 
-	<major>1</major>
-	<minor>1</minor>
-	<release>1</release>
-	<build>2</build>
-</osversion>
-
-<associationitem1>
-	<name>View this Picture</name>
-	<filetype>jpg,bmp,gif</filetype>
-	<parameter>­view</parameter>
-</associationitem1>
-
-<associationitem2>
-	<name>Convert this Picture</name>
-	<filetype>jpg,bmp,gif</filetype>
-	<parameter>­convert</parameter>
-</associationitem2>
-
-<associationitem3>
-	<name>Watch This Movie</name>
-	<filetype>mpg,avi,wmv</filetype>
-	<parameter>­convert</parameter>
-</associationitem3>
-
-<clockspeed>600</clockspeed>
-
-<background>Yes</background>
-
-<startdir>../differentdir</startdir>
-
+  <configuration for="gmenupandora">......kfujl........</configuration><!--random data, this is for specific menus-->
+  <configuration for="anothermenu">......qwe......fwer.....</configuration>
 </PXML>
-

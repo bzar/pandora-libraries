@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>The PXML file format</title>
+    <style type="text/css">
+      body { background-color: white; }
+      h1 {
+        color: rgb(0, 0, 32);
+        font: normal 2em sans-serif;
+        counter-reset: section;
+        border-bottom: thin solid blue;
+      }
+      h2:before {
+        counter-increment: section;
+        content: counter(section) ". ";
+        font: normal 0.5em sans-serif;
+        color: gray;
+      }
+      h2 {
+        margin-top: 2.1em;
+        color: rgb(0, 0, 64);
+        font: normal 1.4em sans-serif;
+        counter-reset: subsection;
+      }
+      h3:before {
+        counter-increment: subsection;
+        content: counter(section) ". " counter(subsection) ". ";
+        font: normal 0.5em sans-serif;
+        color: gray;
+      }
+      h3 {
+        margin-top: 2em;
+        color: rgb(0, 0, 96);
+        font: normal 1.2em sans-serif;
+        counter-reset: element;
+      }
+      h4:before {
+        counter-increment: element;
+        content: counter(section) ". " counter(subsection) ". " counter(element) ". ";
+        font: normal 0.5em sans-serif;
+        color: gray;
+      }
+      h4 {
+        margin-top: 0.5em;
+        color: rgb(0, 0, 128);
+        font: normal 1.1em sans-serif;
+      }
+      p {
+        color: rgb(64, 64, 64);
+        font: normal 1em sans-serif;
+      }
+      ol {
+        color: rgb(32, 32, 32);
+        font: normal 1em sans-serif;
+      }
+      div.code {
+        font: normal 1em monospace;
+        color: black;
+        background-color: rgb(196, 196, 196);
+        border: thin solid #888;
+        min-width: 10em;
+        margin: 1em;
+        padding: 0.5em;
+        overflow: auto;
+        outline: #444 solid thin;
+      }
+      brack:before { content: "("; } /* just for fun XD */
+      brack:after { content: ")"; }
+      imp { font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <h1>The PXML file format specification</h1>
+
+
+    <h2>Introduction</h2>
+    <p><imp>
+      Attention: at the present time, the PXML file format isn't set in stone, and is therefore subject to change.
+      There is no guarantee that the format or the schema are bug-free or will be changed at any time.
+      Please wait until this standard is finished before writing a PXML file.
+    </imp></p>
+    <p>
+      This is the human-readable specification for the PXML file format.
+      The PXML file format is used in <imp>your</imp> applications for the <a href="http://openpandora.org">OpenPandora®</a> <brack>that you package in <q>.pnd</q>-files or distribute otherwise</brack>, to make it possible for menus and launchers to use your applications and their properties.
+    </p>
+    <p>
+      A PXML file should be appended to your <q>.pnd</q>-file, using the tools provided for that purpose, or put in a directory that you want to serve as a redistributable package, to make it possible for launchers and menus to find it.
+      It should have the name <q>PXML.xml</q> <brack>not case sensitive</brack>, and there should only be one such file.
+      The contents of the PXML file should also comply to this specification <imp>without exception</imp>, to guarantee that everyone will be able to read it.
+    </p>
+    <p>
+      The PXML format is XML-based and fully XML-compliant, which means that it can be read and written by any XML reader or writer.
+      Included with this specification should also be a <q>.xsd</q>-file, which is used by XML tools to validate PXML files.
+      A <q>.xsd</q>-file is also known as a XML schema, and can be called the <q>computer-readable</q> version of this document. It is very good practice to validate your PXML-files with that schema before publishing them.
+    </p>
+    <p>
+      To write a PXML file, you also need to know the basics of writing a XML file.
+      It boils down to the following:
+      <ol>
+        <li>If an element contains text or other elements, it needs a start-tag and an end-tag. This looks like this:
+          <div class="code">
+            &lt;exampleelement someattribute="something"&gt;something inside it&lt;/exampleeelement&gt;
+          </div>
+        </li>
+        <li>If an element does <imp>not</imp> contain other elements or text, but only attributes, it looks like this: 
+          <div class="code">
+            &lt;exampleelement2 someattribute="something" /&gt;
+          </div>
+        </li>
+      </ol>
+    </p>
+
+
+    <h2>Format</h2>
+    <p>
+      The PXML-file is split up into multiple so-called <imp>elements</imp>, each of which specify one property of the
+      <q>.pnd</q>-package.
+      All of these elements are surrounded with a <imp><q>&lt;PXML&gt;</q>-tag</imp>, which tells the readers of the file that the data within that tag belongs to a PXML file. The tag and elements should be defined as follows:
+    </p>
+
+    <h3>The PXML-tag</h3>
+    <p>
+      The PXML-tag serves as the container for all PXML elements. It is the first thing that should occur in your PXML file.
+      An example <q>&lt;PXML&gt;</q>-tag would look like this:
+    </p>
+    <div class="code">
+      &lt;PXML xmlns="http://openpandora.org/namespaces/PXML" id="uniqueID"&gt;<br/>
+      &nbsp;&nbsp;&lt;!--All of the PXML elements should be put here--&gt;<br/>
+      &lt;/PXML&gt;
+    </div>
+    <p>
+      As you can see, the PXML tag accepts a few <imp>attributes</imp>, namely the <q>id</q> and <q>xmlns</q> attributes.
+    </p>
+    <p>
+      The <imp><q>xmlns</q></imp> attribute is required by the XML standard, and guarantees that this file will be identified as a PXML file.
+      You <imp>must</imp> include the xmlns attribute, exactly as shown, in your PXML file, with the URL as specified.
+      Only then can it be guaranteed that the file will be read at all by launchers and menu apps.
+    </p>
+    <p>
+      The <imp><q>id</q></imp> attribute specifies an identifier for your PND package, and should be something globally unique so that no two PND packages have the same id.
+      This can be achieved by appending some random number to your application name, and to use that as your id; or to simply generate a completely random, very long id.
+      If this id already is used in another PND file, those two PND files will conflict with each other, and unforseeable errors will occur.
+      Please put effort into generating an unique id for your PXML-file.
+    </p>
+
+    <h3>The title element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>title</imp> element specifies the text that is shown to the users of your PND file as the application title.
+      This element can be specified multiple times in multiple languages <brack>the language is indicated by the lang attribute</brack>.
+    </p>
+    <p>
+      At least one <q>title</q>-element is required, in the <q>en_US</q> <brack>American English</brack> language.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;title lang="en_US"&gt;Your application name&lt;/title&gt;<br/><br/>
+      &lt;title lang="de_DE"&gt;Deinen Programmnamen&lt;/title&gt;
+    </div>
+
+    <h3>The description element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>description</imp> element specifies the text that is shown to the users of your PND file as the application description.
+      This element can be specified multiple times in multiple languages <brack>the language is indicated by the lang attribute</brack>.
+    </p>
+    <p>
+      At least one <q>description</q>-element is required, in the <q>en_US</q> <brack>American English</brack> language.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;description lang="en_US"&gt;Your long description of this application, describing it's purpose and highlighting it's features.&lt;/description&gt;<br/><br/>
+      &lt;description lang="de_DE"&gt;Deine etwas längere Programmbeschreibung, die den Sinn des Programmes und den wichtigsten Features beschreiben sollte.&lt;/description&gt;
+    </div>
+
+    <h3>The exec element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>exec</imp> element should specify all the information needed to execute your application.<br/>
+      An exec element <imp>must</imp> be included in every PXML file.
+      It accepts the following attributes:
+    </p>
+    <p>
+      The <imp>command</imp> attribute specifies the path to the executable file.
+      This should be a relative path to a file within the PND package.
+    </p>
+    <p>
+      The <imp>startdir</imp> attribute specifies the starting directory <brack>Also known as the working directory</brack> that the application should start in.
+      This should be a relative path to a directory within the PND package, or to a well-known directory in the Pandora file system.
+    </p>
+    <p>
+      The <imp>standalone</imp> attribute specifies wether or not this application can run on its own, or if it needs parameters to run.<br/>
+      A value of <q>true</q> or <q>1</q> means that the application can be run without parameters.<br/>
+      A value of <q>false</q> or <q>0</q> means that the application must be run with parameters.
+    </p>
+    <p>
+      The <imp>background</imp> attribute specifies wether or not this application should run in the background, and it should be possible to switch to other apps while it is running, or if it is the only application that should be running.<br/>
+      A value of <q>true</q> or <q>1</q> means that the application can run in the background.<br/>
+      A value of <q>false</q> or <q>0</q> means that the application must be run as the only application.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;exec background="true" startdir="/usr/share/icons/" standalone="true" command="./myprogram"/&gt;
+    </div>
+
+    <h3>The icon element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>icon</imp> element should specify a nice icon for your program.<br/>
+      An icon element <imp>is optional</imp>.
+      It accepts the following attributes:
+    </p>
+    <p>
+      The <imp>src</imp> attribute specifies the path to the image file used as the icon.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;icon src="./images/icon.png"/&gt;
+    </div>
+
+    <h3>The previewpics element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>previewpics</imp> element is an element that contains multiple other elements.<br/>
+      A previewpics element <imp>is optional</imp>.
+    </p>
+    <p>
+      It contains multiple <imp>pic</imp>-elements. Every pic-element represents one preview picture.
+      If the previewpics element is specified, it must contain at least one pic element.
+    </p>
+    <p>
+      The <imp>src</imp> attribute on a pic element specifies the path to the image file used as the preview picture.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;previewpics&gt;<br/>
+      &nbsp;&nbsp;&lt;pic src="./preview/pic1.jpg"/&gt;<br/>
+      &nbsp;&nbsp;&lt;pic src="./preview/pic2.jpg"/&gt;<br/>
+      &lt;/previewpics&gt;
+    </div>
+
+    <h3>The author element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>author</imp> element is an element that is used by the author to introduce him/herself.<br/>
+      An author element <imp>is optional</imp>. It accepts the following attributes:
+    </p>
+    <p>
+      The <imp>name</imp> attribute specifies the name of the author.
+    </p>
+    <p>
+      The <imp>website</imp> attribute specifies the website of the author.
+    </p>
+    <p>
+      The <imp>email</imp> attribute specifies the e-mail of the author.<br/>
+      <imp>This attribute is not yet supported.</imp>
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;author name="Bjornhild Andersson" website="http://some.website.with.author.info"/&gt;
+    </div>
+
+    <h3>The version element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>version</imp> element specifies the application version.<br/>
+      A version element <imp>is required</imp>. It accepts the following attributes:
+    </p>
+    <p>
+      The <imp>major</imp> attribute specifies the major version number. This number should be 0 or more.
+    </p>
+    <p>
+      The <imp>minor</imp> attribute specifies the minor version number. This number should be 0 or more.
+    </p>
+    <p>
+      The <imp>release</imp> attribute specifies the release number. This number should be 0 or more.
+    </p>
+    <p>
+      The <imp>build</imp> attribute specifies what build the application is at. This number should be 0 or more.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;version major="1" minor="1" release="1" build="2"/&gt;
+    </div>
+
+    <h3>The osversion element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>osversion</imp> element specifies the application version.<br/>
+      An osversion element <imp>is optional</imp>. It accepts the same attributes as the version element.
+    <h4>Example</h4>
+    <div class="code">
+      &lt;osversion major="1" minor="1" release="1" build="2"/&gt;
+    </div>
+
+    <h3>The categories element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>categories</imp> element is an element that contains multiple other elements.<br/>
+      A categories element <imp>is required, and must contain at least one category</imp>.
+    </p>
+    <p>
+      It contains multiple <imp>category</imp>-elements. Every category-element represents one category that this app can be sorted into.
+      Valid categories are (among others):
+      <ol>
+        <li>Development</li>
+        <li>Education</li>
+        <li>Games</li>
+        <li>Graphics</li>
+        <li>Internet</li>
+        <li>Multimedia</li>
+        <li>Office</li>
+        <li>Settings</li>
+        <li>System</li>
+        <li>Utilities</li>
+      </ol>
+    </p>
+    <p>
+      The category-element takes one attribute: The <imp>name</imp>-attribute.
+      This attribute represents the category name, which preferrably should be one of the above.
+    </p>
+    <p>
+      A category-element can contain further child-elements: <imp>subcategory</imp>-elements.
+      These represent the subcategories of a category that the app will be sorted into.
+    </p>
+    <p>
+      The subcategory-element also takes a <imp>name</imp>-attribute; this attibute can contain any name for your subcategory.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;categories&gt;<br/>
+      &nbsp;&nbsp;&lt;category name="Games"&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;subcategory name="Strategy"/&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;subcategory name="Turn-based"/&gt;<br/>
+      &nbsp;&nbsp;&lt;/category&gt;<br/>
+      &nbsp;&nbsp;&lt;category name="Graphics"&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;subcategory name="Image Editors"/&gt;<br/>
+      &nbsp;&nbsp;&lt;/category&gt;<br/>
+      &lt;/categories&gt;<br/>
+    </div>
+
+    <h3>The associations element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>associations</imp> element is an element that contains multiple other elements.<br/>
+      An associations element <imp>is optional, except if exec.standalone is false</imp>.
+    </p>
+    <p>
+      It contains multiple <imp>association</imp>-elements. Every association-element represents one file action association.
+    </p>
+    <p>
+      The <imp>name</imp> attribute on an association element specifies the user-friendly action name for the association.
+    </p>
+    <p>
+      The <imp>filetype</imp> attribute on an association element specifies what file types (in MIME format) that this association should apply to.
+    </p>
+    <p>
+      The <imp>exec</imp> attribute on an association element specifies the command-line arguments that should be given to the program, when this action is performed.
+      The exec can contain a <q>%s</q>, which indicates where the file name of the file, that the action is performed on, should be inserted.<br/>
+      For example, if the exec-line is <q>--file %s --type lol</q>, and you have a file "lol.bmp" that the action is performed on, the exec-line is transformed into <q>--file "lol.bmp" --type lol</q>
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;associations&gt;<br/>
+      &nbsp;&nbsp;&lt;association name="Open Bitmap Image" filetype="image/bmp" exec="-f %s --no-deinterlacing"/&gt;<br/>
+      &nbsp;&nbsp;&lt;association name="Crash the computer with a stylesheet" filetype="text/css" exec="-f %s --crash-on-success"/&gt;<br/>
+      &lt;/associations&gt;
+    </div>
+
+    <h3>The clockspeed element</h3>
+    <h4>Description</h4>
+    <p>
+      The <imp>clockspeed</imp> element specifies what clockspeed this app should run at.<br/>
+      A clockspeed element <imp>is optional</imp>. It accepts the following attributes:
+    </p>
+    <p>
+      The <imp>frequency</imp> attribute specifies the wanted frequency, in megahertz <brack>mHz</brack>.
+    </p>
+    <h4>Example</h4>
+    <div class="code">
+      &lt;clockspeed frequency="600"/&gt;
+    </div>
+
+
+    <h2>Example file</h2>
+    <div class="code">
+      &lt;?xml&nbsp;version="1.0"&nbsp;encoding="UTF-8"?&gt;<br/>
+      &lt;PXML&nbsp;id="youruniqueID"&nbsp;xmlns="http://openpandora.org/namespaces/PXML"&gt;<br/>
+      &nbsp;&nbsp;&lt;title&nbsp;lang="en_US"&gt;Program&nbsp;Title&lt;/title&gt;<br/>
+      &nbsp;&nbsp;&lt;title&nbsp;lang="de_DE"&gt;German&nbsp;Program&nbsp;Title&lt;/title&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;exec&nbsp;background="true"&nbsp;startdir="/usr/share/icons/"&nbsp;standalone="true"&nbsp;command="./program"/&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;icon&nbsp;src="./program.png"/&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;description&nbsp;lang="en_US"&gt;This&nbsp;is&nbsp;the&nbsp;English&nbsp;Description&nbsp;of&nbsp;the&nbsp;file.&lt;/description&gt;<br/>
+      &nbsp;&nbsp;&lt;description&nbsp;lang="de_DE"&gt;This&nbsp;would&nbsp;be&nbsp;the&nbsp;German&nbsp;description.&lt;/description&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;previewpics&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;pic&nbsp;src="./preview/pic1.jpg"/&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;pic&nbsp;src="./preview/pic2.jpg"/&gt;<br/>
+      &nbsp;&nbsp;&lt;/previewpics&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;author&nbsp;name="Some Dudeson"&nbsp;website="http://a.bc.de"/&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;version&nbsp;major="1"&nbsp;minor="1"&nbsp;release="1"&nbsp;build="2"/&gt;<br/>
+      &nbsp;&nbsp;&lt;osversion&nbsp;major="1"&nbsp;minor="0"&nbsp;release="0"&nbsp;build="0"/&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;categories&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;category&nbsp;name="Main&nbsp;category"&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;subcategory&nbsp;name="Subcategory&nbsp;1"/&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;subcategory&nbsp;name="Subcategory&nbsp;2"/&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;/category&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;category&nbsp;name="Alternative&nbsp;category"&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;subcategory&nbsp;name="Alternative&nbsp;Subcategory&nbsp;1"/&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;/category&gt;<br/>
+      &nbsp;&nbsp;&lt;/categories&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;associations&gt;<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&lt;association&nbsp;name="View&nbsp;Word&nbsp;File"&nbsp;filetype="application/msword"&nbsp;exec="-f&nbsp;%s&nbsp;-t&nbsp;doc"/&gt;<br/>
+      &nbsp;&nbsp;&lt;/associations&gt;<br/>
+      <br/>
+      &nbsp;&nbsp;&lt;clockspeed&nbsp;frequency="600"/&gt;&lt;!--Frequency&nbsp;in&nbsp;Hz--&gt;<br/>
+      &lt;/PXML&gt;<br/>
+    </div>
+
+
+    <h2>Validation</h2>
+    <p>To validate a PXML file, you need a XSD (XML schema) validator, and you have to know how to use it.</p>
+    <p>You will also need to put the XML schema for the PXML format in the same folder as your PXML file.</p>
+    <p>
+      When you have done that, and know how to use it, you need to change a few things in your PXML file.
+      In your PXML tag, change the contents from this:
+    </p>
+    <div class="code">
+      &lt;PXML id="..." xmlns="http://openpandora.org/namespaces/PXML"&gt;...
+    </div>
+    <p>...to this:</p>
+    <div class="code">
+      &lt;PXML id="..." xmlns="http://openpandora.org/namespaces/PXML" <imp>xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PXML_schema.xsd"</imp>&gt;...
+    </div>
+    <p>
+      Now the PXML file can be validated.
+    </p>
+  </body>
+</html>

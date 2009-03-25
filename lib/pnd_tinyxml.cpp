@@ -3,6 +3,9 @@
 #include "../include/pnd_pxml.h"
 #include "pnd_tinyxml.h"
 
+//Easily change the tag names if required (globally in this file):
+#include "pnd_pxml_names.h"
+
 extern "C" {
 
 unsigned char pnd_pxml_load ( const char* pFilename, pnd_pxml_t *app ) {
@@ -34,303 +37,275 @@ unsigned char pnd_pxml_load ( const char* pFilename, pnd_pxml_t *app ) {
   return ( pnd_pxml_parse ( pFilename, b, len, app ) );
 }
 
+char *pnd_pxml_get_attribute(TiXmlElement *elem, const char *name)
+{
+	const char *value = elem->Attribute(name);
+	if (value)
+		return strdup(value);
+	else
+		return NULL;
+}
+
+unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app)
+{
+	TiXmlElement *pElem;
+	app->titles_alloc_c = 4;  //TODO: adjust this based on how many titles a PXML usually has. Power of 2.
+
+	app->titles = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->titles_alloc_c);
+	if (!app->titles) return (0); //errno = NOMEM
+
+	//Go through all title tags and load them.
+	for (pElem = hRoot.FirstChild(PND_PXML_ENAME_TITLE).Element(); pElem;
+		pElem = pElem->NextSiblingElement(PND_PXML_ENAME_TITLE))
+	{
+
+	  if ( ! pElem->GetText() ) {
+	    continue;
+	  }
+
+		char *text = strdup(pElem->GetText());
+		if (!text) continue;
+
+		char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_TITLELANG);
+		if (!lang) continue;
+
+		app->titles_c++;
+		if (app->titles_c > app->titles_alloc_c) //we don't have enough strings allocated
+		{
+			app->titles_alloc_c <<= 1;
+			app->titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
+			if (!app->titles) return (0); //errno = ENOMEM
+		}
+
+		pnd_localized_string_t *title = &app->titles[app->titles_c - 1];
+		title->language = lang;
+		title->string = text;
+	}
+
+	return (1);
+}
+
+unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *app)
+{
+	TiXmlElement *pElem;
+	app->descriptions_alloc_c = 4; //TODO: adjust this based on how many descriptions a PXML usually has. Power of 2.
+
+	app->descriptions = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->descriptions_alloc_c);
+	if (!app->descriptions) 
+	{
+		app->descriptions_alloc_c = 0;
+		return (0); //errno = NOMEM
+	}
+
+	for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem; 
+		pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
+	{
+
+	  if ( ! pElem->GetText() ) {
+	    continue;
+	  }
+
+		char *text = strdup(pElem->GetText());
+		if (!text) continue;
+
+		char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
+		if (!lang) continue;
+
+		app->descriptions_c++;
+		if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
+		{
+			app->descriptions_alloc_c <<= 1;
+			app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c);
+			if (!app->descriptions) return (0); //errno = ENOMEM
+		}
+
+		pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
+		description->language = lang;
+		description->string = text;
+	}
+	return (1);
+}
+
 unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int length, pnd_pxml_t *app ) {
+	//Load the XML document
+	TiXmlDocument doc;
+	doc.Parse(buffer);
 
-  //TiXmlDocument doc(pFilename);
-  //if (!doc.LoadFile()) return;
+	TiXmlElement *pElem = NULL;
 
-  TiXmlDocument doc;
-
-  doc.Parse ( buffer );
-
+	//Find the root element
 	TiXmlHandle hDoc(&doc);
-	TiXmlElement* pElem;
 	TiXmlHandle hRoot(0);
 
-	pElem=hDoc.FirstChildElement().Element();
-	if (!pElem) return ( 0 );
-	hRoot=TiXmlHandle(pElem);
+	pElem = hDoc.FirstChild("PXML").Element();
+	if (!pElem) return (0);
+	hRoot = TiXmlHandle(pElem);
 
-	pElem = hRoot.FirstChild( "title" ).FirstChildElement("en").Element();
-	if ( pElem )
+	//Get unique ID first.
+	app->unique_id = pnd_pxml_get_attribute(hRoot.Element(), PND_PXML_ATTRNAME_UID);
+
+	//Everything related to the title:
+	pnd_pxml_parse_titles(hRoot, app);
+
+	//Everything description-related:
+	pnd_pxml_parse_descriptions(hRoot, app);
+
+	//Everything launcher-related in one tag:
+	if ( (pElem = hRoot.FirstChild(PND_PXML_ENAME_EXEC).Element()) )
 	{
-		app->title_en = strdup(pElem->GetText());
+		app->background = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECBG); //if this returns NULL, the struct is filled with NULL. No need to check.
+		app->standalone = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECSTAL);
+		app->exec       = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECCMD);
+		app->startdir   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECWD);
 	}
 
-	pElem = hRoot.FirstChild( "title" ).FirstChildElement("de").Element();
-	if ( pElem )
+	//The app icon:
+	if ( (pElem = hRoot.FirstChild(PND_PXML_ENAME_ICON).Element()) )
 	{
-		app->title_de = strdup(pElem->GetText());
+		app->icon       = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ICONSRC);
 	}
 
-	pElem = hRoot.FirstChild( "title" ).FirstChildElement("it").Element();
-	if ( pElem )
+	//The preview pics:
+	if ( (pElem = hRoot.FirstChild(PND_PXML_NODENAME_PREVPICS).Element()) )
 	{
-		app->title_it = strdup(pElem->GetText());
-	}
-	
-	pElem = hRoot.FirstChild( "title" ).FirstChildElement("fr").Element();
-	if ( pElem )
+		//TODO: Change this if pnd_pxml_t gains the feature of more pics than 2.
+		if ( (pElem = pElem->FirstChildElement(PND_PXML_ENAME_PREVPIC)) )
+		{
+			app->previewpic1 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
+
+			if ( (pElem = pElem->NextSiblingElement(PND_PXML_ENAME_PREVPIC)) )
+			{
+				app->previewpic2 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
+			}
+		}	
+	} //previewpic
+
+	//The author info:
+	if ( (pElem = hRoot.FirstChild(PND_PXML_ENAME_AUTHOR).Element()) )
 	{
-		app->title_fr = strdup(pElem->GetText());
+		app->author_name    = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_AUTHORNAME);
+		app->author_website = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_AUTHORWWW);
+		//TODO: Uncomment this if the author gets email support.
+		//app->author_email = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_AUTHOREMAIL));
 	}
 
-	pElem=hRoot.FirstChild("unique_id").Element();
-	if (pElem)
-	{	
-		app->unique_id = strdup(pElem->GetText());
+	//The version info:
+	if ( (pElem = hRoot.FirstChild(PND_PXML_ENAME_VERSION).Element()) )
+	{
+		app->version_major   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERMAJOR);
+		app->version_minor   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERMINOR);
+		app->version_release = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERREL);
+		app->version_build   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERBUILD);
 	}
 
-	pElem=hRoot.FirstChild("standalone").Element();
-	if (pElem)
-	{	
-		app->standalone = strdup(pElem->GetText());
+	//The OS version info:
+	if ( (pElem = hRoot.FirstChild(PND_PXML_ENAME_OSVERSION).Element()) )
+	{
+		app->osversion_major   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_OSVERMAJOR);
+		app->osversion_minor   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_OSVERMINOR);
+		app->osversion_release = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_OSVERREL);
+		app->osversion_build   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_OSVERBUILD);
 	}
 
-	pElem=hRoot.FirstChild("icon").Element();
-	if (pElem)
-	{	
-#if 0
-		char anotherbuffer [ FILENAME_MAX ];
-		strcpy ( anotherbuffer, pFilename );
-		char *s = strstr ( anotherbuffer, PXML_FILENAME );
-		if ( s ) {
-		  strcpy ( s, strdup(pElem->GetText()));
-		  app->icon = strdup(anotherbuffer);
-		} else if ( ( s = strrchr ( anotherbuffer, '/' ) ) ) {
-		  s += 1;
-		  strcpy ( s, strdup(pElem->GetText()));
-		  app->icon = strdup(anotherbuffer);
+	int i; //For now, we need to keep track of the index of categories.
+	//Categories:
+	if ( (pElem = hRoot.FirstChildElement(PND_PXML_NODENAME_CATS).Element()) ) //First, enter the "categories" node.
+	{
+		i = 0;
+
+		//Goes through all the top-level categories and their sub-categories. i helps limit these to 2.
+		for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2; 
+			pElem = pElem->NextSiblingElement(PND_PXML_ENAME_CAT), i++)
+		{
+			//TODO: Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
+			switch (i)
+			{
+			case 0: //first category counts as the main cat for now
+				app->main_category = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CATNAME);
+				break;
+
+			case 1: //...second as the alternative
+				app->altcategory = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CATNAME);
+			}
+
+			TiXmlElement *pSubCatElem; //the sub-elements for a main category.
+			int j = 0; //the subcategory index within this category
+
+			//Goes through all the subcategories within this category. j helps limit these to 2.
+			for (pSubCatElem = pElem->FirstChildElement(PND_PXML_ENAME_SUBCAT); pSubCatElem && j < 2;
+				pSubCatElem = pSubCatElem->NextSiblingElement(PND_PXML_ENAME_SUBCAT), j++)
+			{
+				char *subcat = pnd_pxml_get_attribute(pSubCatElem, PND_PXML_ATTRNAME_SUBCATNAME);
+				if (!(subcat)) continue;
+
+				//TODO: This is ugly. Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
+				switch (j & (i << 1))
+				{
+				case 0:
+					app->subcategory1 = subcat;
+					break;
+				case 1:
+					app->subcategory2 = subcat;
+					break;
+				case 2:
+					app->altsubcategory1 = subcat;
+					break;
+				case 3:
+					app->altsubcategory2 = subcat;
+				}
+			}
 		}
-#endif
-		app->icon = strdup ( pElem->GetText() );
 	}
 
-	pElem = hRoot.FirstChild( "description" ).FirstChildElement("en").Element();
-	if ( pElem )
+	//All file associations:
+	//Step into the associations node
+	if ( (pElem = hRoot.FirstChild(PND_PXML_NODENAME_ASSOCS).Element()) )
 	{
-		app->description_en = strdup(pElem->GetText());
-	}
+		i = 0;
+		//Go through all associations. i serves as index; since the format only supports 3 associations we need to keep track of the number.
+		for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3; 
+			pElem = pElem->NextSiblingElement(PND_PXML_ENAME_ASSOC), i++)
+		{
+			char *name = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCNAME);
+			char *filetype = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCFTYPE);
+			char *paramter = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCARGS);
 
-	pElem = hRoot.FirstChild( "description" ).FirstChildElement("de").Element();
-	if ( pElem )
-	{
-		app->description_de = strdup(pElem->GetText());
-	}
+			if (!(name && filetype && paramter)) continue;
 
-	pElem = hRoot.FirstChild( "description" ).FirstChildElement("it").Element();
-	if ( pElem )
-	{
-		app->description_it = strdup(pElem->GetText());
-	}
-	
-	pElem = hRoot.FirstChild( "description" ).FirstChildElement("fr").Element();
-	if ( pElem )
-	{
-		app->description_fr = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "previewpic" ).FirstChildElement("pic1").Element();
-	if ( pElem )
-	{
-		app->previewpic1 = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "previewpic" ).FirstChildElement("pic2").Element();
-	if ( pElem )
-	{
-		app->previewpic2 = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "author" ).FirstChildElement("name").Element();
-	if ( pElem )
-	{
-		app->author_name = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "author" ).FirstChildElement("website").Element();
-	if ( pElem )
-	{
-		app->author_website = strdup(pElem->GetText());;
-	}
-
-	pElem = hRoot.FirstChild( "version" ).FirstChildElement("major").Element();
-	if ( pElem )
-	{
-		app->version_major = strdup(pElem->GetText());
-	}	
-
-	pElem = hRoot.FirstChild( "version" ).FirstChildElement("minor").Element();
-	if ( pElem )
-	{
-		app->version_minor = strdup(pElem->GetText());
-	}	
-
-	pElem = hRoot.FirstChild( "version" ).FirstChildElement("release").Element();
-	if ( pElem )
-	{
-		app->version_release = strdup(pElem->GetText());
-	}	
-
-	pElem = hRoot.FirstChild( "version" ).FirstChildElement("build").Element();
-	if ( pElem )
-	{
-		app->version_build = strdup(pElem->GetText());
-	}
-
-	pElem=hRoot.FirstChild("exec").Element();
-	if (pElem)
-	{	
-#if 0
-		char anotherbuffer [ FILENAME_MAX ];
-		strcpy ( anotherbuffer, pFilename );
-		char *s = strstr ( anotherbuffer, PXML_FILENAME );
-		printf ( "exec %s\n", pElem->GetText() );
-		if ( s ) {
-		  strcpy ( s, strdup(pElem->GetText()));
-		  app->exec = strdup(anotherbuffer);
-		} else if ( ( s = strrchr ( anotherbuffer, '/' ) ) ) {
-		  s += 1;
-		  strcpy ( s, strdup(pElem->GetText()));
-		  app->exec = strdup(anotherbuffer);
+			switch(i) //TODO: same problem here: only 3 associations supported
+			{
+				case 0:
+				{
+					app->associationitem1_name      = name;
+					app->associationitem1_filetype  = filetype;
+					app->associationitem1_parameter = paramter;
+					break;
+				}
+				case 1:
+				{
+					app->associationitem2_name      = name;
+					app->associationitem2_filetype  = filetype;
+					app->associationitem2_parameter = paramter;
+					break;
+				}
+				case 2:
+				{
+					app->associationitem3_name      = name;
+					app->associationitem3_filetype  = filetype;
+					app->associationitem3_parameter = paramter;
+				}
+			}
 		}
-#endif
-		app->exec = strdup ( pElem->GetText() );
-	}	
-
-	pElem = hRoot.FirstChild( "category" ).FirstChildElement("main").Element();
-	if ( pElem )
-	{
-		app->main_category = strdup(pElem->GetText());
 	}
 
-	pElem = hRoot.FirstChild( "category" ).FirstChildElement("subcategory1").Element();
-	if ( pElem )
-	{
-		app->subcategory1 = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "category" ).FirstChildElement("subcategory2").Element();
-	if ( pElem )
-	{
-		app->subcategory2 = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "altcategory" ).FirstChildElement("main").Element();
-	if ( pElem )
-	{
-		app->altcategory = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "altcategory" ).FirstChildElement("subcategory1").Element();
-	if ( pElem )
-	{
-		app->altsubcategory1 = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "altcategory" ).FirstChildElement("subcategory2").Element();
-	if ( pElem )
-	{
-		app->altsubcategory2 = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "osversion" ).FirstChildElement("major").Element();
-	if ( pElem )
-	{
-		app->osversion_major = strdup(pElem->GetText());
-	}	
-
-	pElem = hRoot.FirstChild( "osversion" ).FirstChildElement("minor").Element();
-	if ( pElem )
-	{
-		app->osversion_minor = strdup(pElem->GetText());
-	}	
-
-	pElem = hRoot.FirstChild( "osversion" ).FirstChildElement("release").Element();
-	if ( pElem )
-	{
-		app->osversion_release = strdup(pElem->GetText());
-	}	
-
-	pElem = hRoot.FirstChild( "osversion" ).FirstChildElement("build").Element();
-	if ( pElem )
-	{
-		app->osversion_build = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem1" ).FirstChildElement("name").Element();
-	if ( pElem )
-	{
-		app->associationitem1_name = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem1" ).FirstChildElement("filetype").Element();
-	if ( pElem )
-	{
-		app->associationitem1_filetype = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem1" ).FirstChildElement("parameter").Element();
-	if ( pElem )
-	{
-		app->associationitem1_parameter = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem2" ).FirstChildElement("name").Element();
-	if ( pElem )
-	{
-		app->associationitem2_name = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem2" ).FirstChildElement("filetype").Element();
-	if ( pElem )
-	{
-		app->associationitem2_filetype = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem2" ).FirstChildElement("parameter").Element();
-	if ( pElem )
-	{
-		app->associationitem2_parameter = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem3" ).FirstChildElement("name").Element();
-	if ( pElem )
-	{
-		app->associationitem3_name = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem3" ).FirstChildElement("filetype").Element();
-	if ( pElem )
-	{
-		app->associationitem3_filetype = strdup(pElem->GetText());
-	}
-
-	pElem = hRoot.FirstChild( "associationitem3" ).FirstChildElement("parameter").Element();
-	if ( pElem )
-	{
-		app->associationitem3_parameter = strdup(pElem->GetText());
-	}
-
-	pElem=hRoot.FirstChild("clockspeed").Element();
+	//Performance related things (aka: Clockspeed XD):
+	pElem = hRoot.FirstChild(PND_PXML_ENAME_CLOCK).Element();
 	if (pElem)
 	{	
-		app->clockspeed = strdup(pElem->GetText());
+		app->clockspeed = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CLOCKFREQ);
 	}
 
-	pElem=hRoot.FirstChild("background").Element();
-	if (pElem)
-	{	
-		app->background = strdup(pElem->GetText());
-	}
-
-	pElem=hRoot.FirstChild("startdir").Element();
-	if (pElem)
-	{	
-		app->startdir = strdup(pElem->GetText());
-	}
-
-	return ( 1 );
+	return (1);
 }
 
 } // extern C
