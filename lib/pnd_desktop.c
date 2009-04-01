@@ -84,10 +84,10 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 
     // basics
     if ( p -> object_type == pnd_object_type_directory ) {
-      snprintf ( buffer, 1020, "Exec=/usr/bin/nohup %s -p %s -e %s -b %s -n",
+      snprintf ( buffer, 1020, "Exec=/usr/bin/nohup %s -p %s -e %s -b %s",
 		 pndrun, p -> object_path, p -> exec, p -> unique_id );
     } else if ( p -> object_type == pnd_object_type_pnd ) {
-      snprintf ( buffer, 1020, "Exec=/usr/bin/nohup %s -p %s/%s -e %s -b %s -n",
+      snprintf ( buffer, 1020, "Exec=/usr/bin/nohup %s -p %s/%s -e %s -b %s",
 		 pndrun, p -> object_path, p -> object_filename, p -> exec, p -> unique_id );
     }
 
