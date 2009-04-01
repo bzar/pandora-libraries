@@ -57,10 +57,10 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
     argv [ f++ ] = "-s";
     argv [ f++ ] = rel_startdir;
   }
-  // skip -a (arguments) for now
+  argv [ f++ ] = "-b";
+  argv [ f++ ] = unique_id;
 
-  //argv [ f++ ] = "-b";
-  //argv [ f++ ] = baename;
+  // skip -a (arguments) for now
 
   if ( options & PND_EXEC_OPTION_NOUNION ) {
     argv [ f++ ] = "-n"; // no union for now
