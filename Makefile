@@ -5,6 +5,7 @@
 
 # tools
 CC = ${CROSSCOMPILE}gcc
+CXX = ${CROSSCOMPILE}gcc
 AR = ${CROSSCOMPILE}ar
 RANLIB = ${CROSSCOMPILE}ranlib
 RM = rm
