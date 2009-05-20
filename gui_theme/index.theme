@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Pandora Large
+Type=X-GNOME-Metatheme
+Comment=Standard Look and Feel for the Pandora handheld
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=Pandora-Large
+IconTheme=pandora-large
+

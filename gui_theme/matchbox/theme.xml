@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<theme name="Pandora Large" author="EvilDragon - evildragon@openpandora.de"
+       desc="" version="1.0" engine_version="1" >
+
+<color id="black"        def="#000000" />
+<color id="white"        def="#ffffff" />
+<color id="gray"         def="#000000" />
+<color id="grayblue"     def="#A3BAD4" />
+
+<color id="dockcol"      def="#A3BAD4" />
+<color id="darkbluebdr"  def="#00178f" />
+<color id="lightblue"    def="#0063ff" />
+<color id="lightbluebdr" def="#004bff" />
+
+<color id="gtkhlcol"     def="#3e71aa" />
+
+<font id="titlefont"     def="Sans bold 30px" />
+<font id="menufont"	 def="Sans bold 40px" />
+<font id="barfont"       def="Sans bold 20px" />
+
+<pixmap id="closebutton" filename="38x38-closebuttonup.png" />
+<pixmap id="menubutton" filename="38x38-menubutton.png" />
+<pixmap id="menubuttondown" filename="38x38-menubuttondown.png" />
+<pixmap id="title-bg"    filename="title-bg-tile-16x40.png" />
+<pixmap id="title-left"  filename="title-left-10x40.png" />
+<pixmap id="title-right" filename="title-right-10x40.png" />
+<pixmap id="bottom-left"  filename="bottom-left-6x6.png" />
+<pixmap id="bottom-right" filename="bottom-right-6x6.png" />
+
+<frame id="main" height="40">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="dockcol" />
+
+  <layer x="0" y="22" w="100%"  h="1" 
+   type="plain" color="grayblue" />
+
+  <layer x="0" y="0" w="object" h="object" 
+   type="pixmap" pixmap="title-left" />
+
+  <layer x="10" y="0" w="100%-10" h="object" 
+   type="pixmap" pixmap="title-bg" />
+
+  <layer x="100%-10" y="0" w="object" h="object" 
+   type="pixmap" pixmap="title-right" />
+
+  <layer x="46" y="6" w="98%-12" h="30" 
+   type="label" color="white" justify="left" font="titlefont" />
+
+  <button x="6" y="3" w="38" h="38" action="menu" >
+   <active pixmap="menubuttondown" />
+   <inactive pixmap="menubutton" />
+  </button>
+
+  <button x="100%-50" y="3" w="38" h="38" action="close" >
+   <active pixmap="closebutton" blend="-150"/>
+   <inactive pixmap="closebutton" />
+  </button>
+
+  <panel x="98%+15" y="2" w="40%-15" h="20" />
+
+</frame>
+
+<frame id="main-east"  width="0" >
+
+</frame>
+
+<frame id="main-west"  width="0" >
+
+</frame>
+
+<frame id="main-south"  height="1" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="grayblue" />
+
+</frame>
+
+<frame id="dialog" height="23" options="shaped">
+
+  <layer x="0" y="22" w="100%"  h="1" 
+   type="plain" color="black" />
+
+  <layer x="0" y="0" w="object" h="object" 
+   type="pixmap" pixmap="title-left" />
+
+  <layer x="6" y="0" w="100%-12" h="object" 
+   type="pixmap" pixmap="title-bg" />
+
+  <layer x="100%-6" y="0" w="object" h="object" 
+   type="pixmap" pixmap="title-right" />
+
+  <layer x="28" y="3" w="100%-24" h="20" 
+   type="label" color="gray" justify="left" font="titlefont" />
+
+  <button x="100%-45" y="3" w="19" h="40" action="close" >
+   <active pixmap="closebutton" blend="-150"/>
+   <inactive pixmap="closebutton" />
+  </button>
+
+</frame>
+
+<frame id="dialog-east" width="1" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+</frame>
+
+<frame id="dialog-west" width="1" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+</frame>
+
+<frame id="dialog-south" height="1" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="black" />
+
+</frame>
+
+<frame id="menu" height="40" 
+       font="menufont" 
+       highlight="gtkhlcol"
+       color="gray" 
+       options="shaped"
+       border_north="3" 
+       border_south="5" 
+       border_east="2"
+       border_west="2"  
+       >
+
+  <layer x="0" y="0" w="100%"  h="100%-6" 
+   type="plain" color="black" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-7" 
+   type="plain" color="white" />
+
+  <layer x="6" y="100%-6" w="100%-12"  h="6" 
+   type="plain" color="black" />
+
+  <layer x="6" y="100%-6" w="100%-12"  h="5"	
+   type="plain" color="white" />
+
+  <layer x="0" y="100%-7" w="object" h="object" 
+   type="pixmap" pixmap="bottom-left" />
+
+  <layer x="100%-6" y="100%-7" w="object" h="object" 
+   type="pixmap" pixmap="bottom-right" />
+
+
+</frame>
+
+</theme>
