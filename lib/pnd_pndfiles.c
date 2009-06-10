@@ -133,17 +133,6 @@ char *pnd_match_binbuf ( char *haystack, unsigned int maxlen, char *needle ) {
   return ( NULL );
 }
 
-void pnd_get_mountpoint ( char *unique_id, char *r_mountpoint, unsigned int mountpoint_len ) {
-
-  if ( ! r_mountpoint ) {
-    return; // sillyness
-  }
-
-  snprintf ( r_mountpoint, mountpoint_len, "%s/%s", PND_MOUNT_PATH, unique_id );
-
-  return;
-}
-
 static unsigned char pnd_pnd_mountie ( char *pndrun, char *fullpath, char *unique_id, unsigned char do_mount ) {
   char *argv [ 20 ];
   int f;

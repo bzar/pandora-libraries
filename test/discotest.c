@@ -199,6 +199,17 @@ int main ( int argc, char *argv[] ) {
 	  } else if ( d -> object_type == pnd_object_type_pnd ) {
 	    sprintf ( fullpath, "%s/%s", d -> object_path, d -> object_filename );
 	  }
+
+	  printf ( "Guessing appdata path..\n" );
+	  char appdata_path [ 1024 ];
+	  pnd_get_ro_mountpoint ( fullpath, d -> unique_id, appdata_path, 1024 );
+	  printf ( "Guessed readonly app mountpoint '%s'\n", appdata_path );
+	  if ( pnd_get_appdata_path ( fullpath, d -> unique_id, appdata_path, 1024 ) ) {
+	    printf ( "  Appdata should be: %s\n", appdata_path );
+	  } else {
+	    printf ( "  Error determining appdata path..\n" );
+	  }
+
 	  printf ( "Trying to exec '%s'\n", fullpath );
 	  pnd_apps_exec ( pndrun, fullpath, d -> unique_id, d -> exec, d -> startdir, atoi ( d -> clockspeed ), PND_EXEC_OPTION_BLOCK );
 	}
@@ -215,6 +226,7 @@ int main ( int argc, char *argv[] ) {
   }
 
   // extra testing - tilde-substitution
+  printf ( "Unrelated test..\n" );
   char *p = strdup ( "~/.applications" );
   printf ( "Tilde substitution: in '%s'\n", p );
   printf ( "                   out '%s'\n", pnd_expand_tilde ( p ) );

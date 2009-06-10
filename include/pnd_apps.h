@@ -55,6 +55,20 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 			      char *rel_exec, char *rel_startdir,
 			      unsigned int clockspeed, unsigned int options );
 
+// should you wish to know where an app will get mounted, call this function to obtain a guess. The
+// logic is wrapped up in pnd_run.sh, but in theory should be easily determined.
+
+// get_appdata_path() is the one you probably want.. the appdata path (which includes both the
+// files in the pnd, and any files updated/written-out from that app. Look up aufs or union-filesystems.)
+// ie: appdata path is read/write, while ro_mountpoint is read-only
+// Returns >0 on success, and if not-NULL will fill r_path (up to path_len length.)
+unsigned char pnd_get_appdata_path ( char *fullpath, char *unique_id, char *r_path, unsigned int path_len );
+// get_ro_mountpoint() returns the _read only_ mountpoint, where the dir or .pnd is actually
+// mounted to. This is probably NOT WHAT YOU WANT. You probably want the read/write mountpoint, which
+// is the union-filesystem version of it.. see pnd_get_appdata_path()
+//   r_mountpoint (if !NULL) will be populated; mountpoint_len should specify the maxlen of the buffer
+void pnd_get_ro_mountpoint ( char *fullpath, char *unique_id, char *r_mountpoint, unsigned int mountpoint_len );
+
 #ifdef __cplusplus
 } /* "C" */
 #endif

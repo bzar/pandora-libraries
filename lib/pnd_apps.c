@@ -106,3 +106,60 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 
   return ( 1 );
 }
+
+void pnd_get_ro_mountpoint ( char *fullpath, char *unique_id, char *r_mountpoint, unsigned int mountpoint_len ) {
+
+  if ( ! r_mountpoint ) {
+    return; // sillyness
+  }
+
+  snprintf ( r_mountpoint, mountpoint_len, "%s/%s/", PND_MOUNT_PATH, unique_id );
+
+  return;
+}
+
+unsigned char pnd_get_appdata_path ( char *fullpath, char *unique_id, char *r_path, unsigned int path_len ) {
+  // you know, determining the 'mount point' used is sort of a pain in the rear
+  // use df <file>, skip header line, grab first token. Cheap and should work.
+  // (Rather than just assume first two path chunks in path, say, which would be pretty darned
+  // accurate, but whose to say they're not using NFS or crazy mountpoints?)
+  FILE *df;
+  char cmdbuf [ 1024 ];
+
+  snprintf ( cmdbuf, 1023, "/bin/df %s", fullpath );
+
+  df = popen ( cmdbuf, "r" );
+
+  if ( ! df ) {
+    return ( 0 ); // tunefs: you can tune a filesystem but you can't tune a fish
+  }
+
+  // fetch and discard header
+  if ( ! fgets ( cmdbuf, 1023, df ) ) {
+    pclose ( df );
+    return ( 0 );
+  }
+
+  // grab df result line
+  if ( ! fgets ( cmdbuf, 1023, df ) ) {
+    pclose ( df );
+    return ( 0 );
+  }
+
+  pclose ( df );
+
+  // parse
+  char *ws = strchr ( cmdbuf, ' ' );
+
+  if ( ! ws ) {
+    return ( 0 );
+  }
+
+  *ws = '\0';
+
+  if ( r_path && path_len ) {
+    snprintf ( r_path, path_len, "%s/appdata/%s/", cmdbuf, unique_id );
+  }
+
+  return ( 1 );
+}

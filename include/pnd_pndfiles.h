@@ -40,10 +40,6 @@ char *pnd_match_binbuf ( char *haystack, unsigned int maxlen, char *needle );
 // On success, _mount and _unmount return >0
 unsigned char pnd_pnd_mount ( char *pndrun, char *fullpath, char *unique_id );
 unsigned char pnd_pnd_unmount ( char *pndrun, char *fullpath, char *unique_id );
-// should you wish to know where an app will get mounted, call this function to obtain a guess. The
-// logic is wrapped up in pnd_run.sh, but in theory should be easily determined.
-//   r_mountpoint (if !NULL) will be populated; mountpoint_len should specify the maxlen of the buffer
-void pnd_get_mountpoint ( char *unique_id, char *r_mountpoint, unsigned int mountpoint_len );
 
 #ifdef __cplusplus
 } /* "C" */
