@@ -22,7 +22,7 @@ extern "C" {
 #define PND_PXML_OVERRIDE_SEARCHPATH "~/pxml-overrides"
 #define PND_PXML_OVERRIDE_KEY "overrides.searchpath"
 
-#define PND_MOUNT_PATH "/mnt/apps/" /* all mounted PND images should be here.. /mnt/apps/myapp/... */
+#define PND_MOUNT_PATH "/mnt/pnd/" /* all mounted PND images should be here.. /mnt/apps/UNIQUE-ID/... */
 
 // .desktop support
 #define PND_DOTDESKTOP_KEY "dotfiles.dotdesktoppath"
@@ -48,7 +48,8 @@ extern "C" {
 #define PND_EXEC_OPTION_NIL        0
 #define PND_EXEC_OPTION_BLOCK      1 /* wait till children complete; note, children might fork on their own.. */
 #define PND_EXEC_OPTION_NOUNION    2 /* request pnd_run not use a union, just do the mount/run */
-#define PND_EXEC_OPTION_FUTURE2    4
+#define PND_EXEC_OPTION_NOX11      4 /* request pnd_run to kill x11 and restart it after */
+#define PND_EXEC_OPTION_FUTURE2    8
 
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 			      char *rel_exec, char *rel_startdir,

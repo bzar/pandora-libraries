@@ -157,6 +157,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		app->standalone = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECSTAL);
 		app->exec       = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECCMD);
 		app->startdir   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECWD);
+		app->exec_no_x11     = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_EXECNOX11);
 	}
 
 	//The app icon:

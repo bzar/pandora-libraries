@@ -60,6 +60,7 @@ char *pnd_pxml_get_version_minor ( pnd_pxml_handle h );
 char *pnd_pxml_get_version_release ( pnd_pxml_handle h );
 char *pnd_pxml_get_version_build ( pnd_pxml_handle h );
 char *pnd_pxml_get_exec ( pnd_pxml_handle h );
+char *pnd_pxml_get_exec_option_no_x11 ( pnd_pxml_handle h );
 char *pnd_pxml_get_main_category ( pnd_pxml_handle h );
 char *pnd_pxml_get_subcategory1 ( pnd_pxml_handle h );
 char *pnd_pxml_get_subcategory2 ( pnd_pxml_handle h );
@@ -138,6 +139,7 @@ typedef struct
 	char *clockspeed;
 	char *background;
 	char *startdir;
+	char *exec_no_x11;
 	char *package_name;
 	char *package_release_date;
 

@@ -22,6 +22,7 @@ extern "C" {
 #define PND_PXML_ATTRNAME_EXECSTAL "standalone"
 #define PND_PXML_ATTRNAME_EXECCMD "command"
 #define PND_PXML_ATTRNAME_EXECWD "startdir"
+#define PND_PXML_ATTRNAME_EXECNOX11 "no_x11"
 
 /* <icon src="..." /> */
 #define PND_PXML_ENAME_ICON "icon"

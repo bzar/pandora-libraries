@@ -97,6 +97,11 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
       strncat ( buffer, p -> startdir, 1020 );
     }
 
+    // exec options
+    if ( p -> option_no_x11 ) {
+      strncat ( buffer, " -x ", 1020 );
+    }
+
     // newline
     strncat ( buffer, "\n", 1020 );
 

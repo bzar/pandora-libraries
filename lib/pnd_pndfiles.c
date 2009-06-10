@@ -2,6 +2,7 @@
 #include <stdio.h> /* for FILE etc */
 #include <stdlib.h> /* for malloc */
 #include <ctype.h> /* for isprint */
+#include <unistd.h> /* for fork/exec */
 
 #define __USE_GNU
 #include <string.h> /* for making strcasestr happy */
@@ -130,4 +131,87 @@ char *pnd_match_binbuf ( char *haystack, unsigned int maxlen, char *needle ) {
   }
 
   return ( NULL );
+}
+
+void pnd_get_mountpoint ( char *unique_id, char *r_mountpoint, unsigned int mountpoint_len ) {
+
+  if ( ! r_mountpoint ) {
+    return; // sillyness
+  }
+
+  snprintf ( r_mountpoint, mountpoint_len, "%s/%s", PND_MOUNT_PATH, unique_id );
+
+  return;
+}
+
+static unsigned char pnd_pnd_mountie ( char *pndrun, char *fullpath, char *unique_id, unsigned char do_mount ) {
+  char *argv [ 20 ];
+  int f;
+
+  if ( ! pndrun ) {
+    return ( 0 );
+  }
+
+  if ( ! fullpath ) {
+    return ( 0 );
+  }
+
+  if ( ! unique_id ) {
+    return ( 0 );
+  }
+
+#if 0
+  printf ( "  runscript: %s\n", pndrun );
+  printf ( "  path: %s\n", fullpath );
+  printf ( "  id: %s\n", unique_id );
+#endif
+
+  memset ( argv, '\0', sizeof(char*) * 20 );
+
+  // normal stuff
+  f = 0;
+  argv [ f++ ] = pndrun;
+  argv [ f++ ] = "-p";
+  argv [ f++ ] = fullpath;
+  argv [ f++ ] = "-b";
+  argv [ f++ ] = unique_id;
+
+  // mount-only
+  if ( do_mount ) {
+    argv [ f++ ] = "-m";
+  } else {
+    argv [ f++ ] = "-u";
+  }
+
+  // finish
+  argv [ f++ ] = NULL; // for execv
+
+  // debug
+#if 0
+  int i;
+  for ( i = 0; i < f; i++ ) {
+    printf ( "exec's argv %u [ %s ]\n", i, argv [ i ] );
+  }
+#endif
+
+  // invoke it!
+
+  if ( ( f = fork() ) < 0 ) {
+    // error forking
+  } else if ( f > 0 ) {
+    // parent
+  } else {
+    // child, do it
+    execv ( pndrun, argv );
+  } 
+
+  return ( 1 );
+}
+
+unsigned char pnd_pnd_mount ( char *pndrun, char *fullpath, char *unique_id ) {
+  return ( pnd_pnd_mountie ( pndrun, fullpath, unique_id, 1 ) );
+}
+
+unsigned char pnd_pnd_unmount ( char *pndrun, char *fullpath, char *unique_id ) {
+  return ( pnd_pnd_mountie ( pndrun, fullpath, unique_id, 0 ) );
 }

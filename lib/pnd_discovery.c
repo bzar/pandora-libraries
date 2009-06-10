@@ -181,6 +181,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( pnd_pxml_get_exec ( pxmlh ) ) {
 	p -> exec = strdup ( pnd_pxml_get_exec ( pxmlh ) );
       }
+      if ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) ) {
+	p -> option_no_x11 = strdup ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) );
+      }
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
 	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
       }

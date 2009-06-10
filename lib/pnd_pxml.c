@@ -383,6 +383,11 @@ char *pnd_pxml_get_exec ( pnd_pxml_handle h ) {
   return ( p -> exec );
 }
 
+char *pnd_pxml_get_exec_option_no_x11 ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> exec_no_x11 );
+}
+
 char *pnd_pxml_get_main_category ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> main_category );

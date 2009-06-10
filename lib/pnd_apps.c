@@ -66,6 +66,10 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
     argv [ f++ ] = "-n"; // no union for now
   }
 
+  if ( options & PND_EXEC_OPTION_NOX11 ) {
+    argv [ f++ ] = "-x"; // no union for now
+  }
+
   // finish
   argv [ f++ ] = NULL; // for execv
 
