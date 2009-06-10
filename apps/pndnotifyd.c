@@ -27,6 +27,7 @@
 #include "../lib/pnd_pathiter.h"
 #include "pnd_discovery.h"
 #include "pnd_locate.h"
+#include "pnd_pxml.h"
 #include "pnd_utility.h"
 #include "pnd_desktop.h"
 

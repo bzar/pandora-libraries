@@ -305,6 +305,13 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 		app->clockspeed = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CLOCKFREQ);
 	}
 
+	// Package
+	pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
+	if ( pElem ) {	
+	  app -> package_name = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_NAME );
+	  app -> package_release_date = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_DATE );
+	}
+
 	return (1);
 }
 

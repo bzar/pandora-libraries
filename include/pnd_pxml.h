@@ -138,6 +138,8 @@ typedef struct
 	char *clockspeed;
 	char *background;
 	char *startdir;
+	char *package_name;
+	char *package_release_date;
 
 }  pnd_pxml_t;
 
