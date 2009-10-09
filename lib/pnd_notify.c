@@ -102,6 +102,7 @@ void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int f
 static void pnd_notify_hookup ( int fd ) {
 
   inotify_add_watch ( fd, "./testdata", IN_CREATE | IN_DELETE | IN_UNMOUNT );
+  inotify_add_watch ( fd, "/media", IN_CREATE | IN_DELETE | IN_UNMOUNT );
 
   return;
 }

@@ -34,6 +34,8 @@ unsigned char pnd_pxml_load ( const char* pFilename, pnd_pxml_t *app ) {
 
   fread ( b, 1, len, f );
 
+  fclose ( f );
+
   return ( pnd_pxml_parse ( pFilename, b, len, app ) );
 }
 

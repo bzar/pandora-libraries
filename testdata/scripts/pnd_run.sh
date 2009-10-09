@@ -46,7 +46,7 @@ while true ; do
 	esac
 done
  
-if [ ! $PND ] || [ ! $EXENAME ]; then
+if [ ! $PND ]; then
 	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-u (skip union)] [-b override BASENAME (name of mountpoint/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
@@ -56,7 +56,7 @@ if [ $nox ]; then
 	filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
 	if [ ${#filteredlist} -ge 1 ]; then
 		message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
-		echo -e ìae[34me[30mî
+		echo -e ‚Äúae[34me[30m‚Äù
 		xmessage -center "$message", -buttons yes,no
 		if [ $? = 102 ]; then
 		exit 1
@@ -64,7 +64,7 @@ if [ $nox ]; then
 		sudo /etc/init.d/gdm stop
 		sleep 5s
 	else
-		echo -e ìae[34me[30mî
+		echo -e ‚Äúae[34me[30m‚Äù
 		xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
 		if [ $? = 102 ]; then
 		exit 1
@@ -200,4 +200,5 @@ echo "starting x in 5s"
 sleep 5
 sudo /etc/init.d/gdm start
 fi
+
 

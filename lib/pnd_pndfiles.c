@@ -3,6 +3,8 @@
 #include <stdlib.h> /* for malloc */
 #include <ctype.h> /* for isprint */
 #include <unistd.h> /* for fork/exec */
+#include <sys/types.h> /* for wait */
+#include <sys/wait.h> /* for wait */
 
 #define __USE_GNU
 #include <string.h> /* for making strcasestr happy */
@@ -193,6 +195,10 @@ static unsigned char pnd_pnd_mountie ( char *pndrun, char *fullpath, char *uniqu
     // child, do it
     execv ( pndrun, argv );
   } 
+
+  // wait until mountscript actually completes
+  int status = 0;
+  wait ( &status );
 
   return ( 1 );
 }
