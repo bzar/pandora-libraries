@@ -1,11 +1,20 @@
 
 #if defined (_PANDORA) || !defined (EMULATOR)
 
+/* cribbed from pnd_keytypes.h so as to make it unnecessary */
+  #define BITS_PER_LONG (sizeof(long) * 8)
+  #define NBITS(x) ((((x)-1)/BITS_PER_LONG)+1)
+  #include <string.h>
+  #include <fcntl.h>
+  #include <unistd.h>
+  #include <stdio.h>
+/* back to reality */
+
 #include <stdlib.h> /* abs() */
 #include <linux/input.h> /* struct input_event */
 
 #include "pnd_io_gpio.h"
-#include "pnd_keytype.h"
+//#include "pnd_keytype.h"
 
 unsigned char GLES2D_Pad [ pke_pad_max ];
 

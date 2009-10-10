@@ -1,3 +1,5 @@
+/* is this file even necessary? removing dependancies to it.. */
+
 /* history..
  * I (skeezix) bugged cpasjuste for his gpio event code, which in turn depends on this
  * cpasjuste got it or some of the code possibly from notaz
