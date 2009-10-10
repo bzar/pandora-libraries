@@ -5,6 +5,10 @@
 #include <string.h> /* for making ftw.h happy */
 #include <unistd.h> /* for fork exec */
 
+#include <utmp.h> /* for expand-tilde below; see commentary for this about-turn */
+#include <sys/types.h> /* ditto */
+#include <pwd.h> /* ditto */
+
 #include "pnd_pxml.h"
 #include "pnd_container.h"
 #include "pnd_utility.h"
@@ -17,6 +21,61 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
   char *p;
   char *s = freeable_buffer;
   char *home = getenv ( "HOME" );
+
+  //printf ( "expand tilde IN: '%s'\n", freeable_buffer );
+  //printf ( "  home was %s\n", home );
+
+  // well, as pndnotifyd (etc) may be running as _root_, while the user is logged in
+  // as 'pandora' or god knows what, this could be problematic. Other parts of the lib
+  // use wordexp() for shell-like expansion, but this funciton is (at least) used by
+  // pndnotifyd for determination of the .desktop emit path, so we need ~ to expand
+  // to the _actual user_ rather than root's homedir. Rather than run 'users' or 'who'
+  // or the like, we'll just cut to the chase..
+  ///////
+  {
+    FILE *f;
+    struct utmp b;
+    static char *florp = NULL;
+    struct passwd *pw;
+
+    f = fopen ( "/var/run/utmp", "r" );
+
+    if ( f ) {
+
+      while ( fread ( &b, sizeof(struct utmp), 1, f ) == 1 ) {
+
+	if ( b.ut_type == USER_PROCESS ) {
+
+	  // ut_user contains the username ..
+	  // now we need to find the path to that account.
+	  while ( ( pw = getpwent() ) ) {
+
+	    if ( strcmp ( pw -> pw_name, b.ut_user ) == 0 ) {
+
+	      // aight, we've got a logged in user and have matched it to
+	      // passwd entry, so can construct the appropriate path
+
+	      if ( florp ) {
+		free ( florp );
+	      }
+	      florp = strdup ( pw -> pw_dir );
+
+	      home = florp;
+	      //printf ( "  home is %s (from %u)\n", home, b.ut_type );
+
+	    } // passwd entry matches the utmp entry
+
+	  } // while iteratin across passwd entries
+	  endpwent();
+
+	} // utmp entry is for a user login
+
+      } // while
+      fclose ( f );
+    } // opened?
+
+  }
+  ///////
 
   if ( ! home ) {
     return ( s ); // can't succeed
@@ -35,6 +94,8 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     free ( s );
     s = temp;
   } // while finding matches
+
+  //printf ( "expand tilde OUT: '%s'\n", s );
 
   return ( s );
 }
