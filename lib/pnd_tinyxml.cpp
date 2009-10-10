@@ -242,7 +242,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 				if (!(subcat)) continue;
 
 				//TODO: This is ugly. Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
-				switch (j & (i << 1))
+				switch (j | (i << 1))
 				{
 				case 0:
 					app->subcategory1 = subcat;

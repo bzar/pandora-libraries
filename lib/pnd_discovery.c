@@ -23,29 +23,19 @@ static char *disco_overrides = NULL;
 
 void pnd_disco_destroy ( pnd_disco_t *p ) {
 
-  if ( p -> title_en ) {
-    free ( p -> title_en );
-  }
-
-  if ( p -> icon ) {
-    free ( p -> icon );
-  }
-
-  if ( p -> exec ) {
-    free ( p -> exec );
-  }
-
-  if ( p -> unique_id ) {
-    free ( p -> unique_id );
-  }
-
-  if ( p -> main_category ) {
-    free ( p -> main_category );
-  }
-
-  if ( p -> clockspeed ) {
-    free ( p -> clockspeed );
-  }
+  if ( p -> title_en ) {       free ( p -> title_en );    }
+  if ( p -> unique_id ) {      free ( p -> unique_id );   }
+  if ( p -> icon )     {       free ( p -> icon );        }
+  if ( p -> exec )     {       free ( p -> exec );        }
+  if ( p -> clockspeed ) {     free ( p -> clockspeed );  }
+  if ( p -> startdir ) {       free ( p -> startdir );    }
+  if ( p -> option_no_x11 ) {  free ( p -> option_no_x11 );  }
+  if ( p -> main_category ) {  free ( p -> main_category );  }
+  if ( p -> main_category1 ) { free ( p -> main_category1 ); }
+  if ( p -> main_category2 ) { free ( p -> main_category2 ); }
+  if ( p -> alt_category ) {   free ( p -> alt_category );   }
+  if ( p -> alt_category1 ) {  free ( p -> alt_category1 );  }
+  if ( p -> alt_category2 ) {  free ( p -> alt_category2 );  }
 
   return;
 }
@@ -187,14 +177,30 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
 	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
       }
-      if ( pnd_pxml_get_main_category ( pxmlh ) ) {
-	p -> main_category = strdup ( pnd_pxml_get_main_category ( pxmlh ) );
-      }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
 	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 
       }
       if ( pnd_pxml_get_startdir ( pxmlh ) ) {
 	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) ); 
+      }
+      // category kruft
+      if ( pnd_pxml_get_main_category ( pxmlh ) ) {
+	p -> main_category = strdup ( pnd_pxml_get_main_category ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_subcategory1 ( pxmlh ) ) {
+	p -> main_category1 = strdup ( pnd_pxml_get_subcategory1 ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_subcategory2 ( pxmlh ) ) {
+	p -> main_category2 = strdup ( pnd_pxml_get_subcategory2 ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_altcategory ( pxmlh ) ) {
+	p -> alt_category = strdup ( pnd_pxml_get_altcategory ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_altsubcategory1 ( pxmlh ) ) {
+	p -> alt_category1 = strdup ( pnd_pxml_get_altsubcategory1 ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_altsubcategory2 ( pxmlh ) ) {
+	p -> alt_category2 = strdup ( pnd_pxml_get_altsubcategory2 ( pxmlh ) );
       }
 
     } else {

@@ -2,12 +2,15 @@
 #include <stdio.h> /* for FILE etc */
 #include <string.h>
 #include <unistd.h> /* for unlink */
+#include <stdlib.h> /* for free */
 
 #include "pnd_apps.h"
 #include "pnd_container.h"
 #include "pnd_pxml.h"
 #include "pnd_discovery.h"
 #include "pnd_pndfiles.h"
+#include "pnd_conf.h"
+#include "pnd_desktop.h"
 
 unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t *p ) {
   char filename [ FILENAME_MAX ];
@@ -109,9 +112,49 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     fprintf ( f, "%s", buffer );
   }
 
-#if 1 // categories
-  fprintf ( f, "%s\n", "Categories=Application;Network;" );
-#endif
+  // categories
+  {
+    char cats [ 512 ] = "";
+    int n;
+    pnd_conf_handle c;
+    char *confpath;
+
+    // uuuuh, defaults?
+    // "Application" used to be in the standard and is commonly supported still
+    // Utility and Network should ensure the app is visible 'somewhere' :/
+    char *defaults = PND_DOTDESKTOP_DEFAULT_CATEGORY;
+
+    // determine searchpath (for conf, not for apps)
+    confpath = pnd_conf_query_searchpath();
+
+    // inhale the conf file
+    c = pnd_conf_fetch_by_id ( pnd_conf_categories, confpath );
+
+    // if we can find a default category set, pull it in; otherwise assume
+    // the hardcoded one
+    if ( pnd_conf_get_as_char ( c, "default" ) ) {
+      defaults = pnd_conf_get_as_char ( c, "default" );
+    }
+
+    // ditch the confpath
+    free ( confpath );
+
+    // attempt mapping
+    if ( c ) {
+
+      n = pnd_map_dotdesktop_categories ( c, cats, 511, p );
+
+      if ( n ) {
+	fprintf ( f, "Categories=%s\n", cats );
+      } else {
+	fprintf ( f, "Categories=%s\n", defaults );
+      }
+
+    } else {
+      fprintf ( f, "Categories=%s\n", defaults );
+    }
+
+  }
 
   fprintf ( f, "%s\n", PND_DOTDESKTOP_SOURCE ); // should we need to know 'who' created the file during trimming
 
@@ -198,4 +241,143 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   fclose ( target );
 
   return ( 1 );
+}
+
+//int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsigned short int len, pnd_pxml_handle h ) {
+int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsigned short int len, pnd_disco_t *d ) {
+  unsigned short int n = 0; // no. matches
+  char *t;
+  char *match;
+
+  // clear target so we can easily append
+  memset ( target_buffer, '\0', len );
+
+  /* attempt primary category chain
+   */
+  match = NULL;
+
+  if ( ( t = d -> main_category ) ) {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = d -> main_category1 ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = d -> main_category2 ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+  
+  if ( match ) {
+    strncat ( target_buffer, match, len );
+    len -= strlen ( target_buffer );
+    n += 1;
+  }
+
+  /* attempt secondary category chain
+   */
+  match = NULL;
+
+  if ( ( t = d -> alt_category ) ) {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = d -> alt_category1 ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = d -> alt_category2 ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+  
+  if ( match ) {
+    if ( target_buffer [ 0 ] != '\0' && len > 0 ) {
+      strcat ( target_buffer, ";" );
+      len -= 1;
+    }
+    strncat ( target_buffer, match, len );
+    len -= strlen ( target_buffer );
+    n += 1;
+  }
+
+#if 0 // doh, originally I was using pxml-t till I realized I pre-boned myself on that one
+  match = NULL;
+
+  if ( ( t = pnd_pxml_get_main_category ( h ) ) ) {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = pnd_pxml_get_subcategory1 ( h ) ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = pnd_pxml_get_subcategory2 ( h ) ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+  
+  if ( match ) {
+    strncat ( target_buffer, match, len );
+    len -= strlen ( target_buffer );
+    n += 1;
+  }
+
+  /* attempt secondary category chain
+   */
+  match = NULL;
+
+  if ( ( t = pnd_pxml_get_altcategory ( h ) ) ) {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = pnd_pxml_get_altsubcategory1 ( h ) ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+
+  if ( ( ! match ) &&
+       ( t = pnd_pxml_get_altsubcategory2 ( h ) ) )
+  {
+    match = pnd_map_dotdesktop_category ( c, t );
+  }
+  
+  if ( match ) {
+    if ( target_buffer [ 0 ] != '\0' && len > 0 ) {
+      strcat ( target_buffer, ";" );
+      len -= 1;
+    }
+    strncat ( target_buffer, match, len );
+    len -= strlen ( target_buffer );
+    n += 1;
+  }
+#endif
+
+  if ( n && len ) {
+    strcat ( target_buffer, ";" );
+  }
+
+  return ( n );
+}
+
+// given category 'foo', look it up in the provided config map. return the char* reference, or NULL
+char *pnd_map_dotdesktop_category ( pnd_conf_handle c, char *single_category ) {
+  char *key;
+
+  key = malloc ( strlen ( single_category ) + 4 + 1 );
+
+  sprintf ( key, "map.%s", single_category );
+
+  return ( pnd_conf_get_as_char ( c, key ) );
 }

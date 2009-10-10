@@ -67,6 +67,7 @@ typedef enum {
   pnd_conf_apps,           // provides application search-path, pxml override location, etc.
   pnd_conf_startup,        // provides list of startup applications, basic shell application, etc.
   pnd_conf_desktop,        // provides settings for the launchers
+  pnd_conf_categories,     // provides mapping from PXML category to dot-desktop category
 } pnd_conf_filename_e;
 
 typedef struct {
@@ -114,7 +115,7 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath );
  * config file accessor functions public API
  */
 
-/* get_as_char() will attempt to locate the specified key string (of format section,key) in the
+/* get_as_char() will attempt to locate the specified key string (of format section.key) in the
  * provided config handle. Do not free up this value, it is considered read only.
  * Returns NULL on error, otherwise a READ ONLY char* reference to the value.
  */

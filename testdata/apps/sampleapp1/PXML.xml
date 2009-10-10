@@ -20,12 +20,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="jeff.sample.1" xsi:noN
   <osversion major="1" minor="0" release="0" build="0"/><!--The minimum OS version required-->
 
   <categories>
-    <category name="Main category"><!--category like "Games", "Graphics", "Internet" etc-->
-    <subcategory name="Subcategory 1"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
-    <subcategory name="Subcategory 2"/>
+    <category name="MainCategory"><!--category like "Games", "Graphics", "Internet" etc-->
+      <subcategory name="Subcategory1"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
+      <subcategory name="Subcategory2"/>
     </category>
-    <category name="Alternative category">
-      <subcategory name="Alternative Subcategory 1"/>
+    <category name="AlternativeCategory">
+      <subcategory name="AlternativeSubcategory1"/>
     </category>
   </categories>
 

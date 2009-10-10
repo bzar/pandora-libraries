@@ -47,15 +47,20 @@ typedef struct {
   char *object_path;           // directory containing pnd or PXML.xml (does not include filename)
   char *object_filename;       // filename within object_path of the app: the PXML.xml or awesomeapp.pnd file itself
   unsigned int pnd_icon_pos;   // offset to the byte after end of PXML in a pnd file (should be icon if present)
-  // strdup'd from PXML
+  // strdup'd from PXML -- hey, who was the idiot who thought it was a reat idea not to just re-use the pxml-struct?
   char *title_en;
   char *unique_id;
   char *icon;
   char *exec;
-  char *main_category;
   char *clockspeed;
   char *startdir;
   char *option_no_x11;
+  char *main_category;
+  char *main_category1;
+  char *main_category2;
+  char *alt_category;
+  char *alt_category1;
+  char *alt_category2;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided
