@@ -44,6 +44,7 @@ char *overridespath;
 // daemon stuff
 char *searchpath = NULL;
 char *dotdesktoppath = NULL;
+char *iconpath = NULL;
 char *notifypath = NULL;
 // pnd runscript
 char *run_searchpath; // searchpath to find pnd_run.sh
@@ -127,6 +128,7 @@ int main ( int argc, char *argv[] ) {
     printf ( "Apps searchpath is '%s'\n", appspath );
     printf ( "PXML overrides searchpath is '%s'\n", overridespath );
     printf ( ".desktop files emit to '%s'\n", dotdesktoppath );
+    printf ( ".desktop icon files emit to '%s'\n", iconpath );
     printf ( "Notify searchpath is '%s'\n", notifypath );
   }
 
@@ -191,7 +193,7 @@ int main ( int argc, char *argv[] ) {
 	  // check if icon already exists (from a previous extraction say); if so, we needn't
 	  // do it again
 	  char existingpath [ FILENAME_MAX ];
-	  sprintf ( existingpath, "%s/%s.png", dotdesktoppath, d -> unique_id );
+	  sprintf ( existingpath, "%s/%s.png", iconpath, d -> unique_id );
 
 	  struct stat dirs;
 	  if ( stat ( existingpath, &dirs ) == 0 ) {
@@ -215,12 +217,16 @@ int main ( int argc, char *argv[] ) {
 
 	    // attempt to create icon files; if successful, alter the disco struct to contain new
 	    // path, otherwise leave it alone (since it could be a generic icon reference..)
-	    if ( pnd_emit_icon ( dotdesktoppath, d ) ) {
+	    if ( pnd_emit_icon ( iconpath, d ) ) {
 	      // success; fix up icon path to new one..
 	      if ( d -> icon ) {
 		free ( d -> icon );
 	      }
 	      d -> icon = strdup ( existingpath );
+	    } else {
+	      if ( ! g_daemon_mode ) {
+		printf ( "  WARN: Couldn't write out icon %s\n", existingpath );
+	      }
 	    }
 
 	  } // icon already exists?
@@ -415,8 +421,14 @@ void consume_configuration ( void ) {
       dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
     }
 
+    iconpath = pnd_conf_get_as_char ( desktoph, PND_DOTDESKTOPICONS_KEY );
+
+    if ( ! iconpath ) {
+      iconpath = PND_DOTDESKTOPICONS_DEFAULT;
+    }
+
   } else {
-    dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
+    dotdesktoppath = PND_DOTDESKTOPICONS_DEFAULT;
   }
 
   // try to locate a runscript and optional hupscript
@@ -440,7 +452,9 @@ void consume_configuration ( void ) {
   if ( ! pndrun ) {
     pndrun = pnd_locate_filename ( run_searchpath, run_script );
 
-    if ( ! pndrun ) {
+    if ( pndrun ) {
+      pndrun = strdup ( pndrun ); // so we don't just use the built in buffer; next locate will overwrite it
+    } else {
       pndrun = PND_PNDRUN_DEFAULT;
     }
 
@@ -451,6 +465,11 @@ void consume_configuration ( void ) {
 
     if ( ( t = pnd_conf_get_as_char ( desktoph, PND_PNDHUP_KEY ) ) ) {
       pndhup = pnd_locate_filename ( run_searchpath, t );
+
+      if ( pndhup ) {
+	pndhup = strdup ( pndhup ); // so we don't just use the built in buffer; next locate will overwrite it
+      }
+
 #if 0 // don't enable this; if no key in config, we don't want to bother hupping
     } else {
       pndhup = pnd_locate_filename ( run_searchpath, PND_PNDHUP_FILENAME );
@@ -474,10 +493,12 @@ void consume_configuration ( void ) {
   /* handle globbing or variable substitution
    */
   dotdesktoppath = pnd_expand_tilde ( strdup ( dotdesktoppath ) );
+  iconpath = pnd_expand_tilde ( strdup ( iconpath ) );
 
   /* validate paths
    */
   mkdir ( dotdesktoppath, 0777 );
+  mkdir ( iconpath, 0777 );
 
   // done
   return;

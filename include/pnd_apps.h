@@ -26,7 +26,9 @@ extern "C" {
 
 // .desktop support
 #define PND_DOTDESKTOP_KEY "dotfiles.dotdesktoppath"
+#define PND_DOTDESKTOPICONS_KEY "dotfiles.iconpath"
 #define PND_DOTDESKTOP_DEFAULT "~/.applications"
+#define PND_DOTDESKTOPICONS_DEFAULT "~/.applications"
 
 // apps
 #define PND_DEFAULT_WORKDIR "./"

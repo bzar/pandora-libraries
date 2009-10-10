@@ -3,8 +3,12 @@
 # Desktop configuration
 
 [dotfiles]
-dotdesktoppath	/usr/share/applications/	# path for pndnotifyd to spit .desktop files into (run as root)
-#dotdesktoppath	~/.applications/	# path for pndnotifyd to spit .desktop files into (run as a user)
+#(~/Desktop for xfce, /usr/share/applications for WMs that actually follow spec)
+dotdesktoppath	~/Desktop/	# path for pndnotifyd to spit .desktop files into (run as root)
+iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as .desktop if WM permits)
 
 [launcher]
-hupscript	pnd_hup.sh
+# if hupscript is commented out entirely, pndnotifyd will not try to find/run the hup
+# if it is uncommented, pndnotifyd will attempt to invoke the hupscript after emitting .desktop files
+# (the hupscript exists to hup the WMs to redisplay .desktop apps)
+#hupscript	pnd_hup.sh
