@@ -19,17 +19,17 @@ while true ; do
 	esac
 done
  
-rnd=$RANDOM%10; # random number for genpxml and index$rnd.xml
+rnd=$RANDOM; # random number for genpxml and index$rnd.xml
  
 if [ $PXML = "guess" ] && [  $PNDNAME ] && [ $FOLDER ];  then
-	PXMLtxt=$(/usr/pandora/scripts $FOLDER)
+	PXMLtxt=$(~/pndtest/genxml.sh $FOLDER $ICON)
 	PXML=tmp$rnd.pxml
 	echo "$PXMLtxt" > tmp$rnd.pxml
 fi
  
 if [ ! $PNDNAME ] || [ ! $FOLDER ] || [ ! $PXML ]; then
 	echo " Usage: pnd_make.sh -p your.pnd -d folder/containing/your/app/ -x 
-	your.pxml (or \"guess\" to try to generate it from the folder) other files to append"
+	your.pxml (or \"guess\" to try to generate it from the folder) -i icon.png"
 	exit 1
 fi
  
@@ -55,3 +55,4 @@ fi
 if [ $PXML = "guess" ];then rm tmp$rnd.pxml; fi
  
 #printf %08d $pxmlstart >> $PNDNAME #append end of iso/start of pxml offset
+
