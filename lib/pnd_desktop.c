@@ -381,10 +381,15 @@ int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsi
 // given category 'foo', look it up in the provided config map. return the char* reference, or NULL
 char *pnd_map_dotdesktop_category ( pnd_conf_handle c, char *single_category ) {
   char *key;
+  char *ret;
 
   key = malloc ( strlen ( single_category ) + 4 + 1 );
 
   sprintf ( key, "map.%s", single_category );
 
-  return ( pnd_conf_get_as_char ( c, key ) );
+  ret = pnd_conf_get_as_char ( c, key );
+
+  free ( key );
+
+  return ( ret );
 }
