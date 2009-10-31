@@ -12,8 +12,7 @@ loc=$(dirname "$0")
  
 echo '
 <?xml version="1.0" encoding="UTF-8"?>
-<PXML xmlns="http://openpandora.org/namespaces/PXML" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="'$BASENAME-$rnd'" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+<PXML xmlns="http://openpandora.org/namespaces/PXML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="'$BASENAME-$rnd'" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
   <title lang="en_US">'$BASENAMEnoex'</title>
   <title lang="de_DE">'$BASENAMEnoex' - German (lol!)</title>
  
@@ -23,6 +22,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="'$BASENAME-$rnd'" xsi:
   <description lang="de_DE">de_DE Automatisch generiertes pxml aus'$(pwd)' exe='$BASENAME'</description>
  
   <previewpics>'
+#add all images in the folder as preview pics
 for image in $(file -i -0 * | grep -a image | cut -d" " -f1)
 do
 echo "<pic src="$image"/>"

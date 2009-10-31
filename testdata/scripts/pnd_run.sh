@@ -1,7 +1,6 @@
 #!/bin/bash
- #needs some serious cleanup!
  
-#Usage: pnd_run.sh -p your.pnd -e executeable [-a "(arguments)"] [ -s "cd to folder inside pnd"] [-u (skip union)] [-b override BASENAME (name of mountpoint/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]
+#Usage: pnd_run.sh -p your.pnd -e executeable [-a "(arguments)"] [ -s "cd to folder inside pnd"] [-u (skip union)] [-b override BASENAME (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]
 # -n to skip union mount, should probably be removed before release
 # -s startdir
 # arguments can be inside -e, -a is optional
@@ -47,7 +46,7 @@ while true ; do
 done
  
 if [ ! $PND ]; then
-	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-u (skip union)] [-b override BASENAME (name of mountpoint/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
+	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-u (skip union)] [-b override BASENAME (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
 if [ $nox ]; then
@@ -117,7 +116,7 @@ fi
  
 #create mountpoints, check if they exist already first to avoid annoying error messages
 if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi
-if [ ! -d $MOUNTPOINT/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/appdata/$BASENAME; fi
+if [ ! -d $MOUNTPOINT/pandora/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/pandora/appdata/$BASENAME; fi
 if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi 
  
 #mount
@@ -129,7 +128,7 @@ if [ ! $NOUNION ] && [ ! $umount ]; then
 		echo "$mntline"
 		$mntline #mount the pnd/folder
 		echo "mounting union!"
-		sudo mount -t aufs -o exec,dirs\=$MOUNTPOINT/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
+		sudo mount -t aufs -o exec,dirs\=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
  
 	else
 		echo "Union already mounted"
@@ -185,8 +184,9 @@ if [ $NOUNION ] ; then sudo umount /mnt/pnd/$BASENAME; fi #umount iso if -u WAS 
 if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
 	if [ ! $NOUNION ] ; then
 		sudo umount /mnt/pnd/$BASENAME
-		sudo rmdir $MOUNTPOINT/appdata/$BASENAME/.wh..wh.plink 
-		sudo rmdir $MOUNTPOINT/appdata/$BASENAME/
+		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
+		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp 
+		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/
 		sudo rmdir /mnt/utmp/$BASENAME;
 	fi
 	if [ $DFS = ISO ]; then
@@ -200,5 +200,3 @@ echo "starting x in 5s"
 sleep 5
 sudo /etc/init.d/gdm start
 fi
-
-
