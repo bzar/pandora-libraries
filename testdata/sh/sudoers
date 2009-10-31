@@ -1,7 +1,7 @@
-ALL ALL=NOPASSWD: /etc/init.d/gdm stop, /etc/init.d/gdm start, NOEXEC: /bin/mount -o loop\,mode=777 *pnd /mnt/pnd/* , \ 
+ALL ALL=NOPASSWD: /etc/init.d/gdm stop, /etc/init.d/gdm start, NOEXEC: /bin/mount /dev/loop* /mnt/pnd/* , \ 
 /bin/mount -t aufs -o exec\,dirs\=*/appdata/*\=rw+nolwh\:/mnt/pnd/*\=rr none /mnt/utmp/* , \
 /bin/mount --bind -o ro * /mnt/pnd/*, \
 /bin/umount /mnt/pnd/*, /bin/umount /mnt/utmp/*, \
 /bin/mkdir -p /mnt/pnd/* , /bin/mkdir -p /mnt/utmp/* , /bin/mkdir -p */appdata/* , \
 /bin/rmdir /mnt/pnd/*,/bin/rmdir /mnt/utmp/* ,/bin/rmdir */appdata/*/.wh..wh.plink ,/bin/rmdir */appdata/*/, \
-/sbin/losetup /dev/loop*, /sin/mknod -m777 /dev/loop*, /sbin/losetup -d /dev/loop*, /bin/rm /dev/loop*
+/sbin/losetup /dev/loop*, /bin/mknod -m777 /dev/loop*, /sbin/losetup -d /dev/loop*, /bin/rm /dev/loop*
