@@ -77,6 +77,7 @@ fi
 #vars
 DFS=$(file -b $PND | awk '{ print $1 }') #is -p a zip/iso or folder?
 MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1)
+if [ $MOUNTPOINT = "/" ]; then MOUNTPOINT=""; fi
 echo "mountpoint: $MOUNTPOINT"
 #MOUNTPOINT=$(df -h $PND | grep -E '[1-9]%' | awk '{ print $6  }') #find out which mountpoint the pnd/folder is on, there probably is a better way to do this
  
@@ -186,7 +187,7 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 		sudo umount /mnt/pnd/$BASENAME
 		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
 		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp 
-		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/
+		sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
 		sudo rmdir /mnt/utmp/$BASENAME;
 	fi
 	if [ $DFS = ISO ]; then

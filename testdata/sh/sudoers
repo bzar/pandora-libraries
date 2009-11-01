@@ -4,5 +4,5 @@ ALL ALL=NOPASSWD: /etc/init.d/gdm stop, /etc/init.d/gdm start, NOEXEC: /bin/moun
 /bin/umount /mnt/pnd/*, /bin/umount /mnt/utmp/*, \
 /bin/mkdir -p /mnt/pnd/* , /bin/mkdir -p /mnt/utmp/* , /bin/mkdir -p */pandora/appdata/* , \
 /bin/rmdir /mnt/pnd/*,/bin/rmdir /mnt/utmp/* ,/bin/rmdir */pandora/appdata/*/.wh..wh.plnk, \
-/bin/rmdir */pandora/appdata/*/.wh..wh..tmp,/bin/rmdir */pandora/appdata/*/, \
+/bin/rmdir */pandora/appdata/*/.wh..wh..tmp,/bin/rmdir -p */pandora/appdata/*/, \
 /sbin/losetup /dev/loop*, /bin/mknod -m777 /dev/loop*, /sbin/losetup -d /dev/loop*, /bin/rm /dev/loop*
