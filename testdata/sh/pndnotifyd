@@ -2,21 +2,15 @@
 #
 ### BEGIN INIT INFO
 # Provides:          pndnotifyd
-# Required-Start:    #adjust
-# Required-Stop:     #adjust
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     1 2 3 4 5
+# Default-Stop:      0 6
+# Short-Description: PND discovery deamon
 ### END INIT INFO
  
 PID=`pidof -o %PPID -x pndnotifyd`
 
-# for testing
-#LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/user/libpnd/pandora-libraries #remove
-#export LD_LIBRARY_PATH #remove
-#PNDNOTIFY='/home/user/libpnd/pandora-libraries/bin/pndnotifyd' #adjust
-
-PNDNOTIFY='/usr/bin/pndnotifyd'
- 
 case "$1" in
 start)
 	# Start daemon.
