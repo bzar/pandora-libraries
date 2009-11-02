@@ -1,11 +1,10 @@
 #!/bin/bash
  
-#Usage: pnd_run.sh -p your.pnd -e executeable [-a "(arguments)"] [ -s "cd to folder inside pnd"] [-u (skip union)] [-b override BASENAME (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]
-# -n to skip union mount, should probably be removed before release
+#Usage: pnd_run.sh -p your.pnd -e executeable [-a "(arguments)"] [ -s "cd to folder inside pnd"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]
 # -s startdir
 # arguments can be inside -e, -a is optional
  
-#/etc/sudoers needs to be adjusted if you touch any of the sudo lines in the wrong place.
+#/etc/sudoers needs to be adjusted if you touch any of the sudo lines
  
 # look at the comments in the nox part, adjust 
  
@@ -14,7 +13,9 @@
 #launch the script with nohup for -x to work!
  
 #todo
-#make sure to only use free loop devices!
+#validate params better
+#make uid/basename mandatory (and rename var, its confusing!)
+#find a clean way of shutting down x without a fixed dm, mabye avoid nohup usage somehow
 #cleanup
  
 # parse arguments
@@ -45,10 +46,19 @@ while true ; do
 	esac
 done
  
-if [ ! $PND ]; then #check if theres a pnd suplied, need to ad some nested ifs to check other params
-	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-u (skip union)] [-b override BASENAME (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
+if [ ! $PND ]; then #check if theres a pnd suplied, need to clean that up a bit more
+	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
+if [ ! $EXENAME ]; then
+	if [ ! $mount ] || [ ! $umount ]; then
+		echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
+		echo "Usage for mounting/umounting pnd_run.sh -p your.pnd -b uid -m or -u"
+		exit 1
+	fi
+fi
+
+
 if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
 	applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
 	whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
@@ -132,16 +142,14 @@ if [ ! $umount ]; then
 		echo "Union already mounted"
 	fi
  
-	if [ $mount ]; then echo "mounted /mnt/utmp/$BASENAME"; exit 1; fi;
-	#start app
-	cd /mnt/utmp/$BASENAME
+	if [ $mount ]; then echo "mounted /mnt/utmp/$BASENAME"; exit 1; fi; #mount only, die here
+	
+	cd /mnt/utmp/$BASENAME # cd to union mount
 	if [ $STARTDIR ]; then cd $STARTDIR; fi #cd to folder specified by the optional arg -s
-	#echo "/lib/ld-linux.so.2 --library-path /mnt/utmp/$BASENAME/ $EXENAME $ARGUMENTS"
-	#/lib/ld-linux.so.2 --library-path /mnt/utmp/$BASENAME/ $EXENAME $ARGUMENTS
-	LD_LIBRARY_PATH=/mnt/utmp/$BASENAME ./$EXENAME $ARGUMENTS
+	LD_LIBRARY_PATH=/mnt/utmp/$BASENAME ./$EXENAME $ARGUMENTS # execute app with ld_lib_path set to the union mount, a bit evil but i think its a good solution
 	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
-	PID=`pidof -o %PPID -x $EXENAME`
-	while [ "$PID" ]
+	PID=`pidof -o %PPID -x $EXENAME` #get pid of app
+	while [ "$PID" ] #wait till we get no pid back for tha app, again a bit ugly, but it works
 	do
 	sleep 10s
 	PID=`pidof -o %PPID -x $EXENAME`
@@ -172,22 +180,6 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 		sudo rm /dev/loop$freeminor
 	fi
 	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
-fi
-
-if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
-	sudo umount /mnt/pnd/$BASENAME #umount the actual pnd
-	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
-	#delete folders created by aufs if empty
-	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
-	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp
-	#delete appdata folder and ancestors if empty
-	sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
-	#delete tmp mountpoint
-	sudo rmdir /mnt/utmp/$BASENAME;
-	if [ $DFS = ISO ]; then # check if we where running an iso, clean up loop device if we did
-		sudo losetup -d /dev/loop$freeminor
-		sudo rm /dev/loop$freeminor
-	fi
 fi
 
 if [ $nox ]; then #restart x if it was killed
