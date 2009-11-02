@@ -29,7 +29,7 @@ while true ; do
 	case "$1" in
 		-p) echo "pnd set to \`$2'" ;PND=$2;shift 2;;
 		-e) echo "exec set to \`$2'" ;EXENAME=$2;shift 2 ;;
-		-n) echo "n set, no union pls!";NOUNION=1;shift 2;;
+#		-n) echo "n set, no union pls!";NOUNION=1;shift 2;; # we will reuse -n soon,stop using it if you still did!
 		-b) echo "BASENAME set to $2";BASENAME=$2;shift 2;;
 		-s) echo "startdir set to $2";STARTDIR=$2;shift 2;;
 		-m) echo "mount";mount=1;shift 2;;
@@ -45,11 +45,11 @@ while true ; do
 	esac
 done
  
-if [ ! $PND ]; then
+if [ ! $PND ]; then #check if theres a pnd suplied, need to ad some nested ifs to check other params
 	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-u (skip union)] [-b override BASENAME (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
-if [ $nox ]; then
+if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
 	applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
 	whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
 	filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
@@ -76,11 +76,11 @@ fi
  
 #vars
 DFS=$(file -b $PND | awk '{ print $1 }') #is -p a zip/iso or folder?
-MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1)
+MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
+#if the pnd is on / set mountpoint to "" so we dont and up with // at the start,
+#this is to make sure sudo doesnt get confused
 if [ $MOUNTPOINT = "/" ]; then MOUNTPOINT=""; fi
 echo "mountpoint: $MOUNTPOINT"
-#MOUNTPOINT=$(df -h $PND | grep -E '[1-9]%' | awk '{ print $6  }') #find out which mountpoint the pnd/folder is on, there probably is a better way to do this
- 
  
 #BASENAME really should be something sensible and somewhat unique
 #if -b is set use that as basename, else generate it from PND
@@ -94,17 +94,13 @@ oCWD=$(pwd)
  
 #detect fs
 if [ $DFS = ISO ]; then
- 
+#find a free loop device and use it 
 	usedminor=$( ls -l /dev/loop* | awk '{print $6}')
 	freeminor=$( echo -e "$(seq 0 64)\n$usedminor" | sort -rn | uniq -u | tail -n1)
 	sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
-	sudo losetup /dev/loop$freeminor $PND
- 
-	mntline="sudo mount /dev/loop$freeminor /mnt/pnd/$BASENAME/"
+	sudo losetup /dev/loop$freeminor $PND #attach the pnd to the loop device
+	mntline="sudo mount /dev/loop$freeminor /mnt/pnd/$BASENAME/" #setup the mountline for later
 #	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
-	echo "Filetype is $DFS"
-elif [ $DFS = Zip ]; then
-	mntline="fuse-zip $PND /mnt/pnd/$BASENAME -o ro,fmask=000" #TOTALLY untested right now
 	echo "Filetype is $DFS"
 elif [ $DFS = directory ]; then
 	mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
@@ -116,13 +112,14 @@ else
 fi
  
 #create mountpoints, check if they exist already first to avoid annoying error messages
-if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi
+if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi #mountpoint for iso, ro
+#writeable dir for union
 if [ ! -d $MOUNTPOINT/pandora/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/pandora/appdata/$BASENAME; sudo chmod -R a+xrw $MOUNTPOINT/pandora/appdata/$BASENAME; fi
-if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi 
+if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #union over the two
  
 #mount
  
-if [ ! $NOUNION ] && [ ! $umount ]; then
+if [ ! $umount ]; then
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
@@ -136,7 +133,6 @@ if [ ! $NOUNION ] && [ ! $umount ]; then
 	fi
  
 	if [ $mount ]; then echo "mounted /mnt/utmp/$BASENAME"; exit 1; fi;
- 
 	#start app
 	cd /mnt/utmp/$BASENAME
 	if [ $STARTDIR ]; then cd $STARTDIR; fi #cd to folder specified by the optional arg -s
@@ -154,49 +150,47 @@ if [ ! $NOUNION ] && [ ! $umount ]; then
  
 	#app exited
 	cd $oCWD #cd out of the mountpoint so we can umount, doesnt really matter to where...
- 
-elif [ ! $umount ]; then
-	$mntline
-	if [ $mount ]; then echo "mounted /mnt/pnd/$BASENAME"; exit 1; fi;
-	cd /mnt/pnd/$BASENAME
-	if [ $STARTDIR ]; then cd $STARTDIR; fi
-	echo $(pwd)
-	#/lib/ld-linux.so.2 --library-path /mnt/pnd/$BASENAME/ $EXENAME $ARGUMENTS	
-	./$EXENAME $ARGUMENTS 
-	LD_LIBRARY_PATH=/mnt/pnd/$BASENAME ./$EXENAME $ARGUMENTS
-	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
-	PID=`pidof -o %PPID -x $EXENAME`
-	while [ $PID ]
-	do
-	sleep 10s
-	PID=`pidof -o %PPID -x $EXENAME`
-	done
-	echo end
- 
-	cd $oCWD
 else
 echo "-u set, nothing to do here"
 fi
  
  
 #clean up
-if [ ! $NOUNION ] ; then sudo umount /mnt/utmp/$BASENAME; fi #umount union if -u wasnt set
-if [ $NOUNION ] ; then sudo umount /mnt/pnd/$BASENAME; fi #umount iso if -u WAS set
+sudo umount /mnt/utmp/$BASENAME #umount union
 if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
-	if [ ! $NOUNION ] ; then
-		sudo umount /mnt/pnd/$BASENAME
-		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
-		sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp 
-		sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
-		sudo rmdir /mnt/utmp/$BASENAME;
-	fi
-	if [ $DFS = ISO ]; then
+	#umount the actual pnd
+	sudo umount /mnt/pnd/$BASENAME
+	#delete folders created by aufs if empty
+	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
+	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp
+	#delete appdata folder and ancestors if empty
+	sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
+	#delete tmp mountpoint
+	sudo rmdir /mnt/utmp/$BASENAME;
+	if [ $DFS = ISO ]; then # check if we where running an iso, clean up loop device if we did
 		sudo losetup -d /dev/loop$freeminor
 		sudo rm /dev/loop$freeminor
 	fi
-	sudo rmdir /mnt/pnd/$BASENAME 
+	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
 fi
-if [ $nox ]; then
+
+if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
+	sudo umount /mnt/pnd/$BASENAME #umount the actual pnd
+	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
+	#delete folders created by aufs if empty
+	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
+	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp
+	#delete appdata folder and ancestors if empty
+	sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
+	#delete tmp mountpoint
+	sudo rmdir /mnt/utmp/$BASENAME;
+	if [ $DFS = ISO ]; then # check if we where running an iso, clean up loop device if we did
+		sudo losetup -d /dev/loop$freeminor
+		sudo rm /dev/loop$freeminor
+	fi
+fi
+
+if [ $nox ]; then #restart x if it was killed
 echo "starting x in 5s"
 sleep 5
 sudo /etc/init.d/gdm start
