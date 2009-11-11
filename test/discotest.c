@@ -124,7 +124,10 @@ int main ( int argc, char *argv[] ) {
       printf ( "  Base path: %s filename: %s\n", d -> object_path, d -> object_filename );
 
       if ( d -> title_en ) {
-	printf ( "  Name: %s\n", d -> title_en );
+	printf ( "  Name EN: %s\n", d -> title_en );
+      }
+      if ( d -> desc_en ) {
+	printf ( "  Desc EN: %s\n", d -> desc_en );
       }
       if ( d -> icon ) {
 	printf ( "  Icon: %s\n", d -> icon );
@@ -146,6 +149,12 @@ int main ( int argc, char *argv[] ) {
       }
       if ( d -> clockspeed ) {
 	printf ( "  Clockspeed: %s\n", d -> clockspeed );
+      }
+      if ( d -> preview_pic1 ) {
+	printf ( "  Preview Pic 1: %s\n", d -> preview_pic1 );
+      }
+      if ( d -> preview_pic2 ) {
+	printf ( "  Preview Pic 2: %s\n", d -> preview_pic2 );
       }
 
       if ( do_icon ) {

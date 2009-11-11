@@ -139,6 +139,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     if ( pnd_is_pxml_valid_app ( pxmlh ) ) {
       pnd_disco_t *p;
       char *fixpxml;
+      char *z;
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
 
@@ -164,6 +165,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       // PXML fields
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
 	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_description_en ( pxmlh ) ) {
+	p -> desc_en = strdup ( pnd_pxml_get_description_en ( pxmlh ) );
       }
       if ( pnd_pxml_get_icon ( pxmlh ) ) {
 	p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
@@ -201,6 +205,13 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( pnd_pxml_get_altsubcategory2 ( pxmlh ) ) {
 	p -> alt_category2 = strdup ( pnd_pxml_get_altsubcategory2 ( pxmlh ) );
+      }
+      // preview pics
+      if ( ( z = pnd_pxml_get_previewpic1 ( pxmlh ) ) ) {
+	p -> preview_pic1 = strdup ( z );
+      }
+      if ( ( z = pnd_pxml_get_previewpic2 ( pxmlh ) ) ) {
+	p -> preview_pic2 = strdup ( z );
       }
 
     } else {

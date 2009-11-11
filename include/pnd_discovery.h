@@ -41,6 +41,8 @@ typedef enum {
 // another struct? Have always intended discovery_t to have minimal members.. just enough to lead to an
 // application (PXML, xecutable, name); if the apps want more details, they can use the pnd_pxml code to
 // fetch the full PXML and get all the details. But I think we got out of control here :)
+// NOTE: We really need to rework disco-t so it can include non-english titles/desc; perhaps more info as optional,
+//   or a name/value pairing system so it can have extra data in it, without a complex structure.
 typedef struct {
   // base
   unsigned char object_type;   // see enum above
@@ -49,6 +51,7 @@ typedef struct {
   unsigned int pnd_icon_pos;   // offset to the byte after end of PXML in a pnd file (should be icon if present)
   // strdup'd from PXML -- hey, who was the idiot who thought it was a reat idea not to just re-use the pxml-struct?
   char *title_en;
+  char *desc_en;
   char *unique_id;
   char *icon;
   char *exec;
@@ -61,6 +64,8 @@ typedef struct {
   char *alt_category;
   char *alt_category1;
   char *alt_category2;
+  char *preview_pic1;
+  char *preview_pic2;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided
