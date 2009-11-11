@@ -22,9 +22,9 @@ rnd=$RANDOM; # random number for genpxml and index$rnd.xml
  
 #generate pxml if guess or empty
 if [ ! $PXML ] || [ $PXML = "guess" ] && [  $PNDNAME ] && [ $FOLDER ];  then
-	PXMLtxt=$(./genpxml.sh $FOLDER $ICON)
-	PXML=tmp$rnd.pxml
-	echo "$PXMLtxt" > tmp$rnd.pxml
+	PXMLtxt=$(/home/user/libpnd/pandora-libraries/testdata/scripts/genpxml.sh $FOLDER $ICON)
+	PXML=$FOLDER/PXML.xml
+	echo "$PXMLtxt" > $FOLDER/PXML.xml
 fi
  
 #check arguments
@@ -53,4 +53,4 @@ if [ $ICON ]; then # check if we want to add an icon
 	fi
 fi
  
-if [ $PXML = "guess" ];then rm tmp$rnd.pxml; fi #cleanup
+if [ $PXML = "guess" ];then rm $FOLDER/PXML.xml; fi #cleanup
