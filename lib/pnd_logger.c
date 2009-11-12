@@ -43,6 +43,10 @@ unsigned char pnd_log_set_filter ( unsigned char newlevel ) {
   return ( foo );
 }
 
+unsigned char pnd_log_get_filter ( void ) {
+  return ( log_filterlevel );
+}
+
 void pnd_log_set_pretext ( char *pre ) {
 
   if ( log_pretext ) {
@@ -112,7 +116,10 @@ void pnd_log_emit ( char *message ) {
 	fprintf ( log_targets [ i ].stream, "%s\t", log_pretext );
       }
       if ( message ) {
-	fprintf ( log_targets [ i ].stream, "%s\n", message );
+	fprintf ( log_targets [ i ].stream, "%s", message );
+	if ( strchr ( message, '\n' ) == NULL ) {
+	  fprintf ( log_targets [ i ].stream, "\n" );
+	}
       }
       break;
 
@@ -133,7 +140,9 @@ void pnd_log_emit ( char *message ) {
 
 unsigned char pnd_log ( unsigned char level, char *fmt, ... ) {
 
-  if ( level < log_filterlevel ) {
+  if ( level == PND_LOG_FORCE ) {
+    // always proceed
+  } else if ( level < log_filterlevel ) {
     return ( 0 ); // too low level
   }
 

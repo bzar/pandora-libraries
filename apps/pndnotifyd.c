@@ -30,12 +30,21 @@
 #include "pnd_pxml.h"
 #include "pnd_utility.h"
 #include "pnd_desktop.h"
+#include "pnd_logger.h"
 
 // this piece of code was simpler once; but need to grow it a bit and in a rush
 // moving all these to globals rather than refactor the code a bit; tsk tsk..
 
 // op mode; emitting stdout or no?
 static unsigned char g_daemon_mode = 0;
+
+typedef enum {
+  pndn_debug = 0,
+  pndn_rem,          // will set default log level to here, so 'debug' is omitted
+  pndn_warning,
+  pndn_error,
+  pndn_none
+} pndnotify_loglevels_e;
 
 // like discotest
 char *configpath;
@@ -53,6 +62,9 @@ char *pndrun;         // full path to located pnd_run.sh
 char *pndhup = NULL;  // full path to located pnd_hup.sh
 // notifier handle
 pnd_notify_handle nh = 0;
+
+// constants
+#define PNDNOTIFYD_LOGLEVEL "pndnotifyd.loglevel"
 
 // decl's
 void consume_configuration ( void );
@@ -87,11 +99,20 @@ int main ( int argc, char *argv[] ) {
       exit ( 0 );
     }
 
+  } // for
+
+  /* enable logging?
+   */
+  if ( g_daemon_mode ) {
+    // nada
+  } else {
+    pnd_log_set_filter ( pndn_rem );
+    pnd_log_set_pretext ( "pndnotifyd" );
+    pnd_log_to_stdout();
+    pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
   }
 
-  if ( ! g_daemon_mode ) {
-    printf ( "Interval between checks is %u seconds\n", interval_secs );
-  }
+  pnd_log ( pndn_rem, "Interval between checks is %u seconds\n", interval_secs );
 
   // basic daemon set up
   if ( g_daemon_mode ) {
@@ -103,7 +124,7 @@ int main ( int argc, char *argv[] ) {
 
     // detach from terminal
     if ( ( i = fork() ) < 0 ) {
-      printf ( "ERROR: Couldn't fork()\n" );
+      pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
       exit ( i );
     }
     if ( i ) {
@@ -124,13 +145,11 @@ int main ( int argc, char *argv[] ) {
   /* startup
    */
 
-  if ( ! g_daemon_mode ) {
-    printf ( "Apps searchpath is '%s'\n", appspath );
-    printf ( "PXML overrides searchpath is '%s'\n", overridespath );
-    printf ( ".desktop files emit to '%s'\n", dotdesktoppath );
-    printf ( ".desktop icon files emit to '%s'\n", iconpath );
-    printf ( "Notify searchpath is '%s'\n", notifypath );
-  }
+  pnd_log ( pndn_rem, "Apps searchpath is '%s'\n", appspath );
+  pnd_log ( pndn_rem, "PXML overrides searchpath is '%s'\n", overridespath );
+  pnd_log ( pndn_rem, ".desktop files emit to '%s'\n", dotdesktoppath );
+  pnd_log ( pndn_rem, ".desktop icon files emit to '%s'\n", iconpath );
+  pnd_log ( pndn_rem, "Notify searchpath is '%s'\n", notifypath );
 
   /* set up signal handler
    */
@@ -172,10 +191,8 @@ int main ( int argc, char *argv[] ) {
       // by this point, the watched directories have notified us that something of relevent
       // has occurred; we should be clever, but we're not, so just re-brute force the
       // discovery and spit out .desktop files..
-      if ( ! g_daemon_mode ) {
-	printf ( "------------------------------------------------------\n" );
-	printf ( "Changes within watched paths .. performing re-discover!\n" );
-      }
+      pnd_log ( pndn_rem, "------------------------------------------------------\n" );
+      pnd_log ( pndn_rem, "Changes within watched paths .. performing re-discover!\n" );
 
       // run the discovery
       applist = pnd_disco_search ( appspath, overridespath );
@@ -186,9 +203,7 @@ int main ( int argc, char *argv[] ) {
 
 	while ( d ) {
 
-	  if ( ! g_daemon_mode ) {
-	    printf ( "Found app: %s\n", pnd_box_get_key ( d ) );
-	  }
+	  pnd_log ( pndn_rem, "Found app: %s\n", pnd_box_get_key ( d ) );
 
 	  // check if icon already exists (from a previous extraction say); if so, we needn't
 	  // do it again
@@ -199,9 +214,7 @@ int main ( int argc, char *argv[] ) {
 	  if ( stat ( existingpath, &dirs ) == 0 ) {
 	    // icon seems to exist, so just crib the location into the .desktop
 
-	    if ( ! g_daemon_mode ) {
-	      printf ( "  Found icon already existed, so reusing it! %s\n", existingpath );
-	    }
+	    pnd_log ( pndn_rem, "  Found icon already existed, so reusing it! %s\n", existingpath );
 
 	    if ( d -> icon ) {
 	      free ( d -> icon );
@@ -211,9 +224,7 @@ int main ( int argc, char *argv[] ) {
 	  } else {
 	    // icon seems unreadable or does not exist; lets try to create it..
 
-	    if ( ! g_daemon_mode ) {
-	      printf ( "  Icon not already present, so trying to write it! %s\n", existingpath );
-	    }
+	    pnd_log ( pndn_rem, "  Icon not already present, so trying to write it! %s\n", existingpath );
 
 	    // attempt to create icon files; if successful, alter the disco struct to contain new
 	    // path, otherwise leave it alone (since it could be a generic icon reference..)
@@ -224,9 +235,7 @@ int main ( int argc, char *argv[] ) {
 	      }
 	      d -> icon = strdup ( existingpath );
 	    } else {
-	      if ( ! g_daemon_mode ) {
-		printf ( "  WARN: Couldn't write out icon %s\n", existingpath );
-	      }
+	      pnd_log ( pndn_rem, "  WARN: Couldn't write out icon %s\n", existingpath );
 	    }
 
 	  } // icon already exists?
@@ -240,9 +249,7 @@ int main ( int argc, char *argv[] ) {
 	    pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
 #endif
 	  } else {
-	    if ( ! g_daemon_mode ) {
-	      printf ( "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
-	    }
+	    pnd_log ( pndn_rem, "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
 	  }
 
 	  // next!
@@ -252,9 +259,7 @@ int main ( int argc, char *argv[] ) {
 
       } else {
 
-	if ( ! g_daemon_mode ) {
-	  printf ( "No applications found in search path\n" );
-	}
+	pnd_log ( pndn_rem, "No applications found in search path\n" );
 
       } // got apps?
 
@@ -305,15 +310,12 @@ int main ( int argc, char *argv[] ) {
 	    }
 	    if ( source_libpnd ) {
 #if 0
-	      if ( ! g_daemon_mode ) {
-		printf ( "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
-	      }
+	      pnd_log ( pndn_rem,
+			"File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
 #endif
 	    } else {
 #if 0
-	      if ( ! g_daemon_mode ) {
-		printf ( "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
-	      }
+	      pnd_log ( pndn_rem, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
 #endif
 	      continue; // skip deleting it
 	    }
@@ -322,9 +324,7 @@ int main ( int argc, char *argv[] ) {
 	    if ( stat ( buffer, &dirs ) == 0 ) {
 	      if ( dirs.st_mtime >= createtime ) {
 #if 0
-		if ( ! g_daemon_mode ) {
-		  printf ( "File '%s' seems 'new', so leave it alone.\n", buffer );
-		}
+		pnd_log ( pndn_rem, "File '%s' seems 'new', so leave it alone.\n", buffer );
 #endif
 		continue; // skip deleting it
 	      }
@@ -332,9 +332,7 @@ int main ( int argc, char *argv[] ) {
 
 	    // by this point, the .desktop file must be 'old' and created by pndnotifyd
 	    // previously, so can remove it
-	    if ( ! g_daemon_mode ) {
-	      printf ( "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
-	    }
+	    pnd_log ( pndn_rem, "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
 	    unlink ( buffer );
 
 	  } // while getting filenames from dir
@@ -346,9 +344,7 @@ int main ( int argc, char *argv[] ) {
 
       // if we've got a hup script located, lets invoke it
       if ( pndhup ) {
-	if ( ! g_daemon_mode ) {
-	  printf ( "Invoking hup script '%s'.\n", pndhup );
-	}
+	pnd_log ( pndn_rem, "Invoking hup script '%s'.\n", pndhup );
 	pnd_exec_no_wait_1 ( pndhup, NULL );
       }
 
@@ -443,6 +439,11 @@ void consume_configuration ( void ) {
       run_script = PND_PNDRUN_FILENAME;
     }
 
+    if ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) != PND_CONF_BADNUM ) {
+      pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
+      pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+    }
+
   } else {
     run_searchpath = NULL;
     run_script = NULL;
@@ -479,15 +480,13 @@ void consume_configuration ( void ) {
   }
 
   // debug
-  if ( ! g_daemon_mode ) {
-    if ( run_searchpath ) printf ( "Locating pnd run in %s\n", run_searchpath );
-    if ( run_script ) printf ( "Locating pnd runscript as %s\n", run_script );
-    if ( pndrun ) printf ( "pndrun is %s\n", pndrun );
-    if ( pndhup ) {
-      printf ( "pndhup is %s\n", pndhup );
-    } else {
-      printf ( "No pndhup found (which is fine.)\n" );
-    }
+  if ( run_searchpath ) pnd_log ( pndn_rem, "Locating pnd run in %s\n", run_searchpath );
+  if ( run_script ) pnd_log ( pndn_rem, "Locating pnd runscript as %s\n", run_script );
+  if ( pndrun ) pnd_log ( pndn_rem, "pndrun is %s\n", pndrun );
+  if ( pndhup ) {
+    pnd_log ( pndn_rem, "pndhup is %s\n", pndhup );
+  } else {
+    pnd_log ( pndn_rem, "No pndhup found (which is fine.)\n" );
   }
 
   /* handle globbing or variable substitution
@@ -523,25 +522,18 @@ void setup_notifications ( void ) {
   }
 
   if ( ! nh ) {
-    if ( ! g_daemon_mode ) {
-      printf ( "INOTIFY failed to init.\n" );
-    }
+    pnd_log ( pndn_rem, "INOTIFY failed to init.\n" );
     exit ( -1 );
   }
 
 #if 0
-  if ( ! g_daemon_mode ) {
-    printf ( "INOTIFY is up.\n" );
-  }
+  pnd_log ( pndn_rem, "INOTIFY is up.\n" );
 #endif
 
   SEARCHPATH_PRE
   {
 
-    if ( ! g_daemon_mode ) {
-      printf ( "Watching path '%s' and its descendents.\n", buffer );
-    }
-
+    pnd_log ( pndn_rem, "Watching path '%s' and its descendents.\n", buffer );
     pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
 
   }
@@ -552,9 +544,7 @@ void setup_notifications ( void ) {
 
 void sighup_handler ( int n ) {
 
-  if ( ! g_daemon_mode ) {
-    printf ( "---[ SIGHUP received ]---\n" );
-  }
+  pnd_log ( pndn_rem, "---[ SIGHUP received ]---\n" );
 
   // reparse config files
   consume_configuration();

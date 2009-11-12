@@ -10,6 +10,7 @@ extern "C" {
 
 /* rudimentary logger; note that this is meant to be a no-brainer to use, so no setup is needed.
  */
+#define PND_LOG_FORCE (0xFF) /* use this log level to require it be emitted, no skipping */
 
 // defaults will have no filtering, so any message will be emitted to all targets
 // default target is nothing, however, so logger is silent unless activated
@@ -33,6 +34,7 @@ void pnd_log_set_pretext ( char * );                                        // e
 // set a 'filter level'; any log message of higher-or-equal level than current filter-level will be emitted. Thus, to remove filters
 // just set to level 0. Returns existing setting.
 unsigned char pnd_log_set_filter ( unsigned char newlevel );                // ex: app-specific enum/#defines for your levels
+unsigned char pnd_log_get_filter ( void );
 
 // how many targets can be opened, entirely? this is a compile time limit, for sanity.
 unsigned char pnd_log_max_targets ( void );

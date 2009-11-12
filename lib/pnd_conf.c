@@ -239,3 +239,15 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
 char *pnd_conf_get_as_char ( pnd_conf_handle c, char *key ) {
   return ( pnd_box_find_by_key ( c, key ) );
 }
+
+int pnd_conf_get_as_int ( pnd_conf_handle c, char *key ) {
+  char *t = pnd_box_find_by_key ( c, key );
+
+  if ( ! t ) {
+    return ( PND_CONF_BADNUM ); // non-existant
+  }
+
+  int i = atoi ( t );
+
+  return ( i );
+}
