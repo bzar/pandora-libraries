@@ -3,7 +3,7 @@ if [ $1 ]; then cd $1; fi
  
 for x in $(pwd)/*
 do
-if [ -x $x ] && [ ! -d $x ]; then exe=$x; break; fi
+if [ -x $x ] && [ ! -d $x ] && [ ! $(echo $x | cut -d . -f 2 -s) ] ; then exe=$x; break; fi
 done
 BASENAMEnoex=$(basename "$exe" | cut -d'.' -f1)
 BASENAME=$(basename "$exe")
