@@ -116,8 +116,15 @@ elif [ $DFS = directory ]; then
 	mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
 #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
 	echo "Filetype is $DFS"
+elif [ $DFS = Squashfs ]; then
+	usedminor=$( ls -l /dev/loop* | awk '{print $6}')
+	freeminor=$( echo -e "$(seq 0 64)\n$usedminor" | sort -rn | uniq -u | tail -n1)
+	sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
+	sudo losetup /dev/loop$freeminor $PND #attach the pnd to the loop device
+	mntline="sudo mount -t squashfs  /dev/loop$freeminor /mnt/pnd/$BASENAME"
+	echo "Filetype is $DFS"
 else
-	echo "error"
+	echo "error determining fs, output was $DFS"
 	exit 1;
 fi
  

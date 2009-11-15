@@ -13,6 +13,7 @@ while true ; do
 		-d) echo "FOLDER set to $2" ;FOLDER=$2;shift 2 ;;
 		-x) echo "PXML set to $2" ;PXML=$2;shift 2 ;;
 		-i) echo "ICON set to $2" ;ICON=$2;shift 2 ;;
+		-c) echo "-c set, will create compressed squasfs image instead of iso $2" ;SQUASH=1;shift 2 ;;
 		--) shift ; break ;;
 		*) echo "Error while parsing arguments! $2" ; exit 1 ;;
 	esac
@@ -37,7 +38,15 @@ if [ ! -d $FOLDER ]; then echo "$FOLDER doesnt exist"; exit 1; fi #check if fold
 if [ ! -f $PXML ]; then echo "$PXML doesnt exist"; exit 1; fi #check if pxml actually exists
  
 #make iso from folder
-mkisofs -o $PNDNAME.iso -R $FOLDER
+if [ ! $SQUASH ]; then
+	mkisofs -o $PNDNAME.iso -R $FOLDER
+else
+	mksquashfs $FOLDER $PNDNAME.iso 
+fi
+#append pxml to iso
+else
+	mksquashfs $FOLDER $PNDNAME.iso 
+fi
 #append pxml to iso
 cat $PNDNAME.iso $PXML >  $PNDNAME
 rm $PNDNAME.iso #cleanup
