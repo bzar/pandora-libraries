@@ -71,7 +71,7 @@ unsigned char pnd_device_set_backlight ( unsigned int c ) {
   return ( pnd_device_open_write_close ( PND_DEVICE_SYS_BACKLIGHT_BRIGHTNESS, buffer ) );
 }
 
-unsigned int pnd_device_get_clock ( void ) {
+unsigned int pnd_device_get_backlight ( void ) {
   char buffer [ 100 ];
 
   if ( pnd_device_open_read_close ( PND_DEVICE_SYS_BACKLIGHT_BRIGHTNESS, buffer, 100 ) ) {
