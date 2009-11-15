@@ -55,7 +55,6 @@ int main ( int argc, char *argv[] ) {
   // ---> cribbed right out of discotest :/ copypaste ftw!
   if ( ! pnd_run ) {
     char *configpath;
-    char *appspath;
     char *overridespath;
 
     // attempt to fetch a sensible default searchpath for configs
@@ -67,11 +66,6 @@ int main ( int argc, char *argv[] ) {
     apph = pnd_conf_fetch_by_id ( pnd_conf_apps, configpath );
 
     if ( apph ) {
-      appspath = pnd_conf_get_as_char ( apph, PND_APPS_KEY );
-
-      if ( ! appspath ) {
-	appspath = PND_APPS_SEARCHPATH;
-      }
 
       overridespath = pnd_conf_get_as_char ( apph, PND_PXML_OVERRIDE_KEY );
 
@@ -81,7 +75,6 @@ int main ( int argc, char *argv[] ) {
 
     } else {
       // couldn't find a useful app search path so use the default
-      appspath = PND_APPS_SEARCHPATH;
       overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
     }
 

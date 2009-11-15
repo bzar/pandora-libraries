@@ -2,10 +2,15 @@
 # Open Pandora
 # Desktop configuration
 
-[dotfiles]
-#(~/Desktop for xfce, /usr/share/applications for WMs that actually follow spec)
+[desktop]
+searchpath	/mnt/sd?/pandora/desktop:/usr/pandora/apps	# path to depth-search for PXMLs and pnd-files
 dotdesktoppath	~/Desktop/	# path for pndnotifyd to spit .desktop files into (run as root)
-iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as .desktop if WM permits)
+iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as dotdesktoppath if WM permits)
+
+[menu]
+searchpath	/mnt/sd?/pandora/menu	# path to depth-search for PXMLs and pnd-files
+dotdesktoppath	/usr/share/applications		# path for pndnotifyd to spit .desktop files into
+iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as dotdesktoppath if WM permits)
 
 [launcher]
 # if hupscript is commented out entirely, pndnotifyd will not try to find/run the hup

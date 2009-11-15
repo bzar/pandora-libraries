@@ -4,7 +4,7 @@
 
 [autodiscovery]
 searchpath	/mnt/sd?/pandora/apps:./testdata/app?	# path to depth-search for PXMLs
-notifypath	/media:/media/*/pandora/apps:./testdata/app?
+notifypath	/media:/media/*/pandora/apps:./testdata/app?:./testdata/menuapp?
 
 # PXMLs may be overridden .. ie: overrides are a subset of PXML, where the values are copied over the full PXML
 [overrides]
@@ -18,4 +18,4 @@ runscript	pnd_run.sh
 # [pndnotifyd] sets some extra pndnotifyd specific items
 [pndnotifyd]
 # logging level 0 means to include debug; level 1 (regular), 2 (warnings), 3 (errors)
-loglevel	0
+loglevel	1

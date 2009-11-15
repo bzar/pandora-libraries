@@ -25,10 +25,17 @@ extern "C" {
 #define PND_MOUNT_PATH "/mnt/pnd/" /* all mounted PND images should be here.. /mnt/apps/UNIQUE-ID/... */
 
 // .desktop support
-#define PND_DOTDESKTOP_KEY "dotfiles.dotdesktoppath"
-#define PND_DOTDESKTOPICONS_KEY "dotfiles.iconpath"
-#define PND_DOTDESKTOP_DEFAULT "~/.applications"
-#define PND_DOTDESKTOPICONS_DEFAULT "~/.applications"
+#define PND_DESKTOP_DOTDESKTOP_PATH_KEY "desktop.dotdesktoppath"
+#define PND_DESKTOP_ICONS_PATH_KEY "desktop.iconpath"
+#define PND_DESKTOP_SEARCH_KEY "desktop.searchpath"
+
+#define PND_MENU_DOTDESKTOP_PATH_KEY "menu.dotdesktoppath"
+#define PND_MENU_ICONS_PATH_KEY "menu.iconpath"
+#define PND_MENU_SEARCH_KEY "menu.searchpath"
+
+#define PND_DESKTOP_DOTDESKTOP_PATH_DEFAULT "~/.applications"
+#define PND_DESKTOP_ICONS_PATH_DEFAULT "~/.applications"
+#define PND_DESKTOP_SEARCH_PATH_DEFAULT "/media/*/pandora/desktop:/usr/pandora/apps"
 
 // apps
 #define PND_DEFAULT_WORKDIR "./"
