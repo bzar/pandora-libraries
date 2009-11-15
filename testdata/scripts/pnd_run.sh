@@ -101,32 +101,8 @@ if [ ! $BASENAME ]; then BASENAME=$(basename "$PND" | cut -d'.' -f1) ; fi
  
  
 oCWD=$(pwd)
- 
-#detect fs
-if [ $DFS = ISO ]; then
-#find a free loop device and use it 
-	usedminor=$( ls -l /dev/loop* | awk '{print $6}')
-	freeminor=$( echo -e "$(seq 0 64)\n$usedminor" | sort -rn | uniq -u | tail -n1)
-	sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
-	sudo losetup /dev/loop$freeminor $PND #attach the pnd to the loop device
-	mntline="sudo mount /dev/loop$freeminor /mnt/pnd/$BASENAME/" #setup the mountline for later
-#	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
-	echo "Filetype is $DFS"
-elif [ $DFS = directory ]; then
-	mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
-#we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
-	echo "Filetype is $DFS"
-elif [ $DFS = Squashfs ]; then
-	usedminor=$( ls -l /dev/loop* | awk '{print $6}')
-	freeminor=$( echo -e "$(seq 0 64)\n$usedminor" | sort -rn | uniq -u | tail -n1)
-	sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
-	sudo losetup /dev/loop$freeminor $PND #attach the pnd to the loop device
-	mntline="sudo mount -t squashfs  /dev/loop$freeminor /mnt/pnd/$BASENAME"
-	echo "Filetype is $DFS"
-else
-	echo "error determining fs, output was $DFS"
-	exit 1;
-fi
+
+
  
 #create mountpoints, check if they exist already first to avoid annoying error messages
 if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi #mountpoint for iso, ro
@@ -140,6 +116,39 @@ if [ ! $umount ]; then
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
+
+	FREELOOP=$(sudo losetup -f) #get first free loop device
+	if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
+		#find a free loop device and use it 
+		usedminor=$(sudo losetup -a | tail -n1)
+		usedminor=${usedminor:9:1}
+		echo usedminor $usedminor
+		freeminor=$(($usedminor+1))
+		echo freeminor $freeminor
+		sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
+		FREELOOP=/dev/loop$freeminor
+	fi
+	
+	#detect fs
+	if [ $DFS = ISO ]; then
+		sudo losetup $FREELOOP $PND #attach the pnd to the loop device
+		mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
+	#	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
+		echo "Filetype is $DFS"
+	elif [ $DFS = directory ]; then
+		mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
+	#we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
+		echo "Filetype is $DFS"
+	elif [ $DFS = Squashfs ]; then
+		sudo losetup $FREELOOP $PND #attach the pnd to the loop device
+		mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
+		echo "Filetype is $DFS"
+	else
+		echo "error determining fs, output was $DFS"
+		exit 1;
+	fi
+
+
 		echo "$mntline"
 		$mntline #mount the pnd/folder
 		echo "mounting union!"
@@ -182,9 +191,9 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 	sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
 	#delete tmp mountpoint
 	sudo rmdir /mnt/utmp/$BASENAME;
-	if [ $DFS = ISO ]; then # check if we where running an iso, clean up loop device if we did
-		sudo losetup -d /dev/loop$freeminor
-		sudo rm /dev/loop$freeminor
+	if [ $DFS = ISO ] || [ $DFS = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
+		sudo losetup -d $FREELOOP
+		sudo rm $FREELOOP
 	fi
 	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
 fi
