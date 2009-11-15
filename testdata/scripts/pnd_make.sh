@@ -44,10 +44,6 @@ else
 	mksquashfs $FOLDER $PNDNAME.iso 
 fi
 #append pxml to iso
-else
-	mksquashfs $FOLDER $PNDNAME.iso 
-fi
-#append pxml to iso
 cat $PNDNAME.iso $PXML >  $PNDNAME
 rm $PNDNAME.iso #cleanup
  
