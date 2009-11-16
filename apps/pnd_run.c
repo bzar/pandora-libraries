@@ -170,12 +170,16 @@ int main ( int argc, char *argv[] ) {
     clock = atoi ( pnd_pxml_get_clockspeed ( h ) );
   }
 
-  pnd_apps_exec ( pnd_run, pndfile,
-		  pnd_pxml_get_unique_id ( h ),
-		  pnd_pxml_get_exec ( h ),
-		  pnd_pxml_get_startdir ( h ),
-		  clock,
-		  options );
+  if ( ! pnd_apps_exec ( pnd_run, pndfile,
+			 pnd_pxml_get_unique_id ( h ),
+			 pnd_pxml_get_exec ( h ),
+			 pnd_pxml_get_startdir ( h ),
+			 clock,
+			 options )
+       )
+  {
+    printf ( "ERROR: PXML.xml data is bad\n" );
+  }
 
   return ( 0 );
 } // main
