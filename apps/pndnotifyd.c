@@ -48,13 +48,18 @@ typedef enum {
 
 // like discotest
 char *configpath;
-char *appspath;
 char *overridespath;
 // daemon stuff
 char *searchpath = NULL;
-char *dotdesktoppath = NULL;
-char *iconpath = NULL;
 char *notifypath = NULL;
+time_t createtime = 0; // all 'new' .destops are created at or after this time; prev are old.
+// dotfiles; this used to be a single pai .. now two pairs, a little unwieldy; pnd_box it up?
+char *desktop_dotdesktoppath = NULL;
+char *desktop_iconpath = NULL;
+char *desktop_appspath = NULL;
+char *menu_dotdesktoppath = NULL;
+char *menu_iconpath = NULL;
+char *menu_appspath = NULL;
 // pnd runscript
 char *run_searchpath; // searchpath to find pnd_run.sh
 char *run_script;     // name of pnd_run.sh script from config
@@ -70,6 +75,9 @@ pnd_notify_handle nh = 0;
 void consume_configuration ( void );
 void setup_notifications ( void );
 void sighup_handler ( int n );
+void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *emiticonpath );
+unsigned char perform_discoveries ( char *appspath, char *overridespath,
+				    char *emitdesktoppath, char *emiticonpath );
 
 int main ( int argc, char *argv[] ) {
   // behaviour
@@ -145,11 +153,18 @@ int main ( int argc, char *argv[] ) {
   /* startup
    */
 
-  pnd_log ( pndn_rem, "Apps searchpath is '%s'\n", appspath );
   pnd_log ( pndn_rem, "PXML overrides searchpath is '%s'\n", overridespath );
-  pnd_log ( pndn_rem, ".desktop files emit to '%s'\n", dotdesktoppath );
-  pnd_log ( pndn_rem, ".desktop icon files emit to '%s'\n", iconpath );
   pnd_log ( pndn_rem, "Notify searchpath is '%s'\n", notifypath );
+
+  pnd_log ( pndn_rem, "Desktop apps ---------------------------------\n" );
+  pnd_log ( pndn_rem, "Apps searchpath is '%s'\n", desktop_appspath );
+  pnd_log ( pndn_rem, ".desktop files emit to '%s'\n", desktop_dotdesktoppath );
+  pnd_log ( pndn_rem, ".desktop icon files emit to '%s'\n", desktop_iconpath );
+
+  pnd_log ( pndn_rem, "Menu apps ---------------------------------\n" );
+  pnd_log ( pndn_rem, "Apps searchpath is '%s'\n", menu_appspath );
+  pnd_log ( pndn_rem, ".desktop files emit to '%s'\n", menu_dotdesktoppath );
+  pnd_log ( pndn_rem, ".desktop icon files emit to '%s'\n", menu_iconpath );
 
   /* set up signal handler
    */
@@ -180,8 +195,7 @@ int main ( int argc, char *argv[] ) {
     if ( scanonlaunch ||
 	 pnd_notify_rediscover_p ( nh ) )
     {
-      pnd_box_handle applist;
-      time_t createtime = time ( NULL ); // all 'new' .destops are created at or after this time; prev are old.
+      createtime = time ( NULL ); // all 'new' .destops are created at or after this time; prev are old.
 
       // if this was a forced scan, lets not do that next iteration
       if ( scanonlaunch ) {
@@ -194,153 +208,18 @@ int main ( int argc, char *argv[] ) {
       pnd_log ( pndn_rem, "------------------------------------------------------\n" );
       pnd_log ( pndn_rem, "Changes within watched paths .. performing re-discover!\n" );
 
-      // run the discovery
-      applist = pnd_disco_search ( appspath, overridespath );
+      /* run the discovery
+       */
 
-      // list the found apps (if any)
-      if ( applist ) {
-	pnd_disco_t *d = pnd_box_get_head ( applist );
+      pnd_log ( pndn_rem, "Scanning desktop paths----------------------------\n" );
+      if ( ! perform_discoveries ( desktop_appspath, overridespath, desktop_dotdesktoppath, desktop_iconpath ) ) {
+	pnd_log ( pndn_rem, "No applications found in desktop search path\n" );
+      }
 
-	while ( d ) {
-
-	  pnd_log ( pndn_rem, "Found app: %s\n", pnd_box_get_key ( d ) );
-
-	  // check if icon already exists (from a previous extraction say); if so, we needn't
-	  // do it again
-	  char existingpath [ FILENAME_MAX ];
-	  sprintf ( existingpath, "%s/%s.png", iconpath, d -> unique_id );
-
-	  struct stat dirs;
-	  if ( stat ( existingpath, &dirs ) == 0 ) {
-	    // icon seems to exist, so just crib the location into the .desktop
-
-	    pnd_log ( pndn_rem, "  Found icon already existed, so reusing it! %s\n", existingpath );
-
-	    if ( d -> icon ) {
-	      free ( d -> icon );
-	    }
-	    d -> icon = strdup ( existingpath );
-
-	  } else {
-	    // icon seems unreadable or does not exist; lets try to create it..
-
-	    pnd_log ( pndn_rem, "  Icon not already present, so trying to write it! %s\n", existingpath );
-
-	    // attempt to create icon files; if successful, alter the disco struct to contain new
-	    // path, otherwise leave it alone (since it could be a generic icon reference..)
-	    if ( pnd_emit_icon ( iconpath, d ) ) {
-	      // success; fix up icon path to new one..
-	      if ( d -> icon ) {
-		free ( d -> icon );
-	      }
-	      d -> icon = strdup ( existingpath );
-	    } else {
-	      pnd_log ( pndn_rem, "  WARN: Couldn't write out icon %s\n", existingpath );
-	    }
-
-	  } // icon already exists?
-
-	  // create the .desktop file
-	  if ( pnd_emit_dotdesktop ( dotdesktoppath, pndrun, d ) ) {
-	    // add a watch onto the newly created .desktop?
-#if 0
-	    char buffer [ FILENAME_MAX ];
-	    sprintf ( buffer, "%s/%s", dotdesktoppath, d -> unique_id );
-	    pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
-#endif
-	  } else {
-	    pnd_log ( pndn_rem, "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
-	  }
-
-	  // next!
-	  d = pnd_box_get_next ( d );
-
-	} // while applist
-
-      } else {
-
-	pnd_log ( pndn_rem, "No applications found in search path\n" );
-
-      } // got apps?
-
-      // run a clean up, to remove any dotdesktop files that we didn't
-      // just now create (that seem to have been created by pndnotifyd
-      // previously.) This allows SD eject (or .pnd remove) to remove
-      // an app from the launcher
-      //   NOTE: Could opendir and iterate across all .desktop files,
-      // removing any that have Source= something else, and that the
-      // app name is not in the list found in applist box above. But
-      // a cheesy simple way right now is to just remove .desktop files
-      // that have a last mod time prior to the time we stored above.
-      {
-	DIR *dir;
-
-	if ( ( dir = opendir ( dotdesktoppath ) ) ) {
-	  struct dirent *dirent;
-	  struct stat dirs;
-	  char buffer [ FILENAME_MAX ];
-
-	  while ( ( dirent = readdir ( dir ) ) ) {
-
-	    // file is a .desktop?
-	    if ( strstr ( dirent -> d_name, ".desktop" ) == NULL ) {
-	      continue;
-	    }
-
-	    // figure out full path
-	    sprintf ( buffer, "%s/%s", dotdesktoppath, dirent -> d_name );
-
-	    // file was previously created by libpnd; check Source= line
-	    // logic: default to 'yes' (in case we can't open the file for some reason)
-	    //        if we can open the file, default to no and look for the source flag we added; if
-	    //          that matches then we know its libpnd created, otherwise assume not.
-	    unsigned char source_libpnd = 1;
-	    {
-	      char line [ 256 ];
-	      FILE *grep = fopen ( buffer, "r" );
-	      if ( grep ) {
-		source_libpnd = 0;
-		while ( fgets ( line, 255, grep ) ) {
-		  if ( strcasestr ( line, PND_DOTDESKTOP_SOURCE ) ) {
-		    source_libpnd = 2;
-		  }
-		} // while
-		fclose ( grep );
-	      }
-	    }
-	    if ( source_libpnd ) {
-#if 0
-	      pnd_log ( pndn_rem,
-			"File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
-#endif
-	    } else {
-#if 0
-	      pnd_log ( pndn_rem, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
-#endif
-	      continue; // skip deleting it
-	    }
-
-	    // file is 'new'?
-	    if ( stat ( buffer, &dirs ) == 0 ) {
-	      if ( dirs.st_mtime >= createtime ) {
-#if 0
-		pnd_log ( pndn_rem, "File '%s' seems 'new', so leave it alone.\n", buffer );
-#endif
-		continue; // skip deleting it
-	      }
-	    }
-
-	    // by this point, the .desktop file must be 'old' and created by pndnotifyd
-	    // previously, so can remove it
-	    pnd_log ( pndn_rem, "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
-	    unlink ( buffer );
-
-	  } // while getting filenames from dir
-
-	  closedir ( dir );
-	}
-
-      } // purge old .desktop files
+      pnd_log ( pndn_rem, "Scanning menu paths----------------------------\n" );
+      if ( ! perform_discoveries ( menu_appspath, overridespath, menu_dotdesktoppath, menu_iconpath ) ) {
+	pnd_log ( pndn_rem, "No applications found in menu search path\n" );
+      }
 
       // if we've got a hup script located, lets invoke it
       if ( pndhup ) {
@@ -380,12 +259,6 @@ void consume_configuration ( void ) {
 
   if ( apph ) {
 
-    appspath = pnd_conf_get_as_char ( apph, PND_APPS_KEY );
-
-    if ( ! appspath ) {
-      appspath = PND_APPS_SEARCHPATH;
-    }
-
     overridespath = pnd_conf_get_as_char ( apph, PND_PXML_OVERRIDE_KEY );
 
     if ( ! overridespath ) {
@@ -400,34 +273,47 @@ void consume_configuration ( void ) {
 
   } else {
     // couldn't find a useful app search path so use the default
-    appspath = PND_APPS_SEARCHPATH;
     overridespath = PND_PXML_OVERRIDE_SEARCHPATH;
     notifypath = PND_APPS_NOTIFYPATH;
   }
 
-  // attempt to figure out where to drop dotfiles
+  // attempt to figure out where to drop dotfiles .. now that we're going
+  // multi-target we see the limit of my rudimentary conf-file parser; should
+  // just parse to an array of targets, rather that hardcoding two, but
+  // on the other hand, don't likely see the need for more than two? (famous
+  // last words.)
   pnd_conf_handle desktoph;
 
   desktoph = pnd_conf_fetch_by_id ( pnd_conf_desktop, configpath );
 
+  // for 'desktop' main applications
   if ( desktoph ) {
-    dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_DOTDESKTOP_KEY );
-
-    if ( ! dotdesktoppath ) {
-      dotdesktoppath = PND_DOTDESKTOP_DEFAULT;
-    }
-
-    iconpath = pnd_conf_get_as_char ( desktoph, PND_DOTDESKTOPICONS_KEY );
-
-    if ( ! iconpath ) {
-      iconpath = PND_DOTDESKTOPICONS_DEFAULT;
-    }
-
-  } else {
-    dotdesktoppath = PND_DOTDESKTOPICONS_DEFAULT;
+    desktop_dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_DESKTOP_DOTDESKTOP_PATH_KEY );
+    desktop_iconpath = pnd_conf_get_as_char ( desktoph, PND_DESKTOP_ICONS_PATH_KEY );
+    desktop_appspath = pnd_conf_get_as_char ( desktoph, PND_DESKTOP_SEARCH_KEY );
   }
 
-  // try to locate a runscript and optional hupscript
+  if ( ! desktop_dotdesktoppath ) {
+    desktop_dotdesktoppath = PND_DESKTOP_DOTDESKTOP_PATH_DEFAULT;
+  }
+
+  if ( ! desktop_iconpath ) {
+    desktop_iconpath = PND_DESKTOP_ICONS_PATH_DEFAULT;
+  }
+
+  if ( ! desktop_appspath ) {
+    desktop_appspath = PND_DESKTOP_SEARCH_PATH_DEFAULT;
+  }
+
+  // for 'menu' applications
+  if ( desktoph ) {
+    menu_dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_MENU_DOTDESKTOP_PATH_KEY );
+    menu_iconpath = pnd_conf_get_as_char ( desktoph, PND_MENU_ICONS_PATH_KEY );
+    menu_appspath = pnd_conf_get_as_char ( desktoph, PND_MENU_SEARCH_KEY );
+  }
+
+  /* try to locate a runscript and optional hupscript
+   */
 
   if ( apph ) {
     run_searchpath = pnd_conf_get_as_char ( apph, PND_PNDRUN_SEARCHPATH_KEY );
@@ -491,13 +377,19 @@ void consume_configuration ( void ) {
 
   /* handle globbing or variable substitution
    */
-  dotdesktoppath = pnd_expand_tilde ( strdup ( dotdesktoppath ) );
-  iconpath = pnd_expand_tilde ( strdup ( iconpath ) );
+  desktop_dotdesktoppath = pnd_expand_tilde ( strdup ( desktop_dotdesktoppath ) );
+  desktop_iconpath = pnd_expand_tilde ( strdup ( desktop_iconpath ) );
+  mkdir ( desktop_dotdesktoppath, 0777 );
+  mkdir ( desktop_iconpath, 0777 );
 
-  /* validate paths
-   */
-  mkdir ( dotdesktoppath, 0777 );
-  mkdir ( iconpath, 0777 );
+  if ( menu_dotdesktoppath ) {
+    menu_dotdesktoppath = pnd_expand_tilde ( strdup ( menu_dotdesktoppath ) );
+    mkdir ( menu_dotdesktoppath, 0777 );
+  }
+  if ( menu_iconpath ) {
+    menu_iconpath = pnd_expand_tilde ( strdup ( menu_iconpath ) );
+    mkdir ( menu_iconpath, 0777 );
+  }
 
   // done
   return;
@@ -553,4 +445,170 @@ void sighup_handler ( int n ) {
   setup_notifications();
 
   return;
+}
+
+// This very recently was inline code; just slight refactor to functionize it so that it can be
+// reused in a couple of places. Simple code with simple design quickly became too large for
+// its simple design; should revisit a lot of these little things..
+void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *emiticonpath ) {
+  pnd_disco_t *d = pnd_box_get_head ( applist );
+
+  while ( d ) {
+
+    pnd_log ( pndn_rem, "Found app: %s\n", pnd_box_get_key ( d ) );
+
+    // check if icon already exists (from a previous extraction say); if so, we needn't
+    // do it again
+    char existingpath [ FILENAME_MAX ];
+    sprintf ( existingpath, "%s/%s.png", emiticonpath, d -> unique_id );
+
+    struct stat dirs;
+    if ( stat ( existingpath, &dirs ) == 0 ) {
+      // icon seems to exist, so just crib the location into the .desktop
+
+      pnd_log ( pndn_rem, "  Found icon already existed, so reusing it! %s\n", existingpath );
+
+      if ( d -> icon ) {
+	free ( d -> icon );
+      }
+      d -> icon = strdup ( existingpath );
+
+    } else {
+      // icon seems unreadable or does not exist; lets try to create it..
+
+      pnd_log ( pndn_debug, "  Icon not already present, so trying to write it! %s\n", existingpath );
+
+      // attempt to create icon files; if successful, alter the disco struct to contain new
+      // path, otherwise leave it alone (since it could be a generic icon reference..)
+      if ( pnd_emit_icon ( emiticonpath, d ) ) {
+	// success; fix up icon path to new one..
+	if ( d -> icon ) {
+	  free ( d -> icon );
+	}
+	d -> icon = strdup ( existingpath );
+      } else {
+	pnd_log ( pndn_debug, "  WARN: Couldn't write out icon %s\n", existingpath );
+      }
+
+    } // icon already exists?
+
+    // create the .desktop file
+    if ( pnd_emit_dotdesktop ( emitdesktoppath, pndrun, d ) ) {
+      // add a watch onto the newly created .desktop?
+#if 0
+      char buffer [ FILENAME_MAX ];
+      sprintf ( buffer, "%s/%s", emitdesktoppath, d -> unique_id );
+      pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
+#endif
+    } else {
+      pnd_log ( pndn_rem, "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
+    }
+
+    // next!
+    d = pnd_box_get_next ( d );
+
+  } // while applist
+
+  return;
+}
+
+// returns true if any applications were found
+unsigned char perform_discoveries ( char *appspath, char *overridespath,              // args to do discovery
+				    char *emitdesktoppath, char *emiticonpath )       // args to do emitting
+{
+  pnd_box_handle applist;
+
+  // attempt to auto-discover applications in the given path
+  applist = pnd_disco_search ( appspath, overridespath );
+
+  if ( ! applist ) {
+    return ( 0 );
+  }
+
+  process_discoveries ( applist, emitdesktoppath, emiticonpath );
+
+  // run a clean up, to remove any dotdesktop files that we didn't
+  // just now create (that seem to have been created by pndnotifyd
+  // previously.) This allows SD eject (or .pnd remove) to remove
+  // an app from the launcher
+  //   NOTE: Could opendir and iterate across all .desktop files,
+  // removing any that have Source= something else, and that the
+  // app name is not in the list found in applist box above. But
+  // a cheesy simple way right now is to just remove .desktop files
+  // that have a last mod time prior to the time we stored above.
+  {
+    DIR *dir;
+
+    if ( ( dir = opendir ( emitdesktoppath ) ) ) {
+      struct dirent *dirent;
+      struct stat dirs;
+      char buffer [ FILENAME_MAX ];
+
+      while ( ( dirent = readdir ( dir ) ) ) {
+
+	// file is a .desktop?
+	if ( strstr ( dirent -> d_name, ".desktop" ) == NULL ) {
+	  continue;
+	}
+
+	// figure out full path
+	sprintf ( buffer, "%s/%s", emitdesktoppath, dirent -> d_name );
+
+	// file was previously created by libpnd; check Source= line
+	// logic: default to 'yes' (in case we can't open the file for some reason)
+	//        if we can open the file, default to no and look for the source flag we added; if
+	//          that matches then we know its libpnd created, otherwise assume not.
+	unsigned char source_libpnd = 1;
+	{
+	  char line [ 256 ];
+	  FILE *grep = fopen ( buffer, "r" );
+	  if ( grep ) {
+	    source_libpnd = 0;
+	    while ( fgets ( line, 255, grep ) ) {
+	      if ( strcasestr ( line, PND_DOTDESKTOP_SOURCE ) ) {
+		source_libpnd = 2;
+	      }
+	    } // while
+	    fclose ( grep );
+	  }
+	}
+	if ( source_libpnd ) {
+#if 0
+	  pnd_log ( pndn_rem,
+		    "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
+#endif
+	} else {
+#if 0
+	  pnd_log ( pndn_rem, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
+#endif
+	  continue; // skip deleting it
+	}
+
+	// file is 'new'?
+	if ( stat ( buffer, &dirs ) == 0 ) {
+	  if ( dirs.st_mtime >= createtime ) {
+#if 0
+	    pnd_log ( pndn_rem, "File '%s' seems 'new', so leave it alone.\n", buffer );
+#endif
+	    continue; // skip deleting it
+	  }
+	}
+
+	// by this point, the .desktop file must be 'old' and created by pndnotifyd
+	// previously, so can remove it
+	pnd_log ( pndn_rem, "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
+	unlink ( buffer );
+
+      } // while getting filenames from dir
+
+      closedir ( dir );
+    }
+
+  } // purge old .desktop files
+
+  //WARN: MEMORY LEAK HERE
+  pnd_log ( pndn_debug, "pndnotifyd - memory leak here - perform_discoveries()\n" );
+  pnd_box_delete ( applist ); // does not free the disco_t contents!
+
+  return ( 1 );
 }

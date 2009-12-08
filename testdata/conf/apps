@@ -18,4 +18,4 @@ runscript	pnd_run.sh
 # [pndnotifyd] sets some extra pndnotifyd specific items
 [pndnotifyd]
 # logging level 0 means to include debug; level 1 (regular), 2 (warnings), 3 (errors)
-loglevel	0
+loglevel	1
