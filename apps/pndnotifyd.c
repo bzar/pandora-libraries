@@ -82,7 +82,7 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,
 int main ( int argc, char *argv[] ) {
   // behaviour
   unsigned char scanonlaunch = 1;
-  unsigned int interval_secs = 10;
+  unsigned int interval_secs = 5;
   // misc
   int i;
 
@@ -216,9 +216,11 @@ int main ( int argc, char *argv[] ) {
 	pnd_log ( pndn_rem, "No applications found in desktop search path\n" );
       }
 
-      pnd_log ( pndn_rem, "Scanning menu paths----------------------------\n" );
-      if ( ! perform_discoveries ( menu_appspath, overridespath, menu_dotdesktoppath, menu_iconpath ) ) {
-	pnd_log ( pndn_rem, "No applications found in menu search path\n" );
+      if ( menu_appspath && menu_dotdesktoppath && menu_iconpath ) {
+	pnd_log ( pndn_rem, "Scanning menu paths----------------------------\n" );
+	if ( ! perform_discoveries ( menu_appspath, overridespath, menu_dotdesktoppath, menu_iconpath ) ) {
+	  pnd_log ( pndn_rem, "No applications found in menu search path\n" );
+	}
       }
 
       // if we've got a hup script located, lets invoke it
@@ -235,7 +237,8 @@ int main ( int argc, char *argv[] ) {
     } // need to rediscover?
 
     // lets not eat up all the CPU
-    // should use an alarm or select() or something
+    // should use an alarm or select() or something -- I mean really, why aren't I putting interval_secs into
+    // the select() call above in pnd_notify_whatsitcalled()? -- but lets not break this right before release shall we
     sleep ( interval_secs );
 
   } // while

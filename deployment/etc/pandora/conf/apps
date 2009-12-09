@@ -4,10 +4,10 @@
 
 [autodiscovery]
 # searchpath is a list of paths (colon separated) in which to look for PXML.xml or .pnd-file applications
-searchpath	/media/*/pandora/apps:/usr/pandora/apps
+searchpath	/media/*/pandora/apps:/media/*/pandora/desktop:/media/*/pandora/menu:/usr/pandora/apps
 # notifypath is a list of paths to monitor; if anything in those paths changes, the searchpath is rescanned
 # note that for each path chunk, all current subdirs of that path are also watched)
-notifypath	/media:/media/*/pandora/apps:/usr/pandora/apps
+notifypath	/media:/media/*/pandora/apps:/media/*/pandora/desktop:/media/*/pandora/menu:/usr/pandora/apps
 
 # PXMLs may be overridden .. ie: overrides are a subset of PXML, where the values are copied over the full PXML
 [overrides]
