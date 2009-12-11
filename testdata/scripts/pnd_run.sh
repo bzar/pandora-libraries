@@ -117,10 +117,10 @@ if [ ! $umount ]; then
 	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
 
-	FREELOOP=$(sudo losetup -f) #get first free loop device
+	FREELOOP=$(sudo /sbin/losetup -f) #get first free loop device
 	if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
 		#find a free loop device and use it 
-		usedminor=$(sudo losetup -a | tail -n1)
+		usedminor=$(sudo /sbin/losetup -a | tail -n1)
 		usedminor=${usedminor:9:1}
 		echo usedminor $usedminor
 		freeminor=$(($usedminor+1))
@@ -131,7 +131,7 @@ if [ ! $umount ]; then
 	
 	#detect fs
 	if [ $DFS = ISO ]; then
-		sudo losetup $FREELOOP $PND #attach the pnd to the loop device
+		sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
 		mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
 	#	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
 		echo "Filetype is $DFS"
@@ -140,7 +140,7 @@ if [ ! $umount ]; then
 	#we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
 		echo "Filetype is $DFS"
 	elif [ $DFS = Squashfs ]; then
-		sudo losetup $FREELOOP $PND #attach the pnd to the loop device
+		sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
 		mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
 		echo "Filetype is $DFS"
 	else
@@ -152,7 +152,7 @@ if [ ! $umount ]; then
 		echo "$mntline"
 		$mntline #mount the pnd/folder
 		echo "mounting union!"
-		sudo mount -t aufs -o exec,dirs\=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
+		sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
  
 	else
 		echo "Union already mounted"
@@ -192,7 +192,7 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 	#delete tmp mountpoint
 	sudo rmdir /mnt/utmp/$BASENAME;
 	if [ $DFS = ISO ] || [ $DFS = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
-		sudo losetup -d $FREELOOP
+		sudo /sbin/losetup -d $FREELOOP
 		sudo rm $FREELOOP
 	fi
 	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
