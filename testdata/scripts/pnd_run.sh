@@ -87,6 +87,8 @@ fi
 #vars
 DFS=$(file -b $PND | awk '{ print $1 }') #is -p a zip/iso or folder?
 MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
+FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | awk '{print $5}') #get filesystem appdata is on to determine aufs options
+echo "Filesystem is $FILESYSTEM"
 #if the pnd is on / set mountpoint to "" so we dont and up with // at the start,
 #this is to make sure sudo doesnt get confused
 if [ $MOUNTPOINT = "/" ]; then MOUNTPOINT=""; fi
@@ -109,7 +111,7 @@ if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi #moun
 #writeable dir for union
 if [ ! -d $MOUNTPOINT/pandora/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/pandora/appdata/$BASENAME; sudo chmod -R a+xrw $MOUNTPOINT/pandora/appdata/$BASENAME; fi
 if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #union over the two
- 
+
 #mount
  
 if [ ! $umount ]; then
@@ -152,7 +154,11 @@ if [ ! $umount ]; then
 		echo "$mntline"
 		$mntline #mount the pnd/folder
 		echo "mounting union!"
+		if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's
 		sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
+		else
+		sudo mount -t aufs -o exec,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
+		fi
  
 	else
 		echo "Union already mounted"
