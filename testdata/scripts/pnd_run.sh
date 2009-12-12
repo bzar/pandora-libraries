@@ -70,7 +70,7 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 		if [ $? = 102 ]; then
 		exit 1
 		fi
-		sudo /etc/init.d/gdm stop
+		sudo /etc/init.d/slim stop
 		sleep 5s
 	else
 		echo -e “ae[34me[30m”
@@ -78,8 +78,8 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 		if [ $? = 102 ]; then
 		exit 1
 		fi
-		# close x now, do we want to use gdm stop or just kill x?
-		sudo /etc/init.d/gdm stop
+		# close x now, do we want to use slim stop or just kill x?
+		sudo /etc/init.d/slim stop
 		sleep 5s
 	fi
 fi
@@ -87,7 +87,8 @@ fi
 #vars
 DFS=$(file -b $PND | awk '{ print $1 }') #is -p a zip/iso or folder?
 MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
-FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | awk '{print $5}') #get filesystem appdata is on to determine aufs options
+if [ ! -d "$MOUNTPOINT" ]; then MOUNTPOINT="/"; fi #make sure folder exists, if it doesnt assume rootfs
+FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
 echo "Filesystem is $FILESYSTEM"
 #if the pnd is on / set mountpoint to "" so we dont and up with // at the start,
 #this is to make sure sudo doesnt get confused
@@ -119,36 +120,36 @@ if [ ! $umount ]; then
 	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
 
-	FREELOOP=$(sudo /sbin/losetup -f) #get first free loop device
-	if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
-		#find a free loop device and use it 
-		usedminor=$(sudo /sbin/losetup -a | tail -n1)
-		usedminor=${usedminor:9:1}
-		echo usedminor $usedminor
-		freeminor=$(($usedminor+1))
-		echo freeminor $freeminor
-		sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
-		FREELOOP=/dev/loop$freeminor
-	fi
-	
-	#detect fs
-	if [ $DFS = ISO ]; then
-		sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-		mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
-	#	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
-		echo "Filetype is $DFS"
-	elif [ $DFS = directory ]; then
-		mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
-	#we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
-		echo "Filetype is $DFS"
-	elif [ $DFS = Squashfs ]; then
-		sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-		mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
-		echo "Filetype is $DFS"
-	else
-		echo "error determining fs, output was $DFS"
-		exit 1;
-	fi
+	  FREELOOP=$(sudo /sbin/losetup -f) #get first free loop device
+	  if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
+		  #find a free loop device and use it 
+		  usedminor=$(sudo /sbin/losetup -a | tail -n1)
+		  usedminor=${usedminor:9:1}
+		  echo usedminor $usedminor
+		  freeminor=$(($usedminor+1))
+		  echo freeminor $freeminor
+		  sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
+		  FREELOOP=/dev/loop$freeminor
+	  fi
+	  
+	  #detect fs
+	  if [ $DFS = ISO ]; then
+		  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
+		  mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
+	  #	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
+		  echo "Filetype is $DFS"
+	  elif [ $DFS = directory ]; then
+		  mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
+	  #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
+		  echo "Filetype is $DFS"
+	  elif [ $DFS = Squashfs ]; then
+		  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
+		  mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
+		  echo "Filetype is $DFS"
+	  else
+		  echo "error determining fs, output was $DFS"
+		  exit 1;
+	  fi
 
 
 		echo "$mntline"
@@ -207,5 +208,5 @@ fi
 if [ $nox ]; then #restart x if it was killed
 echo "starting x in 5s"
 sleep 5
-sudo /etc/init.d/gdm start
+sudo /etc/init.d/slim start
 fi
