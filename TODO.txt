@@ -1,14 +1,26 @@
 
-Some things to be done.. (see also the main wiki 'todo' page)
+- pndnotifyd drops icons into a conf'd location (/tmp currently); it skips emitting them if that path is already
+  present (saves time after first emit!) .. the risk here is that the icon has changed or been removed, and we just
+  keep using the old one. Perhaps pndnotifyd should check the length of the icon (or a CRC32 or something), on occasion?
 
-- UNICODE everywhere.. this will be a lot of work I'm sure. (replacing all the char* and related consumers)
+- pndnotifyd doesn't delete icons; it leaves them in /tmp as a cache of sorts. /tmp may not be wisest if it gets turfed on
+  boot, but I'm up in the air on that one; we want caching, but not unlimited lifespan, so /tmp seems useful. (Unless /tmp
+  is in RAM, which it could be, should check.) ANYWAY, my point is..
+     - should we conf how many icons/bytes can be consumed in 'cache' this way?
+     - more to point, should we remove old icons (ie: say, a week old) by default, so occasional re-caching occurs, but
+       we also clean up unused icons? We could also keep an access-count or somesuch. Just sayin'
+
+- fill in the blanks in pnd-logger
+
+- more useful PXML.xml parser, to cover all the fields and provide iterators, and better support the treelike nature
 
 - applist memleak; ie: all those disco_t apps returned are never free'd properly
   include/pnd_discovery.h:// TODO: A way to release the disco-lists and reclaim RAM :)
 
-- put in code to fetch clock speed, and add clock speed handler to pnd_apps_exec
+- put in code to fetch clock speed, and add clock speed handler to pnd_apps_exec? maybe unify the whole emit-dotdesktop and
+  exec routines o they dont' have two representations of command line args ..
 
-- remove -u's from pnd_apps_exec and pnd_emit_dotdesktop
+- remove -u's from pnd_apps_exec and pnd_emit_dotdesktop?
 
 - replace brute force memcmp() in pnd pnd with a fancy pants CS alg
 - make pnd_pndfiles seek of PXML more efficient; fread ( 1, nmemb ) gotta be slow :)

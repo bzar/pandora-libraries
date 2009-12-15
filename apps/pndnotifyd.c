@@ -4,10 +4,6 @@
  *
  */
 
-// TODO: Catch HUP and reparse config
-// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
-// TODO: During daemon mode, should perhaps syslog or log errors
-
 #include <stdio.h>     // for stdio
 #include <unistd.h>    // for exit()
 #include <stdlib.h>    // for exit()
