@@ -3,6 +3,7 @@
 #include <stdio.h>          // for stdio, NULL
 #include <stdlib.h>         // for malloc, etc
 #include <unistd.h>         // for close
+#include <time.h>           // for time()
 
 #define _XOPEN_SOURCE 500
 #define __USE_XOPEN_EXTENDED
@@ -17,7 +18,7 @@ typedef struct {
 
 static int notify_handle;
 
-static void pnd_notify_hookup ( int fd );
+//static void pnd_notify_hookup ( int fd );
 
 #define PND_INOTIFY_MASK     IN_CREATE | IN_DELETE | IN_UNMOUNT \
                              | IN_DELETE_SELF | IN_MOVE_SELF    \
@@ -43,7 +44,7 @@ pnd_notify_handle pnd_notify_init ( void ) {
   p -> fd = fd;
 
   // setup some default watches
-  pnd_notify_hookup ( fd );
+  //pnd_notify_hookup ( fd );
 
   return ( p );
 }
@@ -99,6 +100,7 @@ void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int f
   return;
 }
 
+#if 0
 static void pnd_notify_hookup ( int fd ) {
 
   inotify_add_watch ( fd, "./testdata", IN_CREATE | IN_DELETE | IN_UNMOUNT );
@@ -106,6 +108,7 @@ static void pnd_notify_hookup ( int fd ) {
 
   return;
 }
+#endif
 
 unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
   pnd_notify_t *p = (pnd_notify_t*) h;
@@ -173,27 +176,73 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
   return ( 1 );
 }
 
+#define _INOTIFY_TEST_PATH "/tmp/.notifytest"
+#define _INOTIFY_TEST_FILE "/tmp/.notifytest/foopanda"
+static unsigned char _inotify_test_run ( void ) {
+
+  // set up inotify
+  pnd_notify_t fdt;
+  int wd; // watch-descriptor
+
+  // set up inotify
+  fdt.fd = inotify_init();
+
+  if ( fdt.fd < 0 ) {
+    return ( 0 ); // failed to init at all
+  }
+
+  // make a temp dir
+  mkdir ( _INOTIFY_TEST_PATH, 0777 ); // if it fails we assume it exists, which is fine
+
+  // watch the dir
+  if ( ( wd = inotify_add_watch ( fdt.fd, _INOTIFY_TEST_PATH, IN_DELETE ) ) < 0 ) {
+    return ( 0 ); // couldn't watch dir
+  }
+
+  // sleep a sec, just to be safe; seems to dislike being called immediately sometimes
+  usleep ( 1000000 / 2 );
+
+  // create a temp file
+  FILE *f;
+  if ( ! ( f = fopen ( _INOTIFY_TEST_FILE, "w" ) ) ) {
+    close ( fdt.fd );
+    return ( 0 ); // couldn't create test file?!
+  }
+
+  fclose ( f );
+
+  // delete the temp file; this should trigger an event
+  if ( unlink ( _INOTIFY_TEST_FILE ) < 0 ) {
+    return ( 0 ); // couldn't rm a file? life is harsh.
+  }
+
+  // did we get anything?
+  unsigned char s;
+  s = pnd_notify_rediscover_p ( &fdt );
+
+  // ditch inotify
+  close ( fdt.fd );
+
+  // success
+  return ( s );
+}
+
 /* we've run into the issue where inotify returns that it is set up, but in
  * fact is not doing anything; restarting the process repairs it.. so here
  * we devise a wank that continually tests inotify until it responds, then
  * returns knowing we're good
  */
 unsigned char pnd_notify_wait_until_ready ( unsigned int secs_timeout ) {
-  return ( 0 ); // fail
-}
+  time_t start = time ( NULL );
 
-static unsigned char _inotify_test_run ( void ) {
-#if 0
-  // set up inotify
-  int fd;
-
-  fd = inotify_init();
-
-  if ( fd < 0 ) {
-    return ( 0 ); // failed to init at all
+  while ( ( secs_timeout == 0 ) ||
+	  ( time ( NULL ) - start < secs_timeout ) )
+  {
+    if ( _inotify_test_run() ) {
+      return ( 1 );
+    }
+    usleep ( 1000000 / 2 );
   }
 
-
-
-#endif
+  return ( 0 ); // fail
 }
