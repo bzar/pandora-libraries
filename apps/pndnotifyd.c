@@ -619,7 +619,9 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 
   //WARN: MEMORY LEAK HERE
   pnd_log ( pndn_debug, "pndnotifyd - memory leak here - perform_discoveries()\n" );
-  pnd_box_delete ( applist ); // does not free the disco_t contents!
+  if ( applist ) {
+    pnd_box_delete ( applist ); // does not free the disco_t contents!
+  }
 
   return ( 1 );
 }
