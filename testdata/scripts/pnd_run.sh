@@ -70,7 +70,7 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 		if [ $? = 102 ]; then
 		exit 1
 		fi
-		sudo /etc/init.d/slim stop
+		sudo /etc/init.d/slim-init stop
 		sleep 5s
 	else
 		echo -e “ae[34me[30m”
@@ -79,7 +79,7 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 		exit 1
 		fi
 		# close x now, do we want to use slim stop or just kill x?
-		sudo /etc/init.d/slim stop
+		sudo /etc/init.d/slim-init stop
 		sleep 5s
 	fi
 fi
@@ -208,5 +208,5 @@ fi
 if [ $nox ]; then #restart x if it was killed
 echo "starting x in 5s"
 sleep 5
-sudo /etc/init.d/slim start
+sudo /etc/init.d/slim-init-init start
 fi

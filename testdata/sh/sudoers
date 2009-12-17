@@ -1,4 +1,4 @@
-ALL ALL=NOPASSWD: /etc/init.d/slim stop, /etc/init.d/slim start, NOEXEC: /bin/mount /dev/loop* /mnt/pnd/* , \ 
+ALL ALL=NOPASSWD: /etc/init.d/slim-init stop, /etc/init.d/slim-init start, NOEXEC: /bin/mount /dev/loop* /mnt/pnd/* , \ 
 /bin/mount -t aufs -o exec\,dirs\=*/pandora/appdata/*\=rw+nolwh\:/mnt/pnd/*\=rr none /mnt/utmp/* , \
 /bin/mount -t aufs -o exec\,noplink\,dirs\=*/pandora/appdata/*\=rw+nolwh\:/mnt/pnd/*\=rr none /mnt/utmp/* , \
 /bin/mount --bind -o ro * /mnt/pnd/*, mount -t squashfs * /mnt/pnd/*,\
