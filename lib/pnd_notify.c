@@ -172,3 +172,28 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
 
   return ( 1 );
 }
+
+/* we've run into the issue where inotify returns that it is set up, but in
+ * fact is not doing anything; restarting the process repairs it.. so here
+ * we devise a wank that continually tests inotify until it responds, then
+ * returns knowing we're good
+ */
+unsigned char pnd_notify_wait_until_ready ( unsigned int secs_timeout ) {
+  return ( 0 ); // fail
+}
+
+static unsigned char _inotify_test_run ( void ) {
+#if 0
+  // set up inotify
+  int fd;
+
+  fd = inotify_init();
+
+  if ( fd < 0 ) {
+    return ( 0 ); // failed to init at all
+  }
+
+
+
+#endif
+}

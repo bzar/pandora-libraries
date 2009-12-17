@@ -235,6 +235,10 @@ int main ( int argc, char *argv[] ) {
     // lets not eat up all the CPU
     // should use an alarm or select() or something -- I mean really, why aren't I putting interval_secs into
     // the select() call above in pnd_notify_whatsitcalled()? -- but lets not break this right before release shall we
+    // NOTE: Oh right, I remember now -- inotify will spam when a card is inserted, and it will not be instantaneoous..
+    // the events will dribble in over a second. So this sleep is a lame trick that generally works. I really should
+    // do select(), and then when it returns just spin for a couple seconds slurping up events until no more and a thresh-hold
+    // time is hit, but this will do for now. I suck.
     sleep ( interval_secs );
 
   } // while
@@ -520,11 +524,9 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
   // attempt to auto-discover applications in the given path
   applist = pnd_disco_search ( appspath, overridespath );
 
-  if ( ! applist ) {
-    return ( 0 );
+  if ( applist ) {
+    process_discoveries ( applist, emitdesktoppath, emiticonpath );
   }
-
-  process_discoveries ( applist, emitdesktoppath, emiticonpath );
 
   // run a clean up, to remove any dotdesktop files that we didn't
   // just now create (that seem to have been created by pndnotifyd
