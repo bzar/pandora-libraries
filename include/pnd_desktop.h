@@ -19,6 +19,7 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 // emit_icon() will attempt to copy the icon from a PXML directory, or from a pnd file if appended,
 // to the given directory; returns 1 on sucess, otherwise is a fail.
 unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p );
+unsigned char *pnd_emit_icon_to_buffer ( pnd_disco_t *p, unsigned int *r_buflen ); // returns length of malloc in r_buflen if !NULL
 
 // pnd_map_dotdesktop_categories() will attempt to find an appropriate standard .desktop category(s) based
 // on the provided PXML-style category.

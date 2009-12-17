@@ -4,10 +4,6 @@
  *
  */
 
-// TODO: Catch HUP and reparse config
-// TODO: Should perhaps direct all printf's through a vsprintf handler to avoid redundant "if ! g_daemon_mode"
-// TODO: During daemon mode, should perhaps syslog or log errors
-
 #include <stdio.h>     // for stdio
 #include <unistd.h>    // for exit()
 #include <stdlib.h>    // for exit()
@@ -121,6 +117,16 @@ int main ( int argc, char *argv[] ) {
   }
 
   pnd_log ( pndn_rem, "Interval between checks is %u seconds\n", interval_secs );
+
+  // check if inotify is awake yet; if not, try waiting for awhile to see if it does
+  pnd_log ( pndn_rem, "Starting INOTIFY test; should be instant, but may take awhile...\n" );
+
+  if ( ! pnd_notify_wait_until_ready ( 120 /* seconds */ ) ) {
+    pnd_log ( pndn_error, "ERROR: INOTIFY refuses to be useful and quite awhile has passed. Bailing out.\n" );
+    return ( -1 );
+  }
+
+  pnd_log ( pndn_rem, "INOTIFY seems to be useful, whew.\n" );
 
   // basic daemon set up
   if ( g_daemon_mode ) {
@@ -239,6 +245,10 @@ int main ( int argc, char *argv[] ) {
     // lets not eat up all the CPU
     // should use an alarm or select() or something -- I mean really, why aren't I putting interval_secs into
     // the select() call above in pnd_notify_whatsitcalled()? -- but lets not break this right before release shall we
+    // NOTE: Oh right, I remember now -- inotify will spam when a card is inserted, and it will not be instantaneoous..
+    // the events will dribble in over a second. So this sleep is a lame trick that generally works. I really should
+    // do select(), and then when it returns just spin for a couple seconds slurping up events until no more and a thresh-hold
+    // time is hit, but this will do for now. I suck.
     sleep ( interval_secs );
 
   } // while
@@ -524,11 +534,9 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
   // attempt to auto-discover applications in the given path
   applist = pnd_disco_search ( appspath, overridespath );
 
-  if ( ! applist ) {
-    return ( 0 );
+  if ( applist ) {
+    process_discoveries ( applist, emitdesktoppath, emiticonpath );
   }
-
-  process_discoveries ( applist, emitdesktoppath, emiticonpath );
 
   // run a clean up, to remove any dotdesktop files that we didn't
   // just now create (that seem to have been created by pndnotifyd
@@ -611,7 +619,9 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 
   //WARN: MEMORY LEAK HERE
   pnd_log ( pndn_debug, "pndnotifyd - memory leak here - perform_discoveries()\n" );
-  pnd_box_delete ( applist ); // does not free the disco_t contents!
+  if ( applist ) {
+    pnd_box_delete ( applist ); // does not free the disco_t contents!
+  }
 
   return ( 1 );
 }

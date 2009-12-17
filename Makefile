@@ -23,10 +23,10 @@ SOLIB1 = libpnd.so.1.0.1    # versioned name
 XMLOBJ = lib/tinyxml/tinystr.o lib/tinyxml/tinyxml.o lib/tinyxml/tinyxmlerror.o lib/tinyxml/tinyxmlparser.o
 ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o pnd_apps.o pnd_utility.o pnd_desktop.o pnd_io_gpio.o pnd_logger.o
 
-all: ${SOLIB} ${LIB} conftest discotest notifytest pndnotifyd rawpxmltest pndvalidator loggertest pnd_run
+all: ${SOLIB} ${LIB} conftest discotest notifytest pndnotifyd rawpxmltest pndvalidator loggertest pnd_run pndevmapperd
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd
 	${RM} -rf deployment/media
 	find . -name "*~*" -exec rm {} \; -print
 
@@ -54,6 +54,9 @@ pndvalidator:	pndvalidator.o ${SOLIB1}
 pnd_run:	pnd_run.o ${SOLIB1}
 	${CC} -lstdc++ -o bin/pnd_run pnd_run.o ${SOLIB1}
 
+pndevmapperd:	pndevmapperd.o ${SOLIB1}
+	${CC} -lstdc++ -o bin/pndevmapperd pndevmapperd.o ${SOLIB1}
+
 # deployment and assembly components
 #
 
@@ -80,6 +83,7 @@ deploy:
 	cp bin/pndnotifyd deployment/usr/bin
 	cp bin/pnd_run deployment/usr/bin
 	cp testdata/scripts/* deployment/usr/pandora/scripts
+	cp bin/pndevmapperd deployment/usr/bin
 	# copy in freebee .pnd apps to /usr/pandora/apps
 	# add pndnotify to etc/rc/startup-whatever
 	cp testdata/sh/pndnotifyd deployment/etc/init.d/pndnotifyd
