@@ -119,6 +119,8 @@ int main ( int argc, char *argv[] ) {
   pnd_log ( pndn_rem, "Interval between checks is %u seconds\n", interval_secs );
 
   // check if inotify is awake yet; if not, try waiting for awhile to see if it does
+  pnd_log ( pndn_rem, "Starting INOTIFY test; should be instant, but may take awhile...\n" );
+
   if ( ! pnd_notify_wait_until_ready ( 120 /* seconds */ ) ) {
     pnd_log ( pndn_error, "ERROR: INOTIFY refuses to be useful and quite awhile has passed. Bailing out.\n" );
     return ( -1 );
