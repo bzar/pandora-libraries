@@ -2,7 +2,7 @@
  
 ######adjust path of genpxml.sh if you want to use that "feture"#####
  
-TEMP=`getopt -o p:d:x:i: -- "$@"`
+TEMP=`getopt -o p:d:x:i:c: -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
