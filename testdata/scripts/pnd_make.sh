@@ -2,7 +2,7 @@
  
 ######adjust path of genpxml.sh if you want to use that "feture"#####
  
-TEMP=`getopt -o p:d:x:i:c: -- "$@"`
+TEMP=`getopt -o p:d:x:i:c -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -13,7 +13,7 @@ while true ; do
 		-d) echo "FOLDER set to $2" ;FOLDER=$2;shift 2 ;;
 		-x) echo "PXML set to $2" ;PXML=$2;shift 2 ;;
 		-i) echo "ICON set to $2" ;ICON=$2;shift 2 ;;
-		-c) echo "-c set, will create compressed squasfs image instead of iso $2" ;SQUASH=1;shift 2 ;;
+		-c) echo "-c set, will create compressed squasfs image instead of iso $2" ;SQUASH=1;shift 1 ;;
 		--) shift ; break ;;
 		*) echo "Error while parsing arguments! $2" ; exit 1 ;;
 	esac
