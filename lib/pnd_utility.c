@@ -15,6 +15,46 @@
 #include "pnd_pndfiles.h"
 #include "pnd_discovery.h"
 
+unsigned char pnd_check_login ( char *r_username, unsigned int maxlen ) {
+  FILE *f;
+  struct utmp b;
+  struct passwd *pw;
+
+  f = fopen ( "/var/run/utmp", "r" );
+
+  if ( f ) {
+
+    while ( fread ( &b, sizeof(struct utmp), 1, f ) == 1 ) {
+
+      if ( b.ut_type == USER_PROCESS ) {
+
+	// ut_user contains the username ..
+	// now we need to find the path to that account.
+	while ( ( pw = getpwent() ) ) {
+
+	  if ( strcmp ( pw -> pw_name, b.ut_user ) == 0 ) {
+
+	    if ( r_username ) {
+	      strncpy ( r_username, b.ut_user, maxlen );
+	    }
+
+	    fclose ( f );
+	    return ( 1 );
+	  } // passwd entry matches the utmp entry
+
+	} // while iteratin across passwd entries
+	endpwent();
+
+      } // utmp entry is for a user login
+
+    } // while
+
+    fclose ( f );
+  } // opened?
+
+  return ( 0 );
+}
+
 // a generalized variable-substitution routine might be nice; for now we need a quick tilde one,
 // so here goes. Brute force ftw!
 char *pnd_expand_tilde ( char *freeable_buffer ) {

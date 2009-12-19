@@ -151,6 +151,19 @@ int main ( int argc, char *argv[] ) {
     
   } // set up daemon
 
+  // wait for a user to be logged in - we should probably get hupped when a user logs in, so we can handle
+  // log-out and back in again, with SDs popping in and out between..
+  pnd_log ( pndn_rem, "Checking to see if a user is logged in\n" );
+  char tmp_username [ 128 ];
+  while ( 1 ) {
+    if ( pnd_check_login ( tmp_username, 127 ) ) {
+      break;
+    }
+    pnd_log ( pndn_debug, "  No one logged in yet .. spinning.\n" );
+    sleep ( 2 );
+  } // spin
+  pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", tmp_username );
+
   /* parse configs
    */
 

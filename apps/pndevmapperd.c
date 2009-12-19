@@ -13,6 +13,7 @@
 #include <sys/stat.h>  // for umask
 #include <fcntl.h> // for open(2)
 #include <errno.h> // for errno
+#include <time.h> // for time(2)
 
 #include <linux/input.h> // for keys
 //#include "../../kernel-rip/input.h" // for keys
@@ -29,6 +30,7 @@
 // daemon and logging
 //
 unsigned char g_daemon_mode = 0;
+unsigned int g_minimum_separation = 1;
 
 typedef enum {
   pndn_debug = 0,
@@ -41,10 +43,19 @@ typedef enum {
 // event-to-sh mapping
 //
 typedef struct {
+
+  /* template information
+   */
   unsigned char key_p; // 1 if its a key, otherwise an event
   int keycode;         // scancode for the key in question
   char *script;        // script to invoke
   //unsigned int hold_min; // minimum hold-time to trigger
+
+  /* state
+   */
+  time_t last_trigger_time;
+  time_t keydown_time;
+
 } evmap_t;
 
 #define MAXEVENTS 255
@@ -164,7 +175,7 @@ int main ( int argc, char *argv[] ) {
 	g_evmap [ g_evmap_max ].key_p = 1;
 	g_evmap [ g_evmap_max ].keycode = p -> keycode;
 	g_evmap [ g_evmap_max ].script = n;
-	pnd_log ( pndn_debug, "Registered key %s [%d] to script %s\n", p -> keyname, p -> keycode, (char*) n );
+	pnd_log ( pndn_rem, "Registered key %s [%d] to script %s\n", p -> keyname, p -> keycode, (char*) n );
 	g_evmap_max++;
       } else {
 	pnd_log ( pndn_warning, "WARNING! Key '%s' is not handled by pndevmapperd yet! Skipping.", k );
@@ -172,6 +183,9 @@ int main ( int argc, char *argv[] ) {
 
     } else if ( strncmp ( k, "events.", 7 ) == 0 ) {
       k += 7;
+
+    } else if ( strncmp ( k, "pndevmapperd.", 7 ) == 0 ) {
+      // not consumed here, skip silently
 
     } else {
       // uhhh
@@ -184,6 +198,11 @@ int main ( int argc, char *argv[] ) {
   if ( pnd_conf_get_as_int ( evmaph, "pndevmapperd.loglevel" ) != PND_CONF_BADNUM ) {
     pnd_log_set_filter ( pnd_conf_get_as_int ( evmaph, "pndevmapperd.loglevel" ) );
     pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+  }
+
+  if ( pnd_conf_get_as_int ( evmaph, "pndevmapperd.minimum_separation" ) != PND_CONF_BADNUM ) {
+    g_minimum_separation = pnd_conf_get_as_int ( evmaph, "pndevmapperd.minimum_separation" );
+    pnd_log ( pndn_rem, "config file causes minimum_separation to change to %u", g_minimum_separation );
   }
 
   /* do we have anything to do?
@@ -220,9 +239,12 @@ int main ( int argc, char *argv[] ) {
 
     if ( strcmp ( name, "omap_twl4030keypad" ) == 0 ) {
       fds [ 0 ] = fd;
-    } else if (strcmp(name, "gpio-keys") == 0) {
+    } else if ( strcmp ( name, "gpio-keys" ) == 0) {
       fds [ 1 ] = fd;
+    } else if ( strcmp ( name, "AT Translated Set 2 keyboard" ) == 0) { // for vmware, my dev environment
+      fds [ 0 ] = fd;
     } else {
+      pnd_log ( pndn_rem, "Ignoring unknown device '%s'\n", name );
       close ( fd );
       continue;
     }
@@ -302,7 +324,7 @@ int main ( int argc, char *argv[] ) {
 	}
 
       } else {
-	pnd_log ( pndn_warning, "WARNING: Unexpected event type %i received\n", ev[i].type );
+	pnd_log ( pndn_debug, "DEBUG: Unexpected event type %i received\n", ev[i].type );
 	continue;
       }
 
@@ -324,31 +346,55 @@ int main ( int argc, char *argv[] ) {
 void dispatch_key ( int keycode, int val ) {
   unsigned int i;
 
-  while ( i < g_evmap_max ) {
+  // val decodes as:
+  // 1 - down (pressed)
+  // 2 - down again (hold)
+  // 0 - up (released)
+
+  for ( i = 0; i < g_evmap_max; i++ ) {
 
     if ( ( g_evmap [ i ].key_p ) &&
-	 ( g_evmap [ i ].keycode == keycode ) )
+	 ( g_evmap [ i ].keycode == keycode ) &&
+	 ( g_evmap [ i ].script ) )
     {
 
-      if ( g_evmap [ i ].script ) {
-	int x;
+      // is this a keydown or a keyup?
+      if ( val == 1 ) {
+	// keydown
+	g_evmap [ i ].keydown_time = time ( NULL );
 
-	if ( ( x = fork() ) < 0 ) {
-	  pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-	  exit ( -3 );
+      } else if ( val == 0 ) {
+	// keyup
+
+	char holdtime [ 128 ];
+	sprintf ( holdtime, "%d", (int)( time(NULL) - g_evmap [ i ].keydown_time ) );
+
+	if ( time ( NULL ) - g_evmap [ i ].last_trigger_time >= g_minimum_separation ) {
+	  int x;
+
+	  g_evmap [ i ].last_trigger_time = time ( NULL );
+
+	  pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, holdtime );
+
+	  if ( ( x = fork() ) < 0 ) {
+	    pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+	    exit ( -3 );
+	  }
+
+	  if ( x == 0 ) {
+	    execl ( g_evmap [ i ].script, g_evmap [ i ].script, holdtime, (char*)NULL );
+	    pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
+	    exit ( -4 );
+	  }
+
+	} else {
+	  pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
 	}
 
-	if ( x == 0 ) {
-	  pnd_log ( pndn_debug, "REM: Invoking %s\n", g_evmap [ i ].script );
-	  execl ( g_evmap [ i ].script, g_evmap [ i ].script, (char*)NULL );
-	  pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
-	  exit ( -4 );
-	}
-
-      }
+      } // key up or down?
 
       return;
-    }
+    } // found matching event for keycode
 
   } // while
 

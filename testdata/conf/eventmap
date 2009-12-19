@@ -3,7 +3,7 @@
 # Event-to-shscript map configuration
 
 [keys]
-pandora /usr/pandora/scripts/op_menu
+a /usr/pandora/scripts/op_menu
 
 [events]
 lid-close	bar
