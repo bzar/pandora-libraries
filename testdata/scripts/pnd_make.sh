@@ -41,7 +41,11 @@ if [ ! -f $PXML ]; then echo "$PXML doesnt exist"; exit 1; fi #check if pxml act
 if [ ! $SQUASH ]; then
 	mkisofs -o $PNDNAME.iso -R $FOLDER
 else
-	mksquashfs $FOLDER $PNDNAME.iso 
+	if [ $(mksquashfs -version |  awk '{if ($3 >= 4) print 1}') = 1 ]; then
+		echo "your squashfs version is older then version 4, pleas upgrade to 4.0 or later"
+		exit 1
+	fi
+	mksquashfs -no-recovery -nopad $FOLDER $PNDNAME.iso 
 fi
 #append pxml to iso
 cat $PNDNAME.iso $PXML >  $PNDNAME
