@@ -26,7 +26,7 @@ ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_
 all: ${SOLIB} ${LIB} conftest discotest notifytest pndnotifyd rawpxmltest pndvalidator loggertest pnd_run pndevmapperd
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd testdata/menuicons/*
 	${RM} -rf deployment/media
 	find . -name "*~*" -exec rm {} \; -print
 

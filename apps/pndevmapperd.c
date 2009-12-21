@@ -5,6 +5,9 @@
 
 // woot for writing code while sick.
 
+// this code begs a rewrite, but should work fine; its just arranged goofily
+// -> I mean, why the racial divide between keys and other events
+
 #include <stdio.h> /* for printf, NULL */
 #include <stdlib.h> /* for free */
 #include <string.h> /* for strdup */
@@ -40,14 +43,41 @@ typedef enum {
   pndn_none
 } pndnotify_loglevels_e;
 
+// key/event definition
+//
+typedef struct {
+  int keycode;
+  char *keyname;
+} keycode_t;
+
+keycode_t keycodes[] = {
+  { KEY_A, "a" },
+  { KEY_MENU, "pandora" },
+  { KEY_POWER, "power" },
+  { -1, NULL }
+};
+
+typedef struct {
+  int type;
+  int code;
+  char *name;
+} generic_event_t;
+
+generic_event_t generics[] = {
+  { EV_SW, 0, "lid-toggle" }, // expecting value 1 (lid close) or 0 (lid open)
+  { -1, -1, NULL }
+};
+
 // event-to-sh mapping
 //
 typedef struct {
 
+  unsigned char key_p; // 1 if its a key, otherwise an event
+
   /* template information
    */
-  unsigned char key_p; // 1 if its a key, otherwise an event
-  int keycode;         // scancode for the key in question
+  void *reqs;          // scancode/etc for the event in question
+
   char *script;        // script to invoke
   //unsigned int hold_min; // minimum hold-time to trigger
 
@@ -62,22 +92,10 @@ typedef struct {
 evmap_t g_evmap [ MAXEVENTS ];
 unsigned int g_evmap_max = 0;
 
-// key definition
-//
-typedef struct {
-  int keycode;
-  char *keyname;
-} keycode_t;
-
-keycode_t keycodes[] = {
-  { KEY_A, "a" },
-  { KEY_MENU, "pandora" },
-  { -1, NULL }
-};
-
 /* get to it
  */
 void dispatch_key ( int keycode, int val );
+void dispatch_event ( int code, int val );
 
 static void usage ( char *argv[] ) {
   printf ( "%s [-d]\n", argv [ 0 ] );
@@ -162,6 +180,9 @@ int main ( int argc, char *argv[] ) {
     if ( strncmp ( k, "keys.", 5 ) == 0 ) {
       k += 5;
 
+      // keys should really push push generic-events onto the table, since they;'re just a special case of them
+      // to make things easier to read
+
       // figure out which keycode we're talking about
       keycode_t *p = keycodes;
       while ( p -> keycode != -1 ) {
@@ -172,9 +193,9 @@ int main ( int argc, char *argv[] ) {
       }
 
       if ( p -> keycode != -1 ) {
-	g_evmap [ g_evmap_max ].key_p = 1;
-	g_evmap [ g_evmap_max ].keycode = p -> keycode;
-	g_evmap [ g_evmap_max ].script = n;
+	g_evmap [ g_evmap_max ].key_p = 1;    // its a key, not an event
+	g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
+	g_evmap [ g_evmap_max ].script = n;   // note the script to activate in response
 	pnd_log ( pndn_rem, "Registered key %s [%d] to script %s\n", p -> keyname, p -> keycode, (char*) n );
 	g_evmap_max++;
       } else {
@@ -183,6 +204,32 @@ int main ( int argc, char *argv[] ) {
 
     } else if ( strncmp ( k, "events.", 7 ) == 0 ) {
       k += 7;
+
+      // yes, key events could really be defined in this generic sense, and really we could just let people
+      // put the code and so on right in the conf, but trying to keep it easy on people; maybe should
+      // add a 'generic' section to conf file and just let folks redefine random events that way
+      // Really, it'd be nice if the /dev/input/events could spit out useful text, and just use scripts
+      // to respond without a daemon per se; for that matter, pnd-ls and pnd-map pnd-dotdesktopemitter
+      // should just exist as scripts rather than daemons, but whose counting?
+
+      // figure out which keycode we're talking about
+      generic_event_t *p = generics;
+      while ( p -> code != -1 ) {
+	if ( strcasecmp ( p -> name, k ) == 0 ) {
+	  break;
+	}
+	p++;
+      }
+
+      if ( p -> code != -1 ) {
+	g_evmap [ g_evmap_max ].key_p = 0;    // its an event, not a key
+	g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
+	g_evmap [ g_evmap_max ].script = n;   // note the script to activate in response
+	pnd_log ( pndn_rem, "Registered generic event %s [%d] to script %s\n", p -> name, p -> code, (char*) n );
+	g_evmap_max++;
+      } else {
+	pnd_log ( pndn_warning, "WARNING! Generic event '%s' is not handled by pndevmapperd yet! Skipping.", k );
+      }
 
     } else if ( strncmp ( k, "pndevmapperd.", 7 ) == 0 ) {
       // not consumed here, skip silently
@@ -308,6 +355,7 @@ int main ( int argc, char *argv[] ) {
 	continue;
       } else if ( ev[i].type == EV_KEY ) {
 
+	// do we even know about this key at all?
 	keycode_t *p = keycodes;
 	while ( p -> keycode != -1 ) {
 	  if ( p -> keycode == ev [ i ].code ) {
@@ -316,6 +364,7 @@ int main ( int argc, char *argv[] ) {
 	  p++;
 	}
 
+	// if we do, hand it off to dispatcher to look up if we actually do something with it
 	if ( p -> keycode != -1 ) {
 	  pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
 	  dispatch_key ( p -> keycode, ev [ i ].value );
@@ -323,10 +372,29 @@ int main ( int argc, char *argv[] ) {
 	  pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
 	}
 
+      } else if ( ev[i].type == EV_SW ) {
+
+	// do we even know about this event at all?
+	generic_event_t *p = generics;
+	while ( p -> code != -1 ) {
+	  if ( p -> code == ev [ i ].code ) {
+	    break;
+	  }
+	  p++;
+	}
+
+	// if we do, hand it off to dispatcher to look up if we actually do something with it
+	if ( p -> code != -1 ) {
+	  pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
+	  dispatch_event ( p -> code, ev [ i ].value );
+	} else {
+	  pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	}
+
       } else {
 	pnd_log ( pndn_debug, "DEBUG: Unexpected event type %i received\n", ev[i].type );
 	continue;
-      }
+      } // type?
 
     } // for
 
@@ -354,7 +422,7 @@ void dispatch_key ( int keycode, int val ) {
   for ( i = 0; i < g_evmap_max; i++ ) {
 
     if ( ( g_evmap [ i ].key_p ) &&
-	 ( g_evmap [ i ].keycode == keycode ) &&
+	 ( ((keycode_t*) (g_evmap [ i ].reqs)) -> keycode == keycode ) &&
 	 ( g_evmap [ i ].script ) )
     {
 
@@ -392,6 +460,54 @@ void dispatch_key ( int keycode, int val ) {
 	}
 
       } // key up or down?
+
+      return;
+    } // found matching event for keycode
+
+  } // while
+
+  return;
+}
+
+void dispatch_event ( int code, int val ) {
+  unsigned int i;
+
+  // LID val decodes as:
+  // 1 - closing
+  // 0 - opening
+
+  for ( i = 0; i < g_evmap_max; i++ ) {
+
+    if ( ( g_evmap [ i ].key_p == 0 ) &&
+	 ( ((generic_event_t*) (g_evmap [ i ].reqs)) -> code == code ) &&
+	 ( g_evmap [ i ].script ) )
+    {
+
+      // just hand the code to the script (ie: 0 or 1 to script)
+      if ( time ( NULL ) - g_evmap [ i ].last_trigger_time >= g_minimum_separation ) {
+	int x;
+	char value [ 100 ];
+
+	sprintf ( value, "%d", val );
+
+	g_evmap [ i ].last_trigger_time = time ( NULL );
+
+	pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, value );
+
+	if ( ( x = fork() ) < 0 ) {
+	  pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+	  exit ( -3 );
+	}
+
+	if ( x == 0 ) {
+	  execl ( g_evmap [ i ].script, g_evmap [ i ].script, value, (char*)NULL );
+	  pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
+	  exit ( -4 );
+	}
+
+      } else {
+	pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
+      }
 
       return;
     } // found matching event for keycode
