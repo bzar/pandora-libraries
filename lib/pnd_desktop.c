@@ -67,9 +67,9 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     fprintf ( f, "%s", buffer );
   }
 
-#if 0
-  if ( p -> description_en ) {
-    snprintf ( buffer, 1020, "Comment=%s\n", p -> description_en );
+#if 1
+  if ( p -> desc_en && p -> desc_en [ 0 ] ) {
+    snprintf ( buffer, 1020, "Comment=%s\n", p -> desc_en ); // no [en] needed I suppose, yet
     fprintf ( f, "%s", buffer );
   }
 #endif
@@ -250,6 +250,58 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   return ( 1 );
 }
 
+#if 1 // we switched direction to freedesktop standard categories
+// if no categories herein, return 0; otherwise, if some category-like-text, return 1
+int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsigned short int len, pnd_disco_t *d ) {
+  char *t;
+  char *match;
+
+  // clear target so we can easily append
+  memset ( target_buffer, '\0', len );
+
+  // for each main-cat and sub-cat, including alternates, just append them all together
+  // we'll try mapping them, since the categories file is there, but we'll default to
+  // copying over; this lets the conf file do merging or renaming of cagtegories, which
+  // could still be useful, but we can leave the conf file empty to effect a pure
+  // trusted-PXML-copying
+
+  // it would be sort of cumbersome to copy all the freedesktop.org defined categories (as
+  // there are hundreds), and would also mean new ones and peoples custom ones would
+  // flop
+
+  /* attempt primary category chain
+   */
+  #define MAPCAT(field)				            \
+    if ( ( t = d -> field ) ) {                             \
+      match = pnd_map_dotdesktop_category ( c, t );         \
+      strncat ( target_buffer, match ? match : t, len );    \
+      strncat ( target_buffer, ";", len );                  \
+    }
+
+  MAPCAT(main_category);
+  MAPCAT(main_category1);
+  MAPCAT(main_category2);
+  MAPCAT(alt_category);
+  MAPCAT(alt_category1);
+  MAPCAT(alt_category2);
+
+  if ( target_buffer [ 0 ] ) {
+    return ( 1 ); // I guess its 'good'?
+  }
+
+#if 0
+  if ( ( t = d -> main_category ) ) {
+    match = pnd_map_dotdesktop_category ( c, t );
+    strncat ( target_buffer, match ? match : t, len );
+    strncat ( target_buffer, ";", len );
+  }
+#endif
+
+  return ( 0 );
+}
+#endif
+
+#if 0 // we switched direction
 //int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsigned short int len, pnd_pxml_handle h ) {
 int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsigned short int len, pnd_disco_t *d ) {
   unsigned short int n = 0; // no. matches
@@ -377,6 +429,7 @@ int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsi
 
   return ( n );
 }
+#endif
 
 // given category 'foo', look it up in the provided config map. return the char* reference, or NULL
 char *pnd_map_dotdesktop_category ( pnd_conf_handle c, char *single_category ) {

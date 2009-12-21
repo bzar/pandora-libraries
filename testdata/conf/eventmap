@@ -6,8 +6,7 @@
 a /usr/pandora/scripts/op_menu
 
 [events]
-lid-close	bar
-lid-open	foo
+lid-toggle	/usr/pandora/scripts/op_lidtoggle
 
 [pndevmapperd]
 # logging level 0 means to include debug; level 1 (regular), 2 (warnings), 3 (errors)

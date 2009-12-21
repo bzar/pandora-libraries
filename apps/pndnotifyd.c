@@ -113,6 +113,7 @@ int main ( int argc, char *argv[] ) {
     pnd_log_set_filter ( pndn_rem );
     pnd_log_set_pretext ( "pndnotifyd" );
     pnd_log_to_stdout();
+    pnd_log_set_flush ( 1 );
     pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
   }
 

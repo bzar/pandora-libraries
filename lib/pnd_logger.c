@@ -6,6 +6,7 @@
 
 char *log_pretext = NULL;
 unsigned char log_filterlevel = 0;
+unsigned char log_flushafter = 0;
 
 typedef enum {
   pndl_nil = 0,
@@ -45,6 +46,11 @@ unsigned char pnd_log_set_filter ( unsigned char newlevel ) {
 
 unsigned char pnd_log_get_filter ( void ) {
   return ( log_filterlevel );
+}
+
+void pnd_log_set_flush ( unsigned char x ) {
+  log_flushafter = x;
+  return;
 }
 
 void pnd_log_set_pretext ( char *pre ) {
@@ -119,6 +125,9 @@ void pnd_log_emit ( char *message ) {
 	fprintf ( log_targets [ i ].stream, "%s", message );
 	if ( strchr ( message, '\n' ) == NULL ) {
 	  fprintf ( log_targets [ i ].stream, "\n" );
+	}
+	if ( log_flushafter ) {
+	  fflush ( log_targets [ i ].stream );
 	}
       }
       break;
