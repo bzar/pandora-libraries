@@ -101,7 +101,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
 	      florp = strdup ( pw -> pw_dir );
 
 	      home = florp;
-	      //printf ( "  home is %s (from %u)\n", home, b.ut_type );
+	      printf ( "  DEBUG: home is %s (from %u)\n", home, b.ut_type );
 
 	    } // passwd entry matches the utmp entry
 
@@ -121,7 +121,10 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     return ( s ); // can't succeed
   }
 
+  printf ( "DEBUG: entering while (%s)\n", s );
+
   while ( ( p = strchr ( s, '~' ) ) ) {
+    printf ( "DEBUG: within while (%s)\n", s );
     char *temp = malloc ( strlen ( s ) + strlen ( home ) + 1 );
     memset ( temp, '\0', strlen ( s ) + strlen ( home ) + 1 );
     // copy in stuff prior to ~
@@ -135,7 +138,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     s = temp;
   } // while finding matches
 
-  //printf ( "expand tilde OUT: '%s'\n", s );
+  printf ( "DEBUG: expand tilde OUT: '%s'\n", s );
 
   return ( s );
 }
