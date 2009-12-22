@@ -18,7 +18,8 @@ if [ $xpid ]; then
     done
   else
   echo "starting appfinder"
-    xfce4-appfinder
+    xfceuser=$(ps u -C xfce4-session | tail -n1 | awk '{print $1}')
+    sudo -u $xfceuser xfce4-appfinder
   fi
 else
   echo "no x, killing all pnd aps so x gets restarted"
