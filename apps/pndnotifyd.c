@@ -402,6 +402,39 @@ void consume_configuration ( void ) {
     pnd_log ( pndn_rem, "No pndhup found (which is fine.)\n" );
   }
 
+  /* cheap hack, maybe it'll help when pndnotifyd is coming up before the rest of the system and before
+   * the user is formally logged in
+   */
+  pnd_log ( pndn_rem, "Setting a default $HOME to non-root user\n" );
+  {
+    DIR *dir;
+
+    if ( ( dir = opendir ( "/home" ) ) ) {
+      struct dirent *dirent;
+
+      while ( ( dirent = readdir ( dir ) ) ) {
+	pnd_log ( pndn_rem, "  Found user homedir '%s'\n", dirent -> d_name );
+
+	// file is a .desktop?
+	if ( dirent -> d_name [ 0 ] == '.' ) {
+	  continue;
+	} else if ( strcmp ( dirent -> d_name, "root" ) == 0 ) {
+	  continue;
+	}
+
+	// a non-root user is found
+	char buffer [ 200 ];
+	sprintf ( buffer, "/home/%s", dirent -> d_name );
+	pnd_log ( pndn_rem, "  Going with '%s'\n", buffer );
+	setenv ( "HOME", buffer, 1 /* overwrite */ );
+
+      } // while iterating through dir listing
+
+      closedir ( dir );
+    } // opendir?
+
+  } // scope
+
   /* handle globbing or variable substitution
    */
   desktop_dotdesktoppath = pnd_expand_tilde ( strdup ( desktop_dotdesktoppath ) );

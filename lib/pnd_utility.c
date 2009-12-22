@@ -24,9 +24,12 @@ unsigned char pnd_check_login ( char *r_username, unsigned int maxlen ) {
 
   if ( f ) {
 
+    // spin until a non-root user comes along
     while ( fread ( &b, sizeof(struct utmp), 1, f ) == 1 ) {
 
-      if ( b.ut_type == USER_PROCESS ) {
+      if ( ( b.ut_type == USER_PROCESS ) &&
+	   ( strcmp ( b.ut_user, "root" ) != 0 ) )
+      {
 
 	// ut_user contains the username ..
 	// now we need to find the path to that account.
@@ -62,8 +65,8 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
   char *s = freeable_buffer;
   char *home = getenv ( "HOME" );
 
-  //printf ( "expand tilde IN: '%s'\n", freeable_buffer );
-  //printf ( "  home was %s\n", home );
+  printf ( "DEBUG: expand tilde IN: '%s'\n", freeable_buffer );
+  printf ( "DEBUG:  $HOME was %s\n", home );
 
   // well, as pndnotifyd (etc) may be running as _root_, while the user is logged in
   // as 'pandora' or god knows what, this could be problematic. Other parts of the lib
@@ -101,7 +104,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
 	      florp = strdup ( pw -> pw_dir );
 
 	      home = florp;
-	      printf ( "  DEBUG: home is %s (from %u)\n", home, b.ut_type );
+	      printf ( "  DEBUG: home (for %s) is %s (from %u)\n", b.ut_user, home, b.ut_type );
 
 	    } // passwd entry matches the utmp entry
 
@@ -121,7 +124,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     return ( s ); // can't succeed
   }
 
-  printf ( "DEBUG: entering while (%s)\n", s );
+  printf ( "DEBUG: entering while (%s) with home (%s)\n", s, home );
 
   while ( ( p = strchr ( s, '~' ) ) ) {
     printf ( "DEBUG: within while (%s)\n", s );
