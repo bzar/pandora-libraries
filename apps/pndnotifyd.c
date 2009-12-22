@@ -427,6 +427,7 @@ void consume_configuration ( void ) {
 	sprintf ( buffer, "/home/%s", dirent -> d_name );
 	pnd_log ( pndn_rem, "  Going with '%s'\n", buffer );
 	setenv ( "HOME", buffer, 1 /* overwrite */ );
+	break;
 
       } // while iterating through dir listing
 
