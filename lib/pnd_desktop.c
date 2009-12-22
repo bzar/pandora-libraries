@@ -67,6 +67,10 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     fprintf ( f, "%s", buffer );
   }
 
+  if ( p -> unique_id ) {
+    fprintf ( f, "X-Pandora-UID=%s\n", p -> unique_id );
+  }
+
 #if 1
   if ( p -> desc_en && p -> desc_en [ 0 ] ) {
     snprintf ( buffer, 1020, "Comment=%s\n", p -> desc_en ); // no [en] needed I suppose, yet

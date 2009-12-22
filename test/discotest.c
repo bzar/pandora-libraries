@@ -8,6 +8,7 @@
 #include "pnd_apps.h"
 #include "pnd_pxml.h"
 #include "pnd_discovery.h"
+#include "pnd_desktop.h"
 #include "pnd_locate.h"
 #include "pnd_utility.h"
 
