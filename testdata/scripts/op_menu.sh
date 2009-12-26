@@ -23,7 +23,7 @@ if [ $xpid ]; then
   fi
 else
   echo "no x, killing all pnd aps so x gets restarted"
-  pndrunning=$(pstree -lpA | grep pnd_run.sh | sed -ne 's/.*(\([0-9]\+\))/\1/p')
+  pidlist=$(pstree -lpA | grep pnd_run.sh | sed -ne 's/.*(\([0-9]\+\))/\1/p')
   for PID in $pidlist
   do
     kill -9 $PID
