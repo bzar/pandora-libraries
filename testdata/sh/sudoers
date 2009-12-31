@@ -1,4 +1,5 @@
-ALL ALL=NOPASSWD: /etc/init.d/slim-init stop, /etc/init.d/slim-init start, \
+ALL ALL=NOPASSWD: \
+	/etc/init.d/slim-init stop, /etc/init.d/slim-init start, \
 	/bin/mount -t aufs -o exec\,dirs\=*/pandora/appdata/*\=rw+nolwh\:/mnt/pnd/*\=rr none /mnt/utmp/*, \
 	/bin/mount -t aufs -o exec\,noplink\,dirs\=*/pandora/appdata/*\=rw+nolwh\:/mnt/pnd/*\=rr none /mnt/utmp/*
 
