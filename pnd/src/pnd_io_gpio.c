@@ -457,7 +457,7 @@ int PND_OpenEventDeviceByName(char device_name[])
     return 0;
 }
 
-int PND_Pad_RecentlyPressed(pnd_keytype_e num)
+int PND_Pad_RecentlyPressed(enum pnd_keytype_e num)
 {
     static int GLES2D_Pad_old[pke_pad_max];
 

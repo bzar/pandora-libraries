@@ -12,10 +12,10 @@
 #include "pnd_notify.h"
 #include "pnd_pathiter.h"
 
-typedef struct
+struct pnd_notify_t
 {
     int fd;              // notify API file descriptor
-} pnd_notify_t;
+};
 
 static int notify_handle;
 
@@ -28,7 +28,7 @@ static int notify_handle;
 pnd_notify_handle pnd_notify_init(void)
 {
     int fd;
-    pnd_notify_t *p;
+    struct pnd_notify_t *p;
 
     fd = inotify_init();
 
@@ -37,7 +37,7 @@ pnd_notify_handle pnd_notify_init(void)
         return(NULL);
     }
 
-    p = malloc(sizeof(pnd_notify_t));
+    p = malloc(sizeof(struct pnd_notify_t));
 
     if (! p)
     {
@@ -55,7 +55,7 @@ pnd_notify_handle pnd_notify_init(void)
 
 void pnd_notify_shutdown(pnd_notify_handle h)
 {
-    pnd_notify_t *p = (pnd_notify_t*)h;
+    struct pnd_notify_t *p = (struct pnd_notify_t*)h;
 
     close(p -> fd);
 
@@ -83,7 +83,7 @@ static int pnd_notify_callback(const char *fpath, const struct stat *sb __attrib
 
 void pnd_notify_watch_path(pnd_notify_handle h, char *fullpath, unsigned int flags)
 {
-    pnd_notify_t *p = (pnd_notify_t*)h;
+    struct pnd_notify_t *p = (struct pnd_notify_t*)h;
 
 #if 1
     inotify_add_watch(p -> fd, fullpath, PND_INOTIFY_MASK);
@@ -121,7 +121,7 @@ static void pnd_notify_hookup(int fd)
 
 unsigned char pnd_notify_rediscover_p(pnd_notify_handle h)
 {
-    pnd_notify_t *p = (pnd_notify_t*)h;
+    struct pnd_notify_t *p = (struct pnd_notify_t*)h;
 
     struct timeval t;
     fd_set rfds;
@@ -201,7 +201,7 @@ static unsigned char _inotify_test_run(void)
 {
 
     // set up inotify
-    pnd_notify_t fdt;
+    struct pnd_notify_t fdt;
     int wd; // watch-descriptor
 
     // set up inotify

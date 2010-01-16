@@ -9,8 +9,8 @@ extern "C"
 {
 #endif
 
-    unsigned char pnd_pxml_load(const char* pFilename, pnd_pxml_t *app);
-    unsigned char pnd_pxml_parse(const char *pFilename, char *buffer, unsigned int length, pnd_pxml_t *app);
+    unsigned char pnd_pxml_load(const char* pFilename, struct pnd_pxml_t *app);
+    unsigned char pnd_pxml_parse(const char *pFilename, char *buffer, unsigned int length, struct pnd_pxml_t *app);
 
 #ifdef __cplusplus
 }

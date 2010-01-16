@@ -14,9 +14,9 @@
 pnd_pxml_handle pnd_pxml_fetch(char *fullpath)
 {
 
-    pnd_pxml_t *p = malloc(sizeof(pnd_pxml_t));
+    struct pnd_pxml_t *p = malloc(sizeof(struct pnd_pxml_t));
 
-    memset(p, '\0', sizeof(pnd_pxml_t));
+    memset(p, '\0', sizeof(struct pnd_pxml_t));
 
     if (! pnd_pxml_load(fullpath, p))
     {
@@ -29,9 +29,9 @@ pnd_pxml_handle pnd_pxml_fetch(char *fullpath)
 pnd_pxml_handle pnd_pxml_fetch_buffer(char *filename, char *buffer)
 {
 
-    pnd_pxml_t *p = malloc(sizeof(pnd_pxml_t));
+    struct pnd_pxml_t *p = malloc(sizeof(struct pnd_pxml_t));
 
-    memset(p, '\0', sizeof(pnd_pxml_t));
+    memset(p, '\0', sizeof(struct pnd_pxml_t));
 
     if (! pnd_pxml_parse(filename, buffer, strlen(buffer), p))
     {
@@ -43,7 +43,7 @@ pnd_pxml_handle pnd_pxml_fetch_buffer(char *filename, char *buffer)
 
 void pnd_pxml_delete(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
 
     int i;
 
@@ -245,7 +245,7 @@ void pnd_pxml_set_app_name(pnd_pxml_handle h, char *v)
      * Please do not use this function if it can be avoided; it is only here for compatibility.
      * The function might fail on low memory, and there's no way for the user to know when this happens.
      */
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     char has_en_field = 0;
     int i;
 
@@ -268,7 +268,7 @@ void pnd_pxml_set_app_name(pnd_pxml_handle h, char *v)
         if (p->titles_c > p->titles_alloc_c)//we don't have enough strings allocated
         {
             p->titles_alloc_c <<= 1;
-            p->titles = (pnd_localized_string_t *)realloc((void*)p->titles, p->titles_alloc_c);
+            p->titles = (struct pnd_localized_string_t *)realloc((void*)p->titles, p->titles_alloc_c);
 
             if (!p->titles)return; //errno = ENOMEM
         }
@@ -345,7 +345,7 @@ signed char pnd_pxml_merge_override(pnd_pxml_handle h, char *searchpath)
     return(retval);
 }
 
-char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int strings_c, char *iso_lang)
+char *pnd_pxml_get_best_localized_string(struct pnd_localized_string_t strings[], int strings_c, char *iso_lang)
 {
     int i;
     int similarity_weight = 0xff; /*Set to something Really Bad in the beginning*/
@@ -372,7 +372,7 @@ char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int s
 
 char *pnd_pxml_get_app_name(pnd_pxml_handle h, char *iso_lang)
 {
-    pnd_pxml_t *p = (pnd_pxml_t *)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t *)h;
     return pnd_pxml_get_best_localized_string(p->titles, p->titles_c, iso_lang);
 }
 
@@ -398,25 +398,25 @@ char *pnd_pxml_get_app_name_fr(pnd_pxml_handle h)
 
 char *pnd_pxml_get_unique_id(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> unique_id);
 }
 
 char *pnd_pxml_get_standalone(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> standalone);
 }
 
 char *pnd_pxml_get_icon(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> icon);
 }
 
 char *pnd_pxml_get_app_description(pnd_pxml_handle h, char *iso_lang)
 {
-    pnd_pxml_t *p = (pnd_pxml_t *)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t *)h;
     return pnd_pxml_get_best_localized_string(p->descriptions, p->descriptions_c, iso_lang);
 }
 
@@ -442,192 +442,192 @@ char *pnd_pxml_get_description_fr(pnd_pxml_handle h)
 
 char *pnd_pxml_get_previewpic1(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> previewpic1);
 }
 
 char *pnd_pxml_get_previewpic2(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> previewpic2);
 }
 
 char *pnd_pxml_get_author_name(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> author_name);
 }
 
 char *pnd_pxml_get_author_website(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> author_website);
 }
 
 char *pnd_pxml_get_version_major(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> version_major);
 }
 
 char *pnd_pxml_get_version_minor(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> version_minor);
 }
 
 char *pnd_pxml_get_version_release(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> version_release);
 }
 
 char *pnd_pxml_get_version_build(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> version_build);
 }
 
 char *pnd_pxml_get_exec(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> exec);
 }
 
 char *pnd_pxml_get_exec_option_no_x11(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> exec_no_x11);
 }
 
 char *pnd_pxml_get_main_category(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> main_category);
 }
 
 char *pnd_pxml_get_subcategory1(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> subcategory1);
 }
 
 char *pnd_pxml_get_subcategory2(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> subcategory2);
 }
 
 char *pnd_pxml_get_altcategory(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> altcategory);
 }
 
 char *pnd_pxml_get_altsubcategory1(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> altsubcategory1);
 }
 
 char *pnd_pxml_get_altsubcategory2(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> altsubcategory2);
 }
 
 char *pnd_pxml_get_osversion_major(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> osversion_major);
 }
 
 char *pnd_pxml_get_osversion_minor(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> osversion_minor);
 }
 
 char *pnd_pxml_get_osversion_release(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> osversion_release);
 }
 
 char *pnd_pxml_get_osversion_build(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> osversion_build);
 }
 
 char *pnd_pxml_get_associationitem1_name(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem1_name);
 }
 
 char *pnd_pxml_get_associationitem1_filetype(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem1_filetype);
 }
 
 char *pnd_pxml_get_associationitem1_parameter(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem1_parameter);
 }
 
 char *pnd_pxml_get_associationitem2_name(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem2_name);
 }
 
 char *pnd_pxml_get_associationitem2_filetype(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem2_filetype);
 }
 
 char *pnd_pxml_get_associationitem2_parameter(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem2_parameter);
 }
 
 char *pnd_pxml_get_associationitem3_name(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem3_name);
 }
 
 char *pnd_pxml_get_associationitem3_filetype(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem3_filetype);
 }
 
 char *pnd_pxml_get_associationitem3_parameter(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> associationitem3_parameter);
 }
 
 char *pnd_pxml_get_clockspeed(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> clockspeed);
 }
 
 char *pnd_pxml_get_background(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> background);
 }
 
 char *pnd_pxml_get_startdir(pnd_pxml_handle h)
 {
-    pnd_pxml_t *p = (pnd_pxml_t*)h;
+    struct pnd_pxml_t *p = (struct pnd_pxml_t*)h;
     return(p -> startdir);
 }

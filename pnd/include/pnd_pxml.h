@@ -92,21 +92,21 @@ extern "C"
      */
     unsigned char pnd_is_pxml_valid_app(pnd_pxml_handle h); // returns 1 when pxml seems like a valid application
 
-    typedef struct
+    struct pnd_localized_string_t
     {
         char *language;
         char *string;
-    } pnd_localized_string_t;
+    };
 
-    typedef struct
+    struct pnd_pxml_t
     {
-        pnd_localized_string_t *titles;
+        struct pnd_localized_string_t *titles;
         int titles_c;
         int titles_alloc_c;
         char *unique_id;
         char *standalone;
         char *icon;
-        pnd_localized_string_t *descriptions;
+        struct pnd_localized_string_t *descriptions;
         int descriptions_c;
         int descriptions_alloc_c;
         char *previewpic1;
@@ -144,7 +144,7 @@ extern "C"
         char *package_name;
         char *package_release_date;
 
-    }  pnd_pxml_t;
+    };
 
 #ifdef __cplusplus
 } /* "C" */

@@ -34,14 +34,14 @@
 // op mode; emitting stdout or no?
 static unsigned char g_daemon_mode = 0;
 
-typedef enum
+enum pndnotify_loglevels_e
 {
     pndn_debug = 0,
     pndn_rem,          // will set default log level to here, so 'debug' is omitted
     pndn_warning,
     pndn_error,
     pndn_none
-} pndnotify_loglevels_e;
+};
 
 // like discotest
 char *configpath;

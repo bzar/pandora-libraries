@@ -19,10 +19,10 @@ Makefile
 *.so*
 moc_*
 qrc_*
-pndvalidator
-pndrun
-pndnotifyd
-pndevmapperd
+pndvalidator/pndvalidator
+pndrun/pndrun
+pndnotifyd/pndnotifyd
+pndevmapperd/pndevmapperd
 
 # Ignore project-related user-generated files
 *.user

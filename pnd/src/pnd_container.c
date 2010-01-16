@@ -14,25 +14,25 @@
 
 // a Box node is just a key-name and a pointer to the next; the payload is whatever data
 // follows this. The container itself doesn't care.
-typedef struct _pnd_box_node_t
+struct pnd_box_node_t
 {
     char *key;
-    struct _pnd_box_node_t *next;
-} pnd_box_node_t;
+    struct pnd_box_node_t *next;
+};
 
-typedef struct
+struct pnd_box_t
 {
     char *name;             // for when you're using gdb and wondering wtf you're looking at
-    pnd_box_node_t *head;   // the first node
-} pnd_box_t;
+    struct pnd_box_node_t *head;   // the first node
+};
 
-#define PAYLOAD2NODE(x)((pnd_box_node_t*)(((unsigned char *)(x))- sizeof(pnd_box_node_t)))
-#define NODE2PAYLOAD(x)(((unsigned char *)(x))+ sizeof(pnd_box_node_t))
+#define PAYLOAD2NODE(x)((struct pnd_box_node_t*)(((unsigned char *)(x))- sizeof(struct pnd_box_node_t)))
+#define NODE2PAYLOAD(x)(((unsigned char *)(x))+ sizeof(struct pnd_box_node_t))
 
 pnd_box_handle pnd_box_new(char *name)
 {
 
-    pnd_box_t *p = malloc(sizeof(pnd_box_t));
+    struct pnd_box_t *p = malloc(sizeof(struct pnd_box_t));
 
     if (! p)
     {
@@ -55,8 +55,8 @@ pnd_box_handle pnd_box_new(char *name)
 
 void pnd_box_delete(pnd_box_handle box)
 {
-    pnd_box_t *p = (pnd_box_t*)box;
-    pnd_box_node_t *n, *next;
+    struct pnd_box_t *p = (struct pnd_box_t*)box;
+    struct pnd_box_node_t *n, *next;
 
     /* free up the list
      */
@@ -68,10 +68,10 @@ void pnd_box_delete(pnd_box_handle box)
 
         if (n -> key)
         {
-            free(n -> key);
+            free(n->key);
         }
 
-        next = n -> next;
+        next = n->next;
 
         free(n);
 
@@ -96,16 +96,16 @@ void pnd_box_delete(pnd_box_handle box)
 
 void *pnd_box_allocinsert(pnd_box_handle box, char *key, unsigned int size)
 {
-    pnd_box_t *p = (pnd_box_t*)box;
+    struct pnd_box_t *p = (struct pnd_box_t*)box;
 
-    pnd_box_node_t *n = malloc(sizeof(pnd_box_node_t) + size);
+    struct pnd_box_node_t *n = malloc(sizeof(struct pnd_box_node_t) + size);
 
     if (! n)
     {
         return(NULL); // must be getting bloody tight!
     }
 
-    memset(n, '\0', sizeof(pnd_box_node_t) + size);
+    memset(n, '\0', sizeof(struct pnd_box_node_t) + size);
 
     if (key)
     {
@@ -125,8 +125,8 @@ void *pnd_box_allocinsert(pnd_box_handle box, char *key, unsigned int size)
 
 void *pnd_box_find_by_key(pnd_box_handle box, char *key)
 {
-    pnd_box_t *p = (pnd_box_t*)box;
-    pnd_box_node_t *n;
+    struct pnd_box_t *p = (struct pnd_box_t*)box;
+    struct pnd_box_node_t *n;
 
     n = p -> head;
 
@@ -146,13 +146,13 @@ void *pnd_box_find_by_key(pnd_box_handle box, char *key)
 
 char *pnd_box_get_name(pnd_box_handle box)
 {
-    pnd_box_t *p = (pnd_box_t*)box;
+    struct pnd_box_t *p = (struct pnd_box_t*)box;
     return(p -> name);
 }
 
 void *pnd_box_get_head(pnd_box_handle box)
 {
-    pnd_box_t *p = (pnd_box_t*)box;
+    struct pnd_box_t *p = (struct pnd_box_t*)box;
 
     if (! p -> head)
     {
@@ -164,7 +164,7 @@ void *pnd_box_get_head(pnd_box_handle box)
 
 void *pnd_box_get_next(void *node)
 {
-    pnd_box_node_t *p = PAYLOAD2NODE(node);
+    struct pnd_box_node_t *p = PAYLOAD2NODE(node);
     p = p -> next;
 
     if (! p)
@@ -177,6 +177,6 @@ void *pnd_box_get_next(void *node)
 
 char *pnd_box_get_key(void *node)
 {
-    pnd_box_node_t *p = PAYLOAD2NODE(node);
+    struct pnd_box_node_t *p = PAYLOAD2NODE(node);
     return(p -> key);
 }
