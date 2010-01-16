@@ -3,12 +3,13 @@
 #define h_pnd_locate_h
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-// given a filename and a searchpath, return the first path it is found at (or NULL if not found)
+// given a filename and a searchpath, return the first path it is found at(or NULL if not found)
 // Returned path includes filename.
-char *pnd_locate_filename ( char *searchpath, char *filename );
+    char *pnd_locate_filename(char *searchpath, char *filename);
 
 #ifdef __cplusplus
 } /* "C" */

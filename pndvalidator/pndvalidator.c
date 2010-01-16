@@ -11,90 +11,102 @@
 #include "pnd_pxml.h"
 #include "pnd_utility.h"
 
-int main ( int argc, char *argv[] ) {
-  char *fullpath = NULL;
-  unsigned char do_override = 0;
-  unsigned char do_assets = 0;
+int main(int argc, char *argv[])
+{
+    char *fullpath = NULL;
+    unsigned char do_override = 0;
+    unsigned char do_assets = 0;
 
-  if ( argc <= 1 ) {
-    printf ( "usage: %s [options] path-to-file\n", argv [ 0 ] );
-    printf ( "\n" );
-    printf ( "path-to-file\tCan refer to a PXML.xml in a subdir, or can refer to a .pnd-style application bundle\n" );
-    printf ( "\n" );
-    printf ( "Options:\n" );
-    printf ( "\t-a\tattempt to mount and verify assets (executable, icon, screenshots, etc) are present\n" );
-    printf ( "\t-m\tattempt to merge in PXML-overrides and validate against the result\n" );
-    printf ( "\n" );
-    printf ( "By default, the validator will only pick up the PXML and perform checks on field content.\n" );
-    return ( 0 );
-  }
-
-  unsigned char i = 1;
-
-  while ( i < argc ) {
-
-    if ( strncmp ( argv [ i ], "-m", 2 ) == 0 ) {
-      do_override = 1;
-    } else if ( strncmp ( argv [ i ], "-a", 2 ) == 0 ) {
-      do_assets = 1;
-    } else {
-      fullpath = argv [ i ];
+    if (argc <= 1)
+    {
+        printf("usage: %s[options]path-to-file\n", argv[0]);
+        printf("\n");
+        printf("path-to-file\tCan refer to a PXML.xml in a subdir, or can refer to a .pnd-style application bundle\n");
+        printf("\n");
+        printf("Options:\n");
+        printf("\t-a\tattempt to mount and verify assets(executable, icon, screenshots, etc)are present\n");
+        printf("\t-m\tattempt to merge in PXML-overrides and validate against the result\n");
+        printf("\n");
+        printf("By default, the validator will only pick up the PXML and perform checks on field content.\n");
+        return 0;
     }
 
-    i++;
+    unsigned char i = 1;
 
-  } // while
+    while (i < argc)
+    {
 
-  // summarize
+        if (strncmp(argv[i], "-m", 2) == 0)
+        {
+            do_override = 1;
+        }
+        else if (strncmp(argv[i], "-a", 2) == 0)
+        {
+            do_assets = 1;
+        }
+        else
+        {
+            fullpath = argv[i];
+        }
 
-  if ( do_assets ) {
-    printf ( "Note: Will attempt to examine application assets\n" );
-  }
+        i++;
 
-  if ( do_override ) {
-    printf ( "Note: Will merge PXML-overrides if found (not an error if not found.)\n" );
-  }
+    } // while
 
-  if ( ! fullpath ) {
-    printf ( "ERROR: No path provided.\n" );
-    return ( 0 );
-  }
+    // summarize
 
-  printf ( "Path to examine: %s\n", fullpath );
+    if (do_assets)
+    {
+        printf("Note: Will attempt to examine application assets\n");
+    }
 
-  printf ( "\n" );
+    if (do_override)
+    {
+        printf("Note: Will merge PXML-overrides if found(not an error if not found.)\n");
+    }
 
-  //
-  // actually do useful work
-  //
+    if (! fullpath)
+    {
+        printf("ERROR: No path provided.\n");
+        return 0;
+    }
 
-  pnd_pxml_handle pxmlh;
+    printf("Path to examine: %s\n", fullpath);
 
-  pxmlh = pnd_pxml_get_by_path ( fullpath );
+    printf("\n");
 
-  if ( ! pxmlh ) {
-    printf ( "ERROR: PXML could not be extracted meaningfully.\n" );
-    return ( 0 );
-  }
+    //
+    // actually do useful work
+    //
 
-  printf ( "Got back a meaningful PXML structure.\n" );
+    pnd_pxml_handle pxmlh;
 
-  /* check the content
-   */
+    pxmlh = pnd_pxml_get_by_path(fullpath);
 
-  // check for required fields
+    if (! pxmlh)
+    {
+        printf("ERROR: PXML could not be extracted meaningfully.\n");
+        return 0;
+    }
 
-  // exec-path?
+    printf("Got back a meaningful PXML structure.\n");
 
-  // app name?
+    /* check the content
+     */
 
-  // unique ID
+    // check for required fields
 
-  // package-name (shortname)
+    // exec-path?
 
-  /* done!
-   */
-  pnd_pxml_delete ( pxmlh );
+    // app name?
 
-  return ( 0 );
+    // unique ID
+
+    // package-name(shortname)
+
+    /* done!
+     */
+    pnd_pxml_delete(pxmlh);
+
+    return 0;
 }

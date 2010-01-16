@@ -2,6 +2,7 @@
 
 TARGET = pnd
 TEMPLATE = lib
+CONFIG += staticlib
 VERSION = 1.0.1
 
 INCLUDEPATH += include/
@@ -16,6 +17,7 @@ HEADERS += include/pnd_apps.h \
            include/pnd_locate.h \
            include/pnd_logger.h \
            include/pnd_notify.h \
+           include/pnd_pathiter.h \
            include/pnd_pndfiles.h \
            include/pnd_pxml.h \
            include/pnd_pxml_names.h \
@@ -23,7 +25,6 @@ HEADERS += include/pnd_apps.h \
            include/pnd_utility.h \
            include/pnd_version.h \
            src/pnd_keytype.h \
-           src/pnd_pathiter.h \
            src/tinyxml/tinystr.h \
            src/tinyxml/tinyxml.h
 SOURCES += src/pnd_apps.c \
