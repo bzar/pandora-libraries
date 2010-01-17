@@ -3,6 +3,7 @@
 TARGET = pnd
 TEMPLATE = lib
 CONFIG += staticlib
+QT -= core gui
 VERSION = 1.0.1
 
 INCLUDEPATH += include/
