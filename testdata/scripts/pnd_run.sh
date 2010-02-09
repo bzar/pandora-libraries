@@ -19,7 +19,7 @@
 #cleanup
  
 # parse arguments
-TEMP=`getopt -o p:e:a:b:s:m::u::n::x:: -- "$@"`
+TEMP=`getopt -o p:e:a:b:s:m::u::n::x: -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -36,6 +36,7 @@ while true ; do
 		-m) echo "mount";mount=1;shift 2;;
 		-u) echo "umount";umount=1;shift 2;;
 		-x) echo "no x";nox=1;shift 2;;
+		-j) echo "join/ also mount those folders";append=$2;shift 2;;
 		-a) 
 			case "$2" in
 				"") echo "no arguments"; shift 2 ;;
@@ -155,10 +156,11 @@ if [ ! $umount ]; then
 		echo "$mntline"
 		$mntline #mount the pnd/folder
 		echo "mounting union!"
-		if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's
-		sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
+		if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
+		#append is fucking dirty, need to clean that up
+		sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
 		else
-		sudo mount -t aufs -o exec,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr none /mnt/utmp/$BASENAME # put union on top
+		sudo mount -t aufs -o exec,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
 		fi
  
 	else
