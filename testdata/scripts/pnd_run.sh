@@ -211,7 +211,7 @@ fi
 if [ $nox ]; then #restart x if it was killed
 echo "starting x in 5s"
 sleep 5
-sudo /etc/init.d/slim-init-init start
+sudo /etc/init.d/slim-init start
 fi
 }
 echo forking now!
