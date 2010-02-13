@@ -19,7 +19,7 @@
 #cleanup
  
 # parse arguments
-TEMP=`getopt -o p:e:a:b:s:m::u::n::x: -- "$@"`
+TEMP=`getopt -o p:e:a:b:s:m::u::n::x::j: -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -59,7 +59,8 @@ if [ ! $EXENAME ]; then
 	fi
 fi
 
-
+fork () {
+echo in fork!
 if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
 	applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
 	whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
@@ -212,3 +213,7 @@ echo "starting x in 5s"
 sleep 5
 sudo /etc/init.d/slim-init-init start
 fi
+}
+echo forking now!
+fork &
+disown
