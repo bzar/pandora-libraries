@@ -83,6 +83,7 @@ char *pnd_pxml_get_associationitem3_parameter ( pnd_pxml_handle h );
 char *pnd_pxml_get_clockspeed ( pnd_pxml_handle h );
 char *pnd_pxml_get_background ( pnd_pxml_handle h );
 char *pnd_pxml_get_startdir ( pnd_pxml_handle h );
+char *pnd_pxml_get_mkdir ( pnd_pxml_handle h );
 
 // for 'set' functions, pass NULL value to delete existing value without setting new one
 void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v );
@@ -142,6 +143,7 @@ typedef struct
 	char *exec_no_x11;
 	char *package_name;
 	char *package_release_date;
+        char *mkdir_sp; // a colon separated list of paths to be mkdir'd (silently fail) when pnd is autodiscovered. path is always relative to the root of the hosting device.
 
 }  pnd_pxml_t;
 

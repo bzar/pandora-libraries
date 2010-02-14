@@ -36,6 +36,7 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> alt_category ) {   free ( p -> alt_category );   }
   if ( p -> alt_category1 ) {  free ( p -> alt_category1 );  }
   if ( p -> alt_category2 ) {  free ( p -> alt_category2 );  }
+  if ( p -> mkdir_sp )      {  free ( p -> mkdir_sp );       }
 
   return;
 }
@@ -212,6 +213,10 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( ( z = pnd_pxml_get_previewpic2 ( pxmlh ) ) ) {
 	p -> preview_pic2 = strdup ( z );
+      }
+      // mkdirs
+      if ( pnd_pxml_get_mkdir ( pxmlh ) ) {
+	p -> mkdir_sp = strdup ( pnd_pxml_get_mkdir ( pxmlh ) );
       }
 
     } else {

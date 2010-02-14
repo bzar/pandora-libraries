@@ -25,6 +25,11 @@ void pnd_exec_no_wait_1 ( char *fullpath, char *arg1 );
 //   NOTE: Does _NOT_ automatically pick up PXML-overrides; you can call that function if you want
 pnd_pxml_handle pnd_pxml_get_by_path ( char *fullpath );
 
+// determine_mountpoint() will examine a path, and return the mountpoint that this path
+// is sitting on; returns 1 on success, meaning the target was populated.
+// consider for a similar effect: df /home -> look at "Mounted on"
+unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, unsigned char mountpoint_len );
+
 #ifdef __cplusplus
 } /* "C" */
 #endif

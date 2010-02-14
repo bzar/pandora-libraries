@@ -22,6 +22,9 @@
 
 #if 1 // globbing is performed
 
+// only iterates actual existing paths; if you want to return
+// non-matching paths, see below
+
 #define SEARCHPATH_PRE                            \
   char *end, *colon;                              \
   char *head = searchpath;                        \
@@ -73,6 +76,47 @@
     }                                             \
                                                   \
   } // while
+
+
+// the following will return even non-matching chunks, but is not doing wordexp() expansion on it
+
+#define SEARCHCHUNK_PRE                           \
+  char *end, *colon;                              \
+  char *head = searchpath;                        \
+  char chunk [ FILENAME_MAX ];                    \
+                                                  \
+  /*fprintf ( stderr, "sp %s\n", searchpath );*/  \
+                                                  \
+  while ( 1 ) {                                   \
+    colon = strchr ( head, ':' );                 \
+    end = strchr ( head, '\0' );                  \
+                                                  \
+    if ( colon && colon < end ) {                 \
+      memset ( chunk, '\0', FILENAME_MAX );       \
+      strncpy ( chunk, head, colon - head );      \
+    } else {                                      \
+      strncpy ( chunk, head, FILENAME_MAX - 1 );  \
+    }                                             \
+                                                  \
+    /*fprintf ( stderr, "-> %s\n", chunk ); */    \
+                                                  \
+    char buffer [ FILENAME_MAX ];                 \
+                                                  \
+    strcpy ( buffer, chunk );  			  \
+    /*fprintf ( stderr, "glob %s\n", buffer );*/  \
+    { /* user code */
+
+#define SEARCHCHUNK_POST                          \
+    } /* user code */				  \
+    /* next search path */			  \
+    if ( colon && colon < end ) {                 \
+      head = colon + 1;                           \
+    } else {                                      \
+      break; /* done! */                          \
+    }                                             \
+                                                  \
+  } // while
+
 
 #endif // globbing is done
 

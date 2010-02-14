@@ -565,6 +565,55 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
       pnd_log ( pndn_rem, "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
     }
 
+    // does this object request any mkdir's?
+    if ( d -> mkdir_sp ) {
+
+      // it would appear it does! but we have to carefully validate these suckers
+      pnd_log ( pndn_rem, "  App %s requests mkdir: %s\n", d -> object_path, d -> mkdir_sp );
+
+      // for each mkdir requested path, do it...
+      char *searchpath = d -> mkdir_sp;
+
+      SEARCHCHUNK_PRE
+      {
+	/* "buffer" now holds each chunk of the searchpath, expanded */
+
+	// WARN: This whole concept could be flawed; what if they represent '..' in some other obscure way (unicode?)
+	// and we end up allowing mkdir's all over the place? The risk really is limited -- once the pnd is here,
+	// if the user _runs it_, it can go nuts, so creating a few dirs isn't all that dangerous...
+	//   HMRF :/
+	// Perhaps I should have a config setting for pndnotifyd to suppress this whole mkdir behaviour?
+
+	// if not containing ".." we allow it
+	if ( strstr ( buffer, ".." )  == NULL ) {
+
+	  // determine mountpoint for the file
+	  // - we could deduce this from the path (somewhat risky if we assume leading /media/mmcblk1p1 type notation .. could
+	  //   be other distributions entirely
+	  // - better to scan through mount-list and figure it out.. *sucks*
+	  char mountpoint [ PATH_MAX ];
+	  if ( pnd_determine_mountpoint ( d -> object_path, mountpoint, PATH_MAX - strlen ( buffer ) - 1 ) == 1 ) {
+
+	    strcat ( mountpoint, "/" );
+	    strcat ( mountpoint, buffer );
+
+	    struct stat t;
+	    if ( stat ( mountpoint, &t ) == 0 ) {
+	      pnd_log ( pndn_rem, "    Skipping existing mkdir: %s\n", mountpoint );
+	    } else {
+	      pnd_log ( pndn_rem, "    Attempting create of non-existant path: %s\n", mountpoint );
+	      mkdir ( mountpoint, 0777 );
+	    }
+
+	  } // if figured out the mountpoint
+
+	} // if valid path
+
+      }
+      SEARCHCHUNK_POST
+
+    } // mkdir request
+
     // next!
     d = pnd_box_get_next ( d );
 

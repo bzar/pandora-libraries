@@ -315,6 +315,43 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	  app -> package_release_date = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_DATE );
 	}
 
+	// mkdir request
+	if ( (pElem = hRoot.FirstChild(PND_PXML_NODENAME_MKDIR).Element()) ) {
+
+	  // seek <dir>
+	  if ( (pElem = pElem->FirstChildElement(PND_PXML_ENAME_MKDIR)) ) {
+	    char *t;
+
+	    if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
+	      // first <dir>, so just replace it wholesale; we use strdup so we can free() easily later, consistently. Mmm, leak seems imminent.
+	      app -> mkdir_sp = strdup ( t );
+	    }
+
+	    while ( ( pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_MKDIR ) ) ) {
+	      
+	      if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
+		char *foo = (char*) malloc ( strlen ( app -> mkdir_sp ) + strlen ( t ) + 1 /*:*/ + 1 /*\0*/ );
+
+		if ( foo ) {
+		  sprintf ( foo, "%s:%s", app -> mkdir_sp, t );
+		  free ( app -> mkdir_sp );
+		  app -> mkdir_sp = foo;
+		} // assuming we got ram, lets cat it all together
+
+	      } // got another elem?
+
+	    } // while
+
+	  } // found a <dir>
+
+#if 0
+	  if ( app -> mkdir_sp ) {
+	    printf ( "mkdir: %s\n", app -> mkdir_sp );
+	  }
+#endif
+
+	} // mkdir
+
 	return (1);
 }
 
