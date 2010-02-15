@@ -153,7 +153,7 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
     return ( 0 ); // nothing, or overflow, or .. whatever.
   }
 
-  unsigned int i;
+  unsigned int i = 0;
   struct inotify_event *e;
 
   while ( i < actuallen ) {

@@ -8,6 +8,8 @@
 #include <utmp.h> /* for expand-tilde below; see commentary for this about-turn */
 #include <sys/types.h> /* ditto */
 #include <pwd.h> /* ditto */
+#include <sys/stat.h> /* for fstat */
+#include <dirent.h> /* for opendir */
 
 #include "pnd_pxml.h"
 #include "pnd_container.h"
@@ -65,8 +67,8 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
   char *s = freeable_buffer;
   char *home = getenv ( "HOME" );
 
-  printf ( "DEBUG: expand tilde IN: '%s'\n", freeable_buffer );
-  printf ( "DEBUG:  $HOME was %s\n", home );
+  //printf ( "DEBUG: expand tilde IN: '%s'\n", freeable_buffer );
+  //printf ( "DEBUG:  $HOME was %s\n", home );
 
   // well, as pndnotifyd (etc) may be running as _root_, while the user is logged in
   // as 'pandora' or god knows what, this could be problematic. Other parts of the lib
@@ -104,7 +106,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
 	      florp = strdup ( pw -> pw_dir );
 
 	      home = florp;
-	      printf ( "  DEBUG: home (for %s) is %s (from %u)\n", b.ut_user, home, b.ut_type );
+	      //printf ( "  DEBUG: home (for %s) is %s (from %u)\n", b.ut_user, home, b.ut_type );
 
 	    } // passwd entry matches the utmp entry
 
@@ -124,10 +126,10 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     return ( s ); // can't succeed
   }
 
-  printf ( "DEBUG: entering while (%s) with home (%s)\n", s, home );
+  //printf ( "DEBUG: entering while (%s) with home (%s)\n", s, home );
 
   while ( ( p = strchr ( s, '~' ) ) ) {
-    printf ( "DEBUG: within while (%s)\n", s );
+    //printf ( "DEBUG: within while (%s)\n", s );
     char *temp = malloc ( strlen ( s ) + strlen ( home ) + 1 );
     memset ( temp, '\0', strlen ( s ) + strlen ( home ) + 1 );
     // copy in stuff prior to ~
@@ -141,7 +143,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     s = temp;
   } // while finding matches
 
-  printf ( "DEBUG: expand tilde OUT: '%s'\n", s );
+  //printf ( "DEBUG: expand tilde OUT: '%s'\n", s );
 
   return ( s );
 }
@@ -222,4 +224,82 @@ pnd_pxml_handle pnd_pxml_get_by_path ( char *fullpath ) {
   // ..
 
   return ( pxmlh );
+}
+
+unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, unsigned char mountpoint_len ) {
+
+  // just cheap it, and call df like an idiot.
+
+  // Filesystem           1K-blocks      Used Available Use% Mounted on
+
+  char cmd [ PATH_MAX ];
+  FILE *p;
+  char inbuf [ PATH_MAX ];
+
+  sprintf ( cmd, "/bin/df %s 2>/dev/null", fullpath );
+
+  if ( ( p = popen ( cmd, "r" ) ) ) {
+
+    // ignore title line; we really shoudl analyze it to figure out which column, but we make assumptions..
+    fgets ( inbuf, PATH_MAX, p );
+
+    if ( ! fgets ( inbuf, PATH_MAX, p ) ) {
+      pclose ( p );
+      return ( 0 );
+    }
+
+    pclose ( p );
+
+    // by now, good
+    char crap [ PATH_MAX ];
+    char mount [ PATH_MAX ];
+    if ( sscanf ( inbuf, "%s %s %s %s %s %s", crap, crap, crap, crap, crap, mount ) != 6 ) {
+      return ( 0 );
+    }
+
+    if ( strlen ( mount ) < mountpoint_len ) {
+      strcpy ( r_mountpoint, mount );
+      return ( 1 );
+    }
+
+  } // if popen
+
+  return ( 0 );
+
+#if 0
+  struct stat fooby;
+
+  // can we even stat this file?
+  if ( stat ( fullpath, &fooby ) == 0 ) {
+    //dev_t     st_dev;     /* ID of device containing file */
+    //dev_t     st_rdev;    /* device ID (if special file) */
+
+    dev_t mount = fooby.st_dev;
+
+    DIR *d = opendir ( "/dev" );
+
+    if ( d ) {
+      struct dirent *de;
+      char path [ FILENAME_MAX ];
+
+      while ( de = readdir ( d ) ) {
+	sprintf ( path, "/dev/%s", de -> d_name );
+
+	if ( stat ( path, &fooby ) == 0 ) {
+
+	  // finally, if we find the same major/minor pair in /dev, as we found for the target file, it means we found the right device
+	  if ( fooby.st_rdev == mount ) {
+	    printf ( "Device: %s\n", path );
+	  }
+
+	} // if
+
+      } // while
+
+    } // opened /dev?
+
+  } // stat
+#endif
+
+  return ( 0 );
 }

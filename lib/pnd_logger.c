@@ -2,11 +2,13 @@
 #include <stdarg.h> // va-args
 #include <stdlib.h> // malloc/free
 #include <string.h> // strdup
+#include <time.h>
 #include "pnd_logger.h"
 
-char *log_pretext = NULL;
-unsigned char log_filterlevel = 0;
-unsigned char log_flushafter = 0;
+static char *log_pretext = NULL;
+static unsigned char log_filterlevel = 0;
+static unsigned char log_flushafter = 0;
+static time_t log_first = 0;
 
 typedef enum {
   pndl_nil = 0,
@@ -105,7 +107,7 @@ unsigned char pnd_log_max_targets ( void ) {
   return ( PND_LOG_MAX );
 }
 
-void pnd_log_emit ( char *message ) {
+static void pnd_log_emit ( unsigned char level, char *message ) {
   unsigned char i;
 
   // iterate across targets and attempt to emit
@@ -118,9 +120,13 @@ void pnd_log_emit ( char *message ) {
       break;
 
     case pndl_stream:
+      // pretext
       if ( log_pretext ) {
-	fprintf ( log_targets [ i ].stream, "%s\t", log_pretext );
+	fprintf ( log_targets [ i ].stream, "%s ", log_pretext );
       }
+      // log level
+      fprintf ( log_targets [ i ].stream, "%u %u\t", level, (unsigned int) (time ( NULL ) - log_first) );
+      // message
       if ( message ) {
 	fprintf ( log_targets [ i ].stream, "%s", message );
 	if ( strchr ( message, '\n' ) == NULL ) {
@@ -149,6 +155,10 @@ void pnd_log_emit ( char *message ) {
 
 unsigned char pnd_log ( unsigned char level, char *fmt, ... ) {
 
+  if ( log_first == 0 ) {
+    log_first = time ( NULL );
+  }
+
   if ( level == PND_LOG_FORCE ) {
     // always proceed
   } else if ( level < log_filterlevel ) {
@@ -173,7 +183,7 @@ unsigned char pnd_log ( unsigned char level, char *fmt, ... ) {
 
     /* If that worked, return the string. */
     if ( n > -1 && n < size ) {
-      pnd_log_emit ( p );
+      pnd_log_emit ( level, p );
       break;
     }
 
@@ -196,4 +206,18 @@ unsigned char pnd_log ( unsigned char level, char *fmt, ... ) {
   }
 
   return ( 1 );
+}
+
+
+static unsigned char _do_buried_logging = 0;
+void pnd_log_set_buried_logging ( unsigned char yesno ) {
+  _do_buried_logging = yesno;
+  return;
+}
+
+unsigned char pnd_log_do_buried_logging ( void ) {
+  if ( _do_buried_logging == 1 ) {
+    return ( 1 );
+  }
+  return ( 0 );
 }

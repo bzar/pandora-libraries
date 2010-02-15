@@ -61,6 +61,8 @@ char *run_searchpath; // searchpath to find pnd_run.sh
 char *run_script;     // name of pnd_run.sh script from config
 char *pndrun;         // full path to located pnd_run.sh
 char *pndhup = NULL;  // full path to located pnd_hup.sh
+// default username
+char g_username [ 128 ]; // since we have to wait for login (!!), store username here
 // notifier handle
 pnd_notify_handle nh = 0;
 
@@ -79,6 +81,7 @@ int main ( int argc, char *argv[] ) {
   // behaviour
   unsigned char scanonlaunch = 1;
   unsigned int interval_secs = 5;
+  int logall = -1; // -1 means normal logging rules; >=0 means log all!
   // misc
   int i;
 
@@ -93,10 +96,24 @@ int main ( int argc, char *argv[] ) {
       interval_secs = atoi ( argv [ i ] );
     } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'n' ) {
       scanonlaunch = 0;
+    } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'l' ) {
+
+      if ( isdigit ( argv [ i ][ 2 ] ) ) {
+	unsigned char x = atoi ( argv [ i ] + 2 );
+	if ( x >= 0 &&
+	     x < pndn_none )
+	{
+	  logall = x;
+	}
+      } else {
+	logall = 0;
+      }
+
     } else {
       printf ( "%s [-d] [##]\n", argv [ 0 ] );
       printf ( "-d\tDaemon mode; detach from terminal, chdir to /tmp, suppress output. Optional.\n" );
       printf ( "-n\tDo not scan on launch; default is to run a scan for apps when %s is invoked.\n", argv [ 0 ] );
+      printf ( "-l#\tLog-it; -l is 0-and-up (or all), and -l2 means 2-and-up (not all); l[0-3] for now. Log goes to /tmp/pndnotifyd.log\n" );
       printf ( "##\tA numeric value is interpreted as number of seconds between checking for filesystem changes. Default %u.\n",
 	       interval_secs );
       printf ( "Signal: HUP the process to force reload of configuration and reset the notifier watch paths\n" );
@@ -107,15 +124,40 @@ int main ( int argc, char *argv[] ) {
 
   /* enable logging?
    */
-  if ( g_daemon_mode ) {
-    // nada
+  pnd_log_set_pretext ( "pndnotifyd" );
+  pnd_log_set_flush ( 1 );
+
+  if ( logall == -1 ) {
+    // standard logging; non-daemon versus daemon
+
+    if ( g_daemon_mode ) {
+      // nada
+    } else {
+      pnd_log_set_filter ( pndn_rem );
+      pnd_log_to_stdout();
+    }
+
   } else {
-    pnd_log_set_filter ( pndn_rem );
-    pnd_log_set_pretext ( "pndnotifyd" );
-    pnd_log_to_stdout();
-    pnd_log_set_flush ( 1 );
-    pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
-  }
+    FILE *f;
+
+    f = fopen ( "/tmp/pndnotifyd.log", "w" );
+
+    if ( f ) {
+      pnd_log_set_filter ( logall );
+      pnd_log_to_stream ( f );
+      pnd_log ( pndn_rem, "logall mode - logging to /tmp/pndnotifyd.log\n" );
+    }
+
+    if ( logall == pndn_debug ) {
+      pnd_log_set_buried_logging ( 1 ); // log the shit out of it
+      pnd_log ( pndn_rem, "logall mode 0 - turned on buried logging\n" );
+    }
+
+  } // logall
+
+  pnd_log ( pndn_rem, "%s built %s %s", argv [ 0 ], __DATE__, __TIME__ );
+
+  pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
 
   pnd_log ( pndn_rem, "Interval between checks is %u seconds\n", interval_secs );
 
@@ -155,15 +197,14 @@ int main ( int argc, char *argv[] ) {
   // wait for a user to be logged in - we should probably get hupped when a user logs in, so we can handle
   // log-out and back in again, with SDs popping in and out between..
   pnd_log ( pndn_rem, "Checking to see if a user is logged in\n" );
-  char tmp_username [ 128 ];
   while ( 1 ) {
-    if ( pnd_check_login ( tmp_username, 127 ) ) {
+    if ( pnd_check_login ( g_username, 127 ) ) {
       break;
     }
     pnd_log ( pndn_debug, "  No one logged in yet .. spinning.\n" );
     sleep ( 2 );
   } // spin
-  pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", tmp_username );
+  pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", g_username );
 
   /* parse configs
    */
@@ -215,6 +256,13 @@ int main ( int argc, char *argv[] ) {
     if ( scanonlaunch ||
 	 pnd_notify_rediscover_p ( nh ) )
     {
+
+      if ( time ( NULL ) - createtime <= 2 ) {
+	pnd_log ( pndn_rem, "Rediscovery request comes to soon after previous discovery; skipping.\n" );
+	sleep ( interval_secs );
+	continue;
+      }
+
       createtime = time ( NULL ); // all 'new' .destops are created at or after this time; prev are old.
 
       // if this was a forced scan, lets not do that next iteration
@@ -353,8 +401,12 @@ void consume_configuration ( void ) {
     }
 
     if ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) != PND_CONF_BADNUM ) {
-      pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
-      pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+      if ( pnd_log_do_buried_logging() == 0 ) {
+	pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
+	pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+      } else {
+	pnd_log ( pndn_rem, "-l command line suppresses log level change in config file\n" );
+      }
     }
 
   } else {
@@ -406,14 +458,41 @@ void consume_configuration ( void ) {
    * the user is formally logged in
    */
   pnd_log ( pndn_rem, "Setting a default $HOME to non-root user\n" );
-  {
+
+  // first, try to see if known-username maps to a homedir; if so, just use that!
+  // otherwise, pick first non-root homedir and assume .. or we start blaring .desktops
+  // out to all users like idiots
+  unsigned char got_user_homedir = 0;
+
+  if ( g_username [ 0 ] ) {
+    struct stat homedir;
+    char path [ PATH_MAX ];
+
+    sprintf ( path, "/home/%s", g_username );
+
+    // does this made up path exist?
+    if ( stat ( path, &homedir ) == 0 ) {
+
+      // and its a dir?
+      if ( S_ISDIR(homedir.st_mode) ) {
+	pnd_log ( pndn_rem, "  User [%s] matches path [%s], going with '%s'\n", g_username, path, path );
+	setenv ( "HOME", path, 1 /* overwrite */ );
+	got_user_homedir = 1;
+      } // and its a dir?
+
+    } // guessing a homedirname..
+
+  } // got a username?
+
+  // if guessing a path was no good, just try finding one
+  if ( got_user_homedir == 0 ) {
     DIR *dir;
 
     if ( ( dir = opendir ( "/home" ) ) ) {
       struct dirent *dirent;
 
       while ( ( dirent = readdir ( dir ) ) ) {
-	pnd_log ( pndn_rem, "  Found user homedir '%s'\n", dirent -> d_name );
+	pnd_log ( pndn_rem, "  Scanning user homedir '%s'\n", dirent -> d_name );
 
 	// file is a .desktop?
 	if ( dirent -> d_name [ 0 ] == '.' ) {
@@ -565,6 +644,55 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
       pnd_log ( pndn_rem, "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
     }
 
+    // does this object request any mkdir's?
+    if ( d -> mkdir_sp ) {
+
+      // it would appear it does! but we have to carefully validate these suckers
+      pnd_log ( pndn_rem, "  App %s requests mkdir: %s\n", d -> object_path, d -> mkdir_sp );
+
+      // for each mkdir requested path, do it...
+      char *searchpath = d -> mkdir_sp;
+
+      SEARCHCHUNK_PRE
+      {
+	/* "buffer" now holds each chunk of the searchpath, expanded */
+
+	// WARN: This whole concept could be flawed; what if they represent '..' in some other obscure way (unicode?)
+	// and we end up allowing mkdir's all over the place? The risk really is limited -- once the pnd is here,
+	// if the user _runs it_, it can go nuts, so creating a few dirs isn't all that dangerous...
+	//   HMRF :/
+	// Perhaps I should have a config setting for pndnotifyd to suppress this whole mkdir behaviour?
+
+	// if not containing ".." we allow it
+	if ( strstr ( buffer, ".." )  == NULL ) {
+
+	  // determine mountpoint for the file
+	  // - we could deduce this from the path (somewhat risky if we assume leading /media/mmcblk1p1 type notation .. could
+	  //   be other distributions entirely
+	  // - better to scan through mount-list and figure it out.. *sucks*
+	  char mountpoint [ PATH_MAX ];
+	  if ( pnd_determine_mountpoint ( d -> object_path, mountpoint, PATH_MAX - strlen ( buffer ) - 1 ) == 1 ) {
+
+	    strcat ( mountpoint, "/" );
+	    strcat ( mountpoint, buffer );
+
+	    struct stat t;
+	    if ( stat ( mountpoint, &t ) == 0 ) {
+	      pnd_log ( pndn_rem, "    Skipping existing mkdir: %s\n", mountpoint );
+	    } else {
+	      pnd_log ( pndn_rem, "    Attempting create of non-existant path: %s\n", mountpoint );
+	      mkdir ( mountpoint, 0777 );
+	    }
+
+	  } // if figured out the mountpoint
+
+	} // if valid path
+
+      }
+      SEARCHCHUNK_POST
+
+    } // mkdir request
+
     // next!
     d = pnd_box_get_next ( d );
 
@@ -578,6 +706,9 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 				    char *emitdesktoppath, char *emiticonpath )       // args to do emitting
 {
   pnd_box_handle applist;
+
+  pnd_log ( pndn_rem, "perform discovery - apps: %s, overrides: %s\n", appspath, overridespath );
+  pnd_log ( pndn_rem, "                  - emit desktop: %s, icons: %s\n", emitdesktoppath, emiticonpath );
 
   // attempt to auto-discover applications in the given path
   applist = pnd_disco_search ( appspath, overridespath );
@@ -632,13 +763,13 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 	  }
 	}
 	if ( source_libpnd ) {
-#if 0
-	  pnd_log ( pndn_rem,
+#if 1
+	  pnd_log ( pndn_debug,
 		    "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
 #endif
 	} else {
 #if 0
-	  pnd_log ( pndn_rem, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
+	  pnd_log ( pndn_debug, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
 #endif
 	  continue; // skip deleting it
 	}
@@ -646,8 +777,8 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 	// file is 'new'?
 	if ( stat ( buffer, &dirs ) == 0 ) {
 	  if ( dirs.st_mtime >= createtime ) {
-#if 0
-	    pnd_log ( pndn_rem, "File '%s' seems 'new', so leave it alone.\n", buffer );
+#if 1
+	    pnd_log ( pndn_debug, "File '%s' seems 'new', so leave it alone.\n", buffer );
 #endif
 	    continue; // skip deleting it
 	  }

@@ -157,6 +157,9 @@ int main ( int argc, char *argv[] ) {
       if ( d -> preview_pic2 ) {
 	printf ( "  Preview Pic 2: %s\n", d -> preview_pic2 );
       }
+      if ( d -> mkdir_sp ) {
+	printf ( "  mkdir requests: %s\n", d -> mkdir_sp );
+      }
 
       if ( do_icon ) {
 	if ( pnd_emit_icon ( "./testdata/dotdesktop", d ) ) {

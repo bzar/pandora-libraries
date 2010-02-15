@@ -66,6 +66,7 @@ typedef struct {
   char *alt_category2;
   char *preview_pic1;
   char *preview_pic2;
+  char *mkdir_sp;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided

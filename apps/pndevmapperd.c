@@ -17,6 +17,7 @@
 #include <fcntl.h> // for open(2)
 #include <errno.h> // for errno
 #include <time.h> // for time(2)
+#include <ctype.h> // for isdigit
 
 #include <linux/input.h> // for keys
 //#include "../../kernel-rip/input.h" // for keys
@@ -29,6 +30,8 @@
 #include "pnd_pndfiles.h"
 #include "pnd_pxml.h"
 #include "pnd_logger.h"
+#include "pnd_utility.h"
+#include "pnd_notify.h"
 
 // daemon and logging
 //
@@ -100,18 +103,32 @@ void dispatch_event ( int code, int val );
 static void usage ( char *argv[] ) {
   printf ( "%s [-d]\n", argv [ 0 ] );
   printf ( "-d\tDaemon mode; detach from terminal, chdir to /tmp, suppress output. Optional.\n" );
+  printf ( "-l#\tLog-it; -l is 0-and-up (or all), and -l2 means 2-and-up (not all); l[0-3] for now. Log goes to /tmp/pndevmapperd.log\n" );
   printf ( "Signal: HUP the process to force reload of configuration and reset the notifier watch paths\n" );
   return;
 }
 
 int main ( int argc, char *argv[] ) {
   int i;
+  int logall = -1; // -1 means normal logging rules; >=0 means log all!
 
   for ( i = 1; i < argc; i++ ) {
 
     if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'd' ) {
       //printf ( "Going daemon mode. Silent running.\n" );
       g_daemon_mode = 1;
+    } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'l' ) {
+
+      if ( isdigit ( argv [ i ][ 2 ] ) ) {
+	unsigned char x = atoi ( argv [ i ] + 2 );
+	if ( x >= 0 &&
+	     x < pndn_none )
+	{
+	  logall = x;
+	}
+      } else {
+	logall = 0;
+      }
     } else {
       usage ( argv );
       exit ( 0 );
@@ -121,14 +138,40 @@ int main ( int argc, char *argv[] ) {
 
   /* enable logging?
    */
-  if ( g_daemon_mode ) {
-    // nada
+  pnd_log_set_pretext ( "pndevmapperd" );
+  pnd_log_set_flush ( 1 );
+
+  if ( logall == -1 ) {
+    // standard logging; non-daemon versus daemon
+
+    if ( g_daemon_mode ) {
+      // nada
+    } else {
+      pnd_log_set_filter ( pndn_rem );
+      pnd_log_to_stdout();
+    }
+
   } else {
-    pnd_log_set_filter ( pndn_rem );
-    pnd_log_set_pretext ( "pndevmapperd" );
-    pnd_log_to_stdout();
-    pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
-  }
+    FILE *f;
+
+    f = fopen ( "/tmp/pndevmapperd.log", "w" );
+
+    if ( f ) {
+      pnd_log_set_filter ( logall );
+      pnd_log_to_stream ( f );
+      pnd_log ( pndn_rem, "logall mode - logging to /tmp/pndevmapperd.log\n" );
+    }
+
+    if ( logall == pndn_debug ) {
+      pnd_log_set_buried_logging ( 1 ); // log the shit out of it
+      pnd_log ( pndn_rem, "logall mode 0 - turned on buried logging\n" );
+    }
+
+  } // logall
+
+  pnd_log ( pndn_rem, "%s built %s %s", argv [ 0 ], __DATE__, __TIME__ );
+
+  pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
 
   // basic daemon set up
   if ( g_daemon_mode ) {
@@ -150,6 +193,45 @@ int main ( int argc, char *argv[] ) {
     umask ( 022 ); // emitted files can be rwxr-xr-x
     
   } // set up daemon
+
+  /* hmm, seems to not like working right after boot.. do we depend on another daemon or
+   * on giving kernel time to init something, or ... wtf?
+   * -- lets give the system some time to wake up
+   */
+  { // delay
+
+    // this one works for pndnotifyd, which actually needs INOTIFYH..
+    //
+
+    // check if inotify is awake yet; if not, try waiting for awhile to see if it does
+    pnd_log ( pndn_rem, "Starting INOTIFY test; should be instant, but may take awhile...\n" );
+
+    if ( ! pnd_notify_wait_until_ready ( 120 /* seconds */ ) ) {
+      pnd_log ( pndn_error, "ERROR: INOTIFY refuses to be useful and quite awhile has passed. Bailing out.\n" );
+      return ( -1 );
+    }
+
+    pnd_log ( pndn_rem, "INOTIFY seems to be useful, whew.\n" );
+
+    // pndnotifyd also waits for user to log in .. pretty excessive, especially since
+    // what if user wants to close the lid while at the log in screen? for now play the
+    // odds as thats pretty unliekly usage scenariom but is clearly not acceptible :/
+    //
+
+    // wait for a user to be logged in - we should probably get hupped when a user logs in, so we can handle
+    // log-out and back in again, with SDs popping in and out between..
+    pnd_log ( pndn_rem, "Checking to see if a user is logged in\n" );
+    char tmp_username [ 128 ];
+    while ( 1 ) {
+      if ( pnd_check_login ( tmp_username, 127 ) ) {
+	break;
+      }
+      pnd_log ( pndn_debug, "  No one logged in yet .. spinning.\n" );
+      sleep ( 2 );
+    } // spin
+    pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", tmp_username );
+
+  } // delay
 
   /* inhale config or die trying
    */

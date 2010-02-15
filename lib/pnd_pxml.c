@@ -497,3 +497,8 @@ char *pnd_pxml_get_startdir ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> startdir );
 }
+
+char *pnd_pxml_get_mkdir ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> mkdir_sp );
+}

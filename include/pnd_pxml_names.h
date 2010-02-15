@@ -87,6 +87,14 @@ extern "C" {
 #define PND_PXML_ATTRNAME_PACKAGE_NAME "name"
 #define PND_PXML_ATTRNAME_PACKAGE_DATE "released"
 
+/* <mkdir>
+ *   <dir path="..." />
+ * </mkdir>
+ */
+#define PND_PXML_NODENAME_MKDIR "mkdir"
+#define PND_PXML_ENAME_MKDIR "dir"
+#define PND_PXML_ATTRNAME_MKDIRPATH "path"
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
