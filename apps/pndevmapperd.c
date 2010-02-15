@@ -169,6 +169,8 @@ int main ( int argc, char *argv[] ) {
 
   } // logall
 
+  pnd_log ( pndn_rem, "%s built %s %s", argv [ 0 ], __DATE__, __TIME__ );
+
   pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
 
   // basic daemon set up

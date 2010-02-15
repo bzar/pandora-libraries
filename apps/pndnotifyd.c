@@ -61,6 +61,8 @@ char *run_searchpath; // searchpath to find pnd_run.sh
 char *run_script;     // name of pnd_run.sh script from config
 char *pndrun;         // full path to located pnd_run.sh
 char *pndhup = NULL;  // full path to located pnd_hup.sh
+// default username
+char g_username [ 128 ]; // since we have to wait for login (!!), store username here
 // notifier handle
 pnd_notify_handle nh = 0;
 
@@ -153,6 +155,8 @@ int main ( int argc, char *argv[] ) {
 
   } // logall
 
+  pnd_log ( pndn_rem, "%s built %s %s", argv [ 0 ], __DATE__, __TIME__ );
+
   pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
 
   pnd_log ( pndn_rem, "Interval between checks is %u seconds\n", interval_secs );
@@ -193,15 +197,14 @@ int main ( int argc, char *argv[] ) {
   // wait for a user to be logged in - we should probably get hupped when a user logs in, so we can handle
   // log-out and back in again, with SDs popping in and out between..
   pnd_log ( pndn_rem, "Checking to see if a user is logged in\n" );
-  char tmp_username [ 128 ];
   while ( 1 ) {
-    if ( pnd_check_login ( tmp_username, 127 ) ) {
+    if ( pnd_check_login ( g_username, 127 ) ) {
       break;
     }
     pnd_log ( pndn_debug, "  No one logged in yet .. spinning.\n" );
     sleep ( 2 );
   } // spin
-  pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", tmp_username );
+  pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", g_username );
 
   /* parse configs
    */
@@ -253,6 +256,13 @@ int main ( int argc, char *argv[] ) {
     if ( scanonlaunch ||
 	 pnd_notify_rediscover_p ( nh ) )
     {
+
+      if ( time ( NULL ) - createtime <= 2 ) {
+	pnd_log ( pndn_rem, "Rediscovery request comes to soon after previous discovery; skipping.\n" );
+	sleep ( interval_secs );
+	continue;
+      }
+
       createtime = time ( NULL ); // all 'new' .destops are created at or after this time; prev are old.
 
       // if this was a forced scan, lets not do that next iteration
@@ -448,14 +458,41 @@ void consume_configuration ( void ) {
    * the user is formally logged in
    */
   pnd_log ( pndn_rem, "Setting a default $HOME to non-root user\n" );
-  {
+
+  // first, try to see if known-username maps to a homedir; if so, just use that!
+  // otherwise, pick first non-root homedir and assume .. or we start blaring .desktops
+  // out to all users like idiots
+  unsigned char got_user_homedir = 0;
+
+  if ( g_username [ 0 ] ) {
+    struct stat homedir;
+    char path [ PATH_MAX ];
+
+    sprintf ( path, "/home/%s", g_username );
+
+    // does this made up path exist?
+    if ( stat ( path, &homedir ) == 0 ) {
+
+      // and its a dir?
+      if ( S_ISDIR(homedir.st_mode) ) {
+	pnd_log ( pndn_rem, "  User [%s] matches path [%s], going with '%s'\n", g_username, path, path );
+	setenv ( "HOME", path, 1 /* overwrite */ );
+	got_user_homedir = 1;
+      } // and its a dir?
+
+    } // guessing a homedirname..
+
+  } // got a username?
+
+  // if guessing a path was no good, just try finding one
+  if ( got_user_homedir == 0 ) {
     DIR *dir;
 
     if ( ( dir = opendir ( "/home" ) ) ) {
       struct dirent *dirent;
 
       while ( ( dirent = readdir ( dir ) ) ) {
-	pnd_log ( pndn_rem, "  Found user homedir '%s'\n", dirent -> d_name );
+	pnd_log ( pndn_rem, "  Scanning user homedir '%s'\n", dirent -> d_name );
 
 	// file is a .desktop?
 	if ( dirent -> d_name [ 0 ] == '.' ) {
@@ -731,7 +768,7 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 		    "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
 #endif
 	} else {
-#if 1
+#if 0
 	  pnd_log ( pndn_debug, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
 #endif
 	  continue; // skip deleting it
