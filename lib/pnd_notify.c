@@ -22,7 +22,7 @@ static int notify_handle;
 
 #define PND_INOTIFY_MASK     IN_CREATE | IN_DELETE | IN_UNMOUNT \
                              | IN_DELETE_SELF | IN_MOVE_SELF    \
-                             | IN_MOVED_FROM | IN_MOVED_TO
+                             | IN_MOVED_FROM | IN_MOVED_TO | IN_MODIFY
 
 pnd_notify_handle pnd_notify_init ( void ) {
   int fd;
