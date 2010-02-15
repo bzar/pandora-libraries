@@ -41,6 +41,12 @@ unsigned char pnd_log_get_filter ( void );
 // how many targets can be opened, entirely? this is a compile time limit, for sanity.
 unsigned char pnd_log_max_targets ( void );
 
+// tell buried lib functions to do some logging here; ie: since not all API's have a 'options' type flag where we could
+// add a hint to begin logging, they can just ask the logger if they need to do it
+#define PND_LOG_DEFAULT 0 // level 0 is by default the 'debug' level, with anything higher non-debug; only used for buried logging
+void pnd_log_set_buried_logging ( unsigned char yesno ); // set 1 for 'yes', 0 for 'no'
+unsigned char pnd_log_do_buried_logging ( void ); // return 1 for 'yes'
+
 #ifdef __cplusplus
 } /* "C" */
 #endif

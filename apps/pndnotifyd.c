@@ -79,6 +79,7 @@ int main ( int argc, char *argv[] ) {
   // behaviour
   unsigned char scanonlaunch = 1;
   unsigned int interval_secs = 5;
+  int logall = -1; // -1 means normal logging rules; >=0 means log all!
   // misc
   int i;
 
@@ -93,10 +94,24 @@ int main ( int argc, char *argv[] ) {
       interval_secs = atoi ( argv [ i ] );
     } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'n' ) {
       scanonlaunch = 0;
+    } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'l' ) {
+
+      if ( isdigit ( argv [ i ][ 2 ] ) ) {
+	unsigned char x = atoi ( argv [ i ] + 2 );
+	if ( x >= 0 &&
+	     x < pndn_none )
+	{
+	  logall = x;
+	}
+      } else {
+	logall = 0;
+      }
+
     } else {
       printf ( "%s [-d] [##]\n", argv [ 0 ] );
       printf ( "-d\tDaemon mode; detach from terminal, chdir to /tmp, suppress output. Optional.\n" );
       printf ( "-n\tDo not scan on launch; default is to run a scan for apps when %s is invoked.\n", argv [ 0 ] );
+      printf ( "-l#\tLog-it; -l is 0-and-up (or all), and -l2 means 2-and-up (not all); l[0-3] for now. Log goes to /tmp/pndnotifyd.log\n" );
       printf ( "##\tA numeric value is interpreted as number of seconds between checking for filesystem changes. Default %u.\n",
 	       interval_secs );
       printf ( "Signal: HUP the process to force reload of configuration and reset the notifier watch paths\n" );
@@ -107,15 +122,38 @@ int main ( int argc, char *argv[] ) {
 
   /* enable logging?
    */
-  if ( g_daemon_mode ) {
-    // nada
+  pnd_log_set_pretext ( "pndnotifyd" );
+  pnd_log_set_flush ( 1 );
+
+  if ( logall == -1 ) {
+    // standard logging; non-daemon versus daemon
+
+    if ( g_daemon_mode ) {
+      // nada
+    } else {
+      pnd_log_set_filter ( pndn_rem );
+      pnd_log_to_stdout();
+    }
+
   } else {
-    pnd_log_set_filter ( pndn_rem );
-    pnd_log_set_pretext ( "pndnotifyd" );
-    pnd_log_to_stdout();
-    pnd_log_set_flush ( 1 );
-    pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
-  }
+    FILE *f;
+
+    f = fopen ( "/tmp/pndnotifyd.log", "w" );
+
+    if ( f ) {
+      pnd_log_set_filter ( logall );
+      pnd_log_to_stream ( f );
+      pnd_log ( pndn_rem, "logall mode - logging to /tmp/pndnotifyd.log\n" );
+    }
+
+    if ( logall == pndn_debug ) {
+      pnd_log_set_buried_logging ( 1 ); // log the shit out of it
+      pnd_log ( pndn_rem, "logall mode 0 - turned on buried logging\n" );
+    }
+
+  } // logall
+
+  pnd_log ( pndn_rem, "log level starting as %u", pnd_log_get_filter() );
 
   pnd_log ( pndn_rem, "Interval between checks is %u seconds\n", interval_secs );
 
@@ -353,8 +391,12 @@ void consume_configuration ( void ) {
     }
 
     if ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) != PND_CONF_BADNUM ) {
-      pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
-      pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+      if ( pnd_log_do_buried_logging() == 0 ) {
+	pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
+	pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+      } else {
+	pnd_log ( pndn_rem, "-l command line suppresses log level change in config file\n" );
+      }
     }
 
   } else {
@@ -628,6 +670,9 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 {
   pnd_box_handle applist;
 
+  pnd_log ( pndn_rem, "perform discovery - apps: %s, overrides: %s\n", appspath, overridespath );
+  pnd_log ( pndn_rem, "                  - emit desktop: %s, icons: %s\n", emitdesktoppath, emiticonpath );
+
   // attempt to auto-discover applications in the given path
   applist = pnd_disco_search ( appspath, overridespath );
 
@@ -681,13 +726,13 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 	  }
 	}
 	if ( source_libpnd ) {
-#if 0
-	  pnd_log ( pndn_rem,
+#if 1
+	  pnd_log ( pndn_debug,
 		    "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
 #endif
 	} else {
-#if 0
-	  pnd_log ( pndn_rem, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
+#if 1
+	  pnd_log ( pndn_debug, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
 #endif
 	  continue; // skip deleting it
 	}
@@ -695,8 +740,8 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 	// file is 'new'?
 	if ( stat ( buffer, &dirs ) == 0 ) {
 	  if ( dirs.st_mtime >= createtime ) {
-#if 0
-	    pnd_log ( pndn_rem, "File '%s' seems 'new', so leave it alone.\n", buffer );
+#if 1
+	    pnd_log ( pndn_debug, "File '%s' seems 'new', so leave it alone.\n", buffer );
 #endif
 	    continue; // skip deleting it
 	  }

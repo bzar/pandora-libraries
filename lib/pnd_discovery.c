@@ -16,6 +16,7 @@
 #include "pnd_pathiter.h"
 #include "pnd_apps.h"
 #include "pnd_pndfiles.h"
+#include "pnd_logger.h"
 
 // need these 'globals' due to the way nftw and ftw work :/
 static pnd_box_handle disco_box;
@@ -47,12 +48,17 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
   unsigned char valid = pnd_object_type_unknown;
   pnd_pxml_handle pxmlh = 0;
   unsigned int pxml_close_pos = 0;
+  unsigned char logit = pnd_log_do_buried_logging();
 
-  //printf ( "disco root callback encountered '%s'\n", fpath );
+  if ( logit ) {
+    pnd_log ( PND_LOG_DEFAULT, "disco callback encountered '%s'\n", fpath );
+  }
 
   // PXML.xml is a possible application candidate (and not a dir named PXML.xml :)
   if ( typeflag & FTW_D ) {
-    //printf ( " .. is dir, skipping\n" );
+    if ( logit ) {
+      pnd_log ( PND_LOG_DEFAULT, " .. is dir, skipping\n" );
+    }
     return ( 0 ); // skip directories and other non-regular files
   }
 
@@ -66,7 +72,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
   // if not a file of interest, just keep looking until we run out
   if ( ! valid ) {
-    //printf ( " .. bad filename, skipping\n" );
+    if ( logit ) {
+      pnd_log ( PND_LOG_DEFAULT, " .. bad filename, skipping\n" );
+    }
     return ( 0 );
   }
 

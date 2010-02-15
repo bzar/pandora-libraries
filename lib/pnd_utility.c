@@ -67,8 +67,8 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
   char *s = freeable_buffer;
   char *home = getenv ( "HOME" );
 
-  printf ( "DEBUG: expand tilde IN: '%s'\n", freeable_buffer );
-  printf ( "DEBUG:  $HOME was %s\n", home );
+  //printf ( "DEBUG: expand tilde IN: '%s'\n", freeable_buffer );
+  //printf ( "DEBUG:  $HOME was %s\n", home );
 
   // well, as pndnotifyd (etc) may be running as _root_, while the user is logged in
   // as 'pandora' or god knows what, this could be problematic. Other parts of the lib
@@ -106,7 +106,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
 	      florp = strdup ( pw -> pw_dir );
 
 	      home = florp;
-	      printf ( "  DEBUG: home (for %s) is %s (from %u)\n", b.ut_user, home, b.ut_type );
+	      //printf ( "  DEBUG: home (for %s) is %s (from %u)\n", b.ut_user, home, b.ut_type );
 
 	    } // passwd entry matches the utmp entry
 
@@ -126,10 +126,10 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     return ( s ); // can't succeed
   }
 
-  printf ( "DEBUG: entering while (%s) with home (%s)\n", s, home );
+  //printf ( "DEBUG: entering while (%s) with home (%s)\n", s, home );
 
   while ( ( p = strchr ( s, '~' ) ) ) {
-    printf ( "DEBUG: within while (%s)\n", s );
+    //printf ( "DEBUG: within while (%s)\n", s );
     char *temp = malloc ( strlen ( s ) + strlen ( home ) + 1 );
     memset ( temp, '\0', strlen ( s ) + strlen ( home ) + 1 );
     // copy in stuff prior to ~
@@ -143,7 +143,7 @@ char *pnd_expand_tilde ( char *freeable_buffer ) {
     s = temp;
   } // while finding matches
 
-  printf ( "DEBUG: expand tilde OUT: '%s'\n", s );
+  //printf ( "DEBUG: expand tilde OUT: '%s'\n", s );
 
   return ( s );
 }

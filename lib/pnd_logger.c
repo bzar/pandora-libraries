@@ -105,7 +105,7 @@ unsigned char pnd_log_max_targets ( void ) {
   return ( PND_LOG_MAX );
 }
 
-void pnd_log_emit ( char *message ) {
+static void pnd_log_emit ( unsigned char level, char *message ) {
   unsigned char i;
 
   // iterate across targets and attempt to emit
@@ -118,9 +118,13 @@ void pnd_log_emit ( char *message ) {
       break;
 
     case pndl_stream:
+      // pretext
       if ( log_pretext ) {
 	fprintf ( log_targets [ i ].stream, "%s\t", log_pretext );
       }
+      // log level
+      fprintf ( log_targets [ i ].stream, "%u\t", level );
+      // message
       if ( message ) {
 	fprintf ( log_targets [ i ].stream, "%s", message );
 	if ( strchr ( message, '\n' ) == NULL ) {
@@ -173,7 +177,7 @@ unsigned char pnd_log ( unsigned char level, char *fmt, ... ) {
 
     /* If that worked, return the string. */
     if ( n > -1 && n < size ) {
-      pnd_log_emit ( p );
+      pnd_log_emit ( level, p );
       break;
     }
 
@@ -196,4 +200,18 @@ unsigned char pnd_log ( unsigned char level, char *fmt, ... ) {
   }
 
   return ( 1 );
+}
+
+
+static unsigned char _do_buried_logging = 0;
+void pnd_log_set_buried_logging ( unsigned char yesno ) {
+  _do_buried_logging = yesno;
+  return;
+}
+
+unsigned char pnd_log_do_buried_logging ( void ) {
+  if ( _do_buried_logging == 1 ) {
+    return ( 1 );
+  }
+  return ( 0 );
 }
