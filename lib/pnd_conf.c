@@ -35,7 +35,7 @@ char *pnd_conf_query_searchpath ( void ) {
 
   temp = pnd_conf_get_as_char ( ch, PND_CONF_KEY );
 
-  if ( searchpath ) {
+  if ( temp ) {
     searchpath = strdup ( temp );
   } else {
     searchpath = strdup ( PND_CONF_SEARCHPATH );
