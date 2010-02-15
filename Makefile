@@ -85,6 +85,7 @@ deploy:
 	cp libpnd* deployment/usr/lib
 	cp bin/pndnotifyd deployment/usr/bin
 	cp bin/pnd_run deployment/usr/bin
+	cp bin/pnd_info deployment/usr/bin
 	cp testdata/scripts/* deployment/usr/pandora/scripts
 	cp bin/pndevmapperd deployment/usr/bin
 	# copy in freebee .pnd apps to /usr/pandora/apps
