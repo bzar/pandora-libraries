@@ -21,9 +21,13 @@ static int notify_handle;
 
 //static void pnd_notify_hookup ( int fd );
 
+#if 1
 #define PND_INOTIFY_MASK     IN_CREATE | IN_DELETE | IN_UNMOUNT \
                              | IN_DELETE_SELF | IN_MOVE_SELF    \
                              | IN_MOVED_FROM | IN_MOVED_TO | IN_MODIFY
+#else
+#define PND_INOTIFY_MASK     IN_ALL_EVENTS
+#endif
 
 pnd_notify_handle pnd_notify_init ( void ) {
   int fd;
@@ -83,11 +87,7 @@ static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
 void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int flags ) {
   pnd_notify_t *p = (pnd_notify_t*) h;
 
-#if 1
   inotify_add_watch ( p -> fd, fullpath, PND_INOTIFY_MASK );
-#else
-  inotify_add_watch ( p -> fd, fullpath, IN_ALL_EVENTS );
-#endif
 
   if ( flags & PND_NOTIFY_RECURSE ) {
 
