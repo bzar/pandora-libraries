@@ -568,8 +568,19 @@ void setup_notifications ( void ) {
     pnd_log ( pndn_rem, "Watching path '%s' and its descendents.\n", buffer );
     pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
 
+    //pnd_notify_watch_path ( nh, buffer, 0 /* no recurse */ );
+
   }
   SEARCHPATH_POST
+
+#if 0
+  sleep ( 1 ); // wait for events to trigger?
+
+  // clear out any notifies we just created
+  while ( pnd_notify_rediscover_p ( nh ) ) {
+    usleep ( 100 ); // spin
+  } // while
+#endif
 
   return;
 }
