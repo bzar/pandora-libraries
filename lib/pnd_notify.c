@@ -11,6 +11,7 @@
 
 #include "pnd_notify.h"
 #include "pnd_pathiter.h"
+#include "pnd_logger.h"
 
 typedef struct {
   int fd;              // notify API file descriptor
@@ -71,6 +72,10 @@ static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
   //printf ( "Implicitly watching dir '%s'\n", fpath );
 
   inotify_add_watch ( notify_handle, fpath, PND_INOTIFY_MASK );
+
+  if ( pnd_log_do_buried_logging() ) {
+    pnd_log ( PND_LOG_DEFAULT, "notify callback: added watch on %s\n", fpath );
+  }
 
   return ( 0 ); // continue the tree walk
 }
@@ -162,8 +167,8 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
     /* do it!
      */
 
-    if ( e -> len ) {
-      //printf ( "Got event against '%s'\n", e -> name );
+    if ( pnd_log_do_buried_logging() ) {
+      pnd_log ( PND_LOG_DEFAULT, "notify: Got event against '%s' [%u %x]\n", e -> name, e -> mask, e -> mask );
     }
 
     /* do it!
