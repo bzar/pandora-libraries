@@ -27,6 +27,7 @@
 #include "pnd_utility.h"
 #include "pnd_desktop.h"
 #include "pnd_logger.h"
+#include "pnd_dbusnotify.h"
 
 // this piece of code was simpler once; but need to grow it a bit and in a rush
 // moving all these to globals rather than refactor the code a bit; tsk tsk..
@@ -65,6 +66,7 @@ char *pndhup = NULL;  // full path to located pnd_hup.sh
 char g_username [ 128 ]; // since we have to wait for login (!!), store username here
 // notifier handle
 pnd_notify_handle nh = 0;
+pnd_dbusnotify_handle dbh = 0;
 
 // constants
 #define PNDNOTIFYD_LOGLEVEL "pndnotifyd.loglevel"
@@ -72,6 +74,7 @@ pnd_notify_handle nh = 0;
 // decl's
 void consume_configuration ( void );
 void setup_notifications ( void );
+void sigint_handler ( int n );
 void sighup_handler ( int n );
 void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *emiticonpath );
 unsigned char perform_discoveries ( char *appspath, char *overridespath,
@@ -239,6 +242,9 @@ int main ( int argc, char *argv[] ) {
 
   sigaction ( SIGHUP, &siggy, NULL );
 
+  siggy.sa_handler = sigint_handler;
+  sigaction ( SIGINT, &siggy, NULL );
+
   /* set up notifies
    */
 
@@ -248,14 +254,49 @@ int main ( int argc, char *argv[] ) {
   setup_notifications();
   //}
 
+  dbh = pnd_dbusnotify_init();
+
   /* daemon main loop
    */
+  unsigned char watch_inotify, watch_dbus;
   while ( 1 ) {
 
+    watch_dbus = 0;
+    watch_inotify = 0;
+
+    if ( dbh ) {
+      watch_dbus = pnd_dbusnotify_rediscover_p ( dbh );
+    }
+
+    if ( ! watch_dbus && nh ) {
+      watch_inotify = pnd_notify_rediscover_p ( nh );
+    }
+
     // need to rediscover?
-    if ( scanonlaunch ||
-	 pnd_notify_rediscover_p ( nh ) )
-    {
+    if ( scanonlaunch || watch_inotify || watch_dbus ) {
+
+      // by this point, the watched directories have notified us that something of relevent
+      // has occurred; we should be clever, but we're not, so just re-brute force the
+      // discovery and spit out .desktop files..
+      pnd_log ( pndn_rem, "------------------------------------------------------\n" );
+
+      pnd_log ( pndn_rem, "System changes detected in dbus or watched paths .. performing re-discover!\n" );
+
+      // if this was a forced scan, lets not do that next iteration
+      if ( scanonlaunch ) {
+	pnd_log ( pndn_rem, "scan-on-first-launch detected an event\n" );
+	scanonlaunch = 0;
+      }
+
+      if ( watch_inotify ) {
+	pnd_log ( pndn_rem, "inotify detected an event\n" );
+      }
+
+      if ( watch_dbus ) {
+	pnd_log ( pndn_rem, "dbusnotify detected an event\n" );
+	pnd_notify_shutdown ( nh );
+	nh = 0;
+      }
 
       if ( time ( NULL ) - createtime <= 2 ) {
 	pnd_log ( pndn_rem, "Rediscovery request comes to soon after previous discovery; skipping.\n" );
@@ -263,31 +304,22 @@ int main ( int argc, char *argv[] ) {
 	continue;
       }
 
-      createtime = time ( NULL ); // all 'new' .destops are created at or after this time; prev are old.
-
-      // if this was a forced scan, lets not do that next iteration
-      if ( scanonlaunch ) {
-	scanonlaunch = 0;
-      }
-
-      // by this point, the watched directories have notified us that something of relevent
-      // has occurred; we should be clever, but we're not, so just re-brute force the
-      // discovery and spit out .desktop files..
       pnd_log ( pndn_rem, "------------------------------------------------------\n" );
-      pnd_log ( pndn_rem, "Changes within watched paths .. performing re-discover!\n" );
+
+      createtime = time ( NULL ); // all 'new' .destops are created at or after this time; prev are old.
 
       /* run the discovery
        */
 
-      pnd_log ( pndn_rem, "Scanning desktop paths----------------------------\n" );
+      pnd_log ( pndn_rem, "  Scanning desktop paths----------------------------\n" );
       if ( ! perform_discoveries ( desktop_appspath, overridespath, desktop_dotdesktoppath, desktop_iconpath ) ) {
-	pnd_log ( pndn_rem, "No applications found in desktop search path\n" );
+	pnd_log ( pndn_rem, "    No applications found in desktop search path\n" );
       }
 
       if ( menu_appspath && menu_dotdesktoppath && menu_iconpath ) {
-	pnd_log ( pndn_rem, "Scanning menu paths----------------------------\n" );
+	pnd_log ( pndn_rem, "  Scanning menu paths----------------------------\n" );
 	if ( ! perform_discoveries ( menu_appspath, overridespath, menu_dotdesktoppath, menu_iconpath ) ) {
-	  pnd_log ( pndn_rem, "No applications found in menu search path\n" );
+	  pnd_log ( pndn_rem, "    No applications found in menu search path\n" );
 	}
       }
 
@@ -300,7 +332,9 @@ int main ( int argc, char *argv[] ) {
       // since its entirely likely new directories have been found (ie: SD with a directory structure was inserted)
       // we should re-apply watches to catch all these new directories; ie: user might use on-device browser to
       // drop in new applications, or use the shell to juggle them around, or any number of activities.
-      //setup_notifications();
+      if ( watch_dbus ) {
+	setup_notifications();
+      }
 
     } // need to rediscover?
 
@@ -318,6 +352,7 @@ int main ( int argc, char *argv[] ) {
   /* shutdown
    */
   pnd_notify_shutdown ( nh );
+  pnd_dbusnotify_shutdown ( dbh );
 
   return ( 0 );
 }
@@ -594,6 +629,21 @@ void sighup_handler ( int n ) {
 
   // re set up the notifier watches
   setup_notifications();
+
+  return;
+}
+
+void sigint_handler ( int n ) {
+
+  pnd_log ( pndn_rem, "---[ SIGINT received ]---\n" );
+
+  if ( dbh ) {
+    pnd_dbusnotify_shutdown ( dbh );
+  }
+
+  if ( nh ) {
+    pnd_notify_shutdown ( nh );
+  }
 
   return;
 }
