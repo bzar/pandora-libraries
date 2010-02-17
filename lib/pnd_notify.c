@@ -11,6 +11,7 @@
 
 #include "pnd_notify.h"
 #include "pnd_pathiter.h"
+#include "pnd_logger.h"
 
 typedef struct {
   int fd;              // notify API file descriptor
@@ -20,9 +21,13 @@ static int notify_handle;
 
 //static void pnd_notify_hookup ( int fd );
 
+#if 1
 #define PND_INOTIFY_MASK     IN_CREATE | IN_DELETE | IN_UNMOUNT \
                              | IN_DELETE_SELF | IN_MOVE_SELF    \
-                             | IN_MOVED_FROM | IN_MOVED_TO
+                             | IN_MOVED_FROM | IN_MOVED_TO | IN_MODIFY
+#else
+#define PND_INOTIFY_MASK     IN_ALL_EVENTS
+#endif
 
 pnd_notify_handle pnd_notify_init ( void ) {
   int fd;
@@ -72,17 +77,17 @@ static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
 
   inotify_add_watch ( notify_handle, fpath, PND_INOTIFY_MASK );
 
+  if ( pnd_log_do_buried_logging() ) {
+    pnd_log ( PND_LOG_DEFAULT, "notify callback: added watch on %s\n", fpath );
+  }
+
   return ( 0 ); // continue the tree walk
 }
 
 void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int flags ) {
   pnd_notify_t *p = (pnd_notify_t*) h;
 
-#if 1
   inotify_add_watch ( p -> fd, fullpath, PND_INOTIFY_MASK );
-#else
-  inotify_add_watch ( p -> fd, fullpath, IN_ALL_EVENTS );
-#endif
 
   if ( flags & PND_NOTIFY_RECURSE ) {
 
@@ -162,8 +167,8 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
     /* do it!
      */
 
-    if ( e -> len ) {
-      //printf ( "Got event against '%s'\n", e -> name );
+    if ( pnd_log_do_buried_logging() ) {
+      pnd_log ( PND_LOG_DEFAULT, "notify: Got event against '%s' [%u %x]\n", e -> name, e -> mask, e -> mask );
     }
 
     /* do it!
