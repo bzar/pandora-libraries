@@ -18,6 +18,8 @@
 #include <errno.h> // for errno
 #include <time.h> // for time(2)
 #include <ctype.h> // for isdigit
+#include <signal.h> // for sigaction
+#include <sys/wait.h> // for wait
 
 #include <linux/input.h> // for keys
 //#include "../../kernel-rip/input.h" // for keys
@@ -99,12 +101,12 @@ unsigned int g_evmap_max = 0;
  */
 void dispatch_key ( int keycode, int val );
 void dispatch_event ( int code, int val );
+void sigchld_handler ( int n );
 
 static void usage ( char *argv[] ) {
   printf ( "%s [-d]\n", argv [ 0 ] );
   printf ( "-d\tDaemon mode; detach from terminal, chdir to /tmp, suppress output. Optional.\n" );
   printf ( "-l#\tLog-it; -l is 0-and-up (or all), and -l2 means 2-and-up (not all); l[0-3] for now. Log goes to /tmp/pndevmapperd.log\n" );
-  printf ( "Signal: HUP the process to force reload of configuration and reset the notifier watch paths\n" );
   return;
 }
 
@@ -341,6 +343,18 @@ int main ( int argc, char *argv[] ) {
     pnd_log ( pndn_warning, "WARNING! No events configured to watch, so just spinning wheels...\n" );
     exit ( -1 );
   } // spin
+
+  /* set up sigchld -- don't want zombies all over; well, we do, but not process zombies
+   */
+  sigset_t ss;
+  sigemptyset ( &ss );
+
+  struct sigaction siggy;
+  siggy.sa_handler = sigchld_handler;
+  siggy.sa_mask = ss; /* implicitly blocks the origin signal */
+  siggy.sa_flags = 0; /* don't need anything */
+
+  sigaction ( SIGCHLD, &siggy, NULL );
 
   /* actually try to do something useful
    */
@@ -595,6 +609,16 @@ void dispatch_event ( int code, int val ) {
     } // found matching event for keycode
 
   } // while
+
+  return;
+}
+
+void sigchld_handler ( int n ) {
+
+  pnd_log ( pndn_rem, "---[ SIGCHLD received ]---\n" );
+
+  int status;
+  wait ( &status );
 
   return;
 }
