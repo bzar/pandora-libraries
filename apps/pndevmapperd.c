@@ -363,7 +363,7 @@ int main ( int argc, char *argv[] ) {
 
   // try to locate the appropriate devices
   int id;
-  int fds [ 5 ] = { -1, -1, -1, -1, -1 }; // 0 = keypad, 1 = gpio keys
+  int fds [ 8 ] = { -1, -1, -1, -1, -1, -1, -1, -1 }; // 0 = keypad, 1 = gpio keys
   int imaxfd = 0;
 
   for ( id = 0; ; id++ ) {
@@ -378,7 +378,11 @@ int main ( int argc, char *argv[] ) {
       break;
     }
 
-    ioctl (fd, EVIOCGNAME(sizeof(name)), name );
+    if ( ioctl (fd, EVIOCGNAME(sizeof(name)), name ) < 0 ) {
+      name [ 0 ] = '\0';
+    }
+
+    pnd_log ( pndn_rem, "%s maps to %s\n", fname, name );
 
     if ( strcmp ( name, "omap_twl4030keypad" ) == 0 ) {
       fds [ 0 ] = fd;
@@ -386,13 +390,24 @@ int main ( int argc, char *argv[] ) {
       fds [ 1 ] = fd;
     } else if ( strcmp ( name, "AT Translated Set 2 keyboard" ) == 0) { // for vmware, my dev environment
       fds [ 0 ] = fd;
+    } else if ( strcmp ( name, "triton2-pwrbutton" ) == 0) {
+      fds [ 2 ] = fd;
+    } else if ( strcmp ( name, "ADS784x Touchscreen" ) == 0) {
+      fds [ 3 ] = fd;
+    } else if ( strcmp ( name, "vsense66" ) == 0) {
+      fds [ 4 ] = fd;
+    } else if ( strcmp ( name, "vsense67" ) == 0) {
+      fds [ 5 ] = fd;
     } else {
       pnd_log ( pndn_rem, "Ignoring unknown device '%s'\n", name );
+      //fds [ 6 ] = fd;
       close ( fd );
+      fd = -1;
       continue;
     }
 
     if (imaxfd < fd) imaxfd = fd;
+
   } // for
 
   if ( fds [ 0 ] == -1 ) {
@@ -414,14 +429,21 @@ int main ( int argc, char *argv[] ) {
   while ( 1 ) {
     struct input_event ev[64];
 
+    unsigned int max_fd = 3; /* imaxfd */
     int fd = -1, rd, ret;
     fd_set fdset;
 
     FD_ZERO ( &fdset );
 
-    for (i = 0; i < 2; i++) {
+    imaxfd = 0;
+    for (i = 0; i < max_fd /*imaxfd*/; i++) {
       if ( fds [ i ] != -1 ) {
 	FD_SET( fds [ i ], &fdset );
+
+	if ( fds [ i ] > imaxfd ) {
+	  imaxfd = fds [ i ];
+	}
+
       }
     }
 
@@ -432,11 +454,11 @@ int main ( int argc, char *argv[] ) {
       continue; // retry!
     }
 
-    for ( i = 0; i < 2; i++ ) {
+    for ( i = 0; i < max_fd; i++ ) {
       if ( fds [ i ] != -1 && FD_ISSET ( fds [ i ], &fdset ) ) {
 	fd = fds [ i ];
-      }
-    }
+      } // fd is set?
+    } // for
 
     /* buttons or keypad */
     rd = read ( fd, ev, sizeof(struct input_event) * 64 );
@@ -515,6 +537,8 @@ void dispatch_key ( int keycode, int val ) {
   // 2 - down again (hold)
   // 0 - up (released)
 
+  pnd_log ( pndn_rem, "Dispatching Key..\n" );
+
   for ( i = 0; i < g_evmap_max; i++ ) {
 
     if ( ( g_evmap [ i ].key_p ) &&
@@ -571,6 +595,8 @@ void dispatch_event ( int code, int val ) {
   // LID val decodes as:
   // 1 - closing
   // 0 - opening
+
+  pnd_log ( pndn_rem, "Dispatching Event..\n" );
 
   for ( i = 0; i < g_evmap_max; i++ ) {
 
