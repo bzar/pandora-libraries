@@ -9,7 +9,7 @@ if [ "$1" = "1" ]; then #lid was closed
 elif [ "$1" = "0" ]; then # lid was opend
   maxbright=$(cat /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/max_brightness)
   oldbright=$(cat /tmp/oldbright)
-   if [ $oldbright -ge 0 ] && [ $oldbright -le $maxbright ]; then 
+   if [ $oldbright -ge 3 ] && [ $oldbright -le $maxbright ]; then 
     /usr/pandora/scripts/op_bright.sh $oldbright 
    else
     /usr/pandora/scripts/op_bright.sh $maxbright

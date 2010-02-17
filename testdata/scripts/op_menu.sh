@@ -18,7 +18,7 @@ if [ $xpid ]; then
     done
   else
   echo "starting appfinder"
-    xfceuser=$(ps ua -C xfce4-session | grep /usr/bin/xfce4-session  | tail -n1 | awk '{print $1}')
+    xfceuser=$(ps u -C xfce4-session | tail -n1 | awk '{print $1}')
     su -c 'DISPLAY=:0.0 xfce4-appfinder' - $xfceuser
   fi
 else
