@@ -352,7 +352,7 @@ int main ( int argc, char *argv[] ) {
   struct sigaction siggy;
   siggy.sa_handler = sigchld_handler;
   siggy.sa_mask = ss; /* implicitly blocks the origin signal */
-  siggy.sa_flags = 0; /* don't need anything */
+  siggy.sa_flags = SA_RESTART; /* don't need anything */
 
   sigaction ( SIGCHLD, &siggy, NULL );
 
@@ -429,7 +429,7 @@ int main ( int argc, char *argv[] ) {
 
     if ( ret == -1 ) {
       pnd_log ( pndn_error, "ERROR! select(2) failed with: %s\n", strerror ( errno ) );
-      break;
+      continue; // retry!
     }
 
     for ( i = 0; i < 2; i++ ) {
@@ -619,6 +619,8 @@ void sigchld_handler ( int n ) {
 
   int status;
   wait ( &status );
+
+  pnd_log ( pndn_rem, "     SIGCHLD done ]---\n" );
 
   return;
 }
