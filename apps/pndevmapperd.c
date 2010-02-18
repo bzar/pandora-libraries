@@ -105,6 +105,8 @@ unsigned int b_frequency = 300;   // frequency to check
 unsigned int b_blinkfreq = 2;     // blink every 2sec
 unsigned int b_blinkdur = 1000;   // blink duration (uSec), 0sec + uSec is assumed
 unsigned char b_active = 0;       // 0=inactive, 1=active and waiting to blink, 2=blink is on, waiting to turn off
+unsigned char b_shutdown = 1;     // %age battery to force a shutdown!
+char *b_shutdown_script = NULL;
 
 /* get to it
  */
@@ -368,6 +370,14 @@ int main ( int argc, char *argv[] ) {
     pnd_log ( pndn_rem, "Battery blink duration set to %u", b_blinkdur );
   }
   b_active = 0;
+  if ( pnd_conf_get_as_int ( evmaph, "battery.shutdown_threshold" ) != PND_CONF_BADNUM ) {
+    b_shutdown = pnd_conf_get_as_int ( evmaph, "battery.shutdown_threshold" );
+    pnd_log ( pndn_rem, "Battery shutdown threshold set to %u", b_shutdown );
+  }
+  if ( pnd_conf_get_as_char ( evmaph, "battery.shutdown_script" ) != NULL ) {
+    b_shutdown_script = strdup ( pnd_conf_get_as_char ( evmaph, "battery.shutdown_script" ) );
+    pnd_log ( pndn_rem, "Battery shutdown script set to %s", b_shutdown_script );
+  }
 
   /* do we have anything to do?
    */
@@ -740,6 +750,25 @@ void sigalrm_handler ( int n ) {
   if ( batlevel < 0 ) {
     // couldn't read the battery level, so just assume low and make blinks?
     batlevel = 4; // low, but not cause a shutdown
+  }
+
+  // first -- are we critical yet? if so, shut down!
+  if ( batlevel <= b_shutdown ) {
+    int x;
+
+    pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n", b_shutdown_script );
+
+    if ( ( x = fork() ) < 0 ) {
+      pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+      exit ( -3 );
+    }
+
+    if ( x == 0 ) {
+      execl ( b_shutdown_script, b_shutdown_script, (char*)NULL );
+      pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
+      exit ( -4 );
+    }
+
   }
 
   // is battery warning already active?
