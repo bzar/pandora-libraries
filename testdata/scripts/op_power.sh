@@ -3,8 +3,12 @@
 #only argument is the time the button was pressed in  seconds
 
 if [ "$1" -le "3" ]; then # button was pressed 1-3sec, "suspend"
-  powerstate=$(cat /tmp/powerstate)
-  if [$powerstate -eq "1" ]; then
+  if [ -e /tmp/powerstate ]; then 
+    powerstate=$(cat /tmp/powerstate)
+  else
+    powerstate=0
+  fi
+  if [$powerstate -eq 1 ]; then
     #in lowpower mode
     echo 0 > /tmp/powerstate
     oldbright=$(cat /tmp/oldbright)
