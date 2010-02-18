@@ -24,6 +24,8 @@ if [ "$1" -le "3" ]; then # button was pressed 1-3sec, "suspend"
     else
       echo 500 > /proc/pandora/cpu_mhz_max
     fi
+    hciconfig hci0 up
+    /etc/init.d/S30wlxxx-init start
     pidlist=$(pstree -lpA | grep pnd_run.sh | sed -ne 's/.*(\([0-9]\+\))/\1/p')
     for PID in $pidlist
     do
