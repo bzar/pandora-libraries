@@ -753,7 +753,7 @@ void sigalrm_handler ( int n ) {
   }
 
   // first -- are we critical yet? if so, shut down!
-  if ( batlevel <= b_shutdown ) {
+  if ( batlevel <= b_shutdown && b_shutdown_script ) {
     int x;
 
     pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n", b_shutdown_script );
