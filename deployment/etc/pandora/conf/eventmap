@@ -24,4 +24,4 @@ check_interval	   300		# in seconds to check threshold; should be a high 300s
 blink_interval	   2		# frequency of blink
 blink_duration	   50000	# how long a blink lasts, in uSecs
 shutdown_threshold 1		# battery %age we force a shutdown (to save the SD!)
-shutdown_script	   /usr/pandora/scripts/op_shutdown.sh
+shutdown_script	   /usr/pandora/scripts/op_battlow.sh
