@@ -19,7 +19,7 @@ if [ "$1" -le "3" ]; then # button was pressed 1-3sec, "suspend"
     else
       /usr/pandora/scripts/op_bright.sh $maxbright
     fi
-    if [ $oldspeed -ge 14 ] && [ $oldspeed -le 1000 ]; then 
+    if [ $oldspeed -gt 14 ] && [ $oldspeed -le 1000 ]; then 
      echo $oldspeed > /proc/pandora/cpu_mhz_max 
     else
       echo 500 > /proc/pandora/cpu_mhz_max
