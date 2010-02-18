@@ -13,11 +13,12 @@
 unsigned char pnd_device_open_write_close ( char *name, char *v ) {
   int f;
 
-  if ( ( f = open ( PND_DEVICE_PROC_CLOCK, O_WRONLY /*O_RDONLY*/ ) ) < 0 ) {
+  if ( ( f = open ( name, O_WRONLY /*O_RDONLY*/ ) ) < 0 ) {
     return ( 0 );
   }
 
-  if ( write ( f, buffer, strlen ( buffer ) ) < strlen ( buffer ) ) {
+  if ( write ( f, v, strlen ( v ) ) < strlen ( v ) ) {
+    close ( f );
     return ( 0 );
   }
 
@@ -48,7 +49,7 @@ unsigned char pnd_device_open_read_close ( char *name, char *r_buffer, unsigned 
 unsigned char pnd_device_set_clock ( unsigned int c ) {
   char buffer [ 100 ];
 
-  sprint ( buffer, "%u", c );
+  sprintf ( buffer, "%u", c );
 
   return ( pnd_device_open_write_close ( PND_DEVICE_PROC_CLOCK, buffer ) );
 }
@@ -66,7 +67,7 @@ unsigned int pnd_device_get_clock ( void ) {
 unsigned char pnd_device_set_backlight ( unsigned int c ) {
   char buffer [ 100 ];
 
-  sprint ( buffer, "%u", c );
+  sprintf ( buffer, "%u", c );
 
   return ( pnd_device_open_write_close ( PND_DEVICE_SYS_BACKLIGHT_BRIGHTNESS, buffer ) );
 }
@@ -79,4 +80,22 @@ unsigned int pnd_device_get_backlight ( void ) {
   }
 
   return ( 0 );
+}
+
+int pnd_device_get_battery_gauge_perc ( void ) {
+  char buffer [ 100 ];
+
+  if ( pnd_device_open_read_close ( PND_DEVICE_BATTERY_GAUGE_PERC, buffer, 100 ) ) {
+    return ( atoi ( buffer ) );
+  }
+
+  return ( -1 );
+}
+
+unsigned char pnd_device_set_led_power_brightness ( unsigned char v ) {
+  char buffer [ 100 ];
+
+  sprintf ( buffer, "%u", v );
+
+  return ( pnd_device_open_write_close ( PND_DEVICE_LED_POWER PND_DEVICE_LED_SUFFIX_BRIGHTNESS, buffer ) );
 }

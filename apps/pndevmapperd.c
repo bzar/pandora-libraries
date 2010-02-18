@@ -20,6 +20,7 @@
 #include <ctype.h> // for isdigit
 #include <signal.h> // for sigaction
 #include <sys/wait.h> // for wait
+#include <sys/time.h> // setitimer
 
 #include <linux/input.h> // for keys
 //#include "../../kernel-rip/input.h" // for keys
@@ -34,6 +35,7 @@
 #include "pnd_logger.h"
 #include "pnd_utility.h"
 #include "pnd_notify.h"
+#include "pnd_device.h"
 
 // daemon and logging
 //
@@ -97,11 +99,20 @@ typedef struct {
 evmap_t g_evmap [ MAXEVENTS ];
 unsigned int g_evmap_max = 0;
 
+// battery
+unsigned char b_threshold = 5;    // %battery
+unsigned int b_frequency = 300;   // frequency to check
+unsigned int b_blinkfreq = 2;     // blink every 2sec
+unsigned int b_blinkdur = 1000;   // blink duration (uSec), 0sec + uSec is assumed
+unsigned char b_active = 0;       // 0=inactive, 1=active and waiting to blink, 2=blink is on, waiting to turn off
+
 /* get to it
  */
 void dispatch_key ( int keycode, int val );
 void dispatch_event ( int code, int val );
 void sigchld_handler ( int n );
+unsigned char set_next_alarm ( unsigned int secs, unsigned int usecs );
+void sigalrm_handler ( int n );
 
 static void usage ( char *argv[] ) {
   printf ( "%s [-d]\n", argv [ 0 ] );
@@ -318,6 +329,9 @@ int main ( int argc, char *argv[] ) {
     } else if ( strncmp ( k, "pndevmapperd.", 7 ) == 0 ) {
       // not consumed here, skip silently
 
+    } else if ( strncmp ( k, "battery.", 8 ) == 0 ) {
+      // not consumed here, skip silently
+
     } else {
       // uhhh
       pnd_log ( pndn_warning, "Unknown config key '%s'; skipping.\n", k );
@@ -336,6 +350,25 @@ int main ( int argc, char *argv[] ) {
     pnd_log ( pndn_rem, "config file causes minimum_separation to change to %u", g_minimum_separation );
   }
 
+  // battery conf
+  if ( pnd_conf_get_as_int ( evmaph, "battery.threshold" ) != PND_CONF_BADNUM ) {
+    b_threshold = pnd_conf_get_as_int ( evmaph, "battery.threshold" );
+    pnd_log ( pndn_rem, "Battery threshold set to %u", b_threshold );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery.check_interval" ) != PND_CONF_BADNUM ) {
+    b_frequency = pnd_conf_get_as_int ( evmaph, "battery.check_interval" );
+    pnd_log ( pndn_rem, "Battery check interval set to %u", b_frequency );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery.blink_interval" ) != PND_CONF_BADNUM ) {
+    b_blinkfreq = pnd_conf_get_as_int ( evmaph, "battery.blink_interval" );
+    pnd_log ( pndn_rem, "Battery blink interval set to %u", b_blinkfreq );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery.blink_duration" ) != PND_CONF_BADNUM ) {
+    b_blinkdur = pnd_conf_get_as_int ( evmaph, "battery.blink_duration" );
+    pnd_log ( pndn_rem, "Battery blink duration set to %u", b_blinkdur );
+  }
+  b_active = 0;
+
   /* do we have anything to do?
    */
   if ( ! g_evmap_max ) {
@@ -353,8 +386,20 @@ int main ( int argc, char *argv[] ) {
   siggy.sa_handler = sigchld_handler;
   siggy.sa_mask = ss; /* implicitly blocks the origin signal */
   siggy.sa_flags = SA_RESTART; /* don't need anything */
-
   sigaction ( SIGCHLD, &siggy, NULL );
+
+  /* set up the battery level warning timers
+   */
+  siggy.sa_handler = sigalrm_handler;
+  siggy.sa_mask = ss; /* implicitly blocks the origin signal */
+  siggy.sa_flags = SA_RESTART; /* don't need anything */
+  sigaction ( SIGALRM, &siggy, NULL );
+
+  if ( set_next_alarm ( b_frequency, 0 ) ) { // check every 'frequency' seconds
+    pnd_log ( pndn_rem, "Checking for low battery every %u seconds\n", b_frequency );
+  } else {
+    pnd_log ( pndn_error, "ERROR: Couldn't set up timer for every %u seconds\n", b_frequency );
+  }
 
   /* actually try to do something useful
    */
@@ -419,8 +464,8 @@ int main ( int argc, char *argv[] ) {
   }
 
   if ( fds [ 0 ] == -1 && fds [ 1 ] == -1 ) {
-    pnd_log ( pndn_error, "ERROR! Couldn't find either device; exiting!\n" );
-    exit ( -2 );
+    pnd_log ( pndn_error, "ERROR! Couldn't find either device!\n" );
+    //exit ( -2 );
   }
 
   /* loop forever, watching for events
@@ -647,6 +692,96 @@ void sigchld_handler ( int n ) {
   wait ( &status );
 
   pnd_log ( pndn_rem, "     SIGCHLD done ]---\n" );
+
+  return;
+}
+
+unsigned char set_next_alarm ( unsigned int secs, unsigned int usecs ) {
+
+  // assume that SIGALRM is already being caught, we just set the itimer here
+
+  struct itimerval itv;
+
+  // if no timer at all, set the 'current' one so it does something; otherwise
+  // let it continue..
+  getitimer ( ITIMER_REAL, &itv );
+
+  if ( itv.it_value.tv_sec == 0 && itv.it_value.tv_sec == 0 ) {
+    itv.it_value.tv_sec = secs;
+    itv.it_value.tv_usec = usecs;
+  }
+
+  // set the next timer
+  //bzero ( &itv, sizeof(struct itimerval) );
+
+  itv.it_interval.tv_sec = secs;
+  itv.it_interval.tv_usec = usecs;
+
+  // if next-timer is less than current, set current too
+  if ( itv.it_value.tv_sec > itv.it_interval.tv_sec ) {
+    itv.it_value.tv_sec = secs;
+    itv.it_value.tv_usec = usecs;
+  }
+
+  if ( setitimer ( ITIMER_REAL, &itv, NULL /* old value returned here */ ) < 0 ) {
+    // sucks
+    return ( 0 );
+  }
+  
+  return ( 1 );
+}
+
+void sigalrm_handler ( int n ) {
+
+  pnd_log ( pndn_debug, "---[ SIGALRM ]---\n" );
+
+  int batlevel = pnd_device_get_battery_gauge_perc();
+
+  if ( batlevel < 0 ) {
+    // couldn't read the battery level, so just assume low and make blinks?
+    batlevel = 4; // low, but not cause a shutdown
+  }
+
+  // is battery warning already active?
+  if ( b_active ) {
+    // warning is on!
+
+    // is user charging up? if so, stop blinking.
+    // perhaps we shoudl check if charger is connected, and not blink at all in that case..
+    if ( batlevel > b_threshold + 1 /* allow for error in read */ ) {
+      pnd_log ( pndn_debug, "Battery is high again, flipping to non-blinker mode\n" );
+      b_active = 0;
+      set_next_alarm ( b_frequency, 0 );
+      pnd_device_set_led_power_brightness ( 250 );
+      return;
+    }
+
+    if ( b_active == 1 ) {
+      // turn LED on
+      pnd_log ( pndn_debug, "Blink on\n" );
+      pnd_device_set_led_power_brightness ( 200 );
+      // set timer to short duration
+      b_active = 2;
+      set_next_alarm ( 0, b_blinkdur );
+    } else if ( b_active == 2 ) {
+      // turn LED off
+      pnd_log ( pndn_debug, "Blink off\n" );
+      pnd_device_set_led_power_brightness ( 10 );
+      // back to longer duration
+      b_active = 1;
+      set_next_alarm ( b_blinkfreq, 0 );
+    }
+
+    return;
+  }
+
+  // warning is off..
+  if ( batlevel <= b_threshold ) {
+    // battery seems low, go to active mode
+    pnd_log ( pndn_debug, "Battery is low, flipping to blinker mode\n" );
+    b_active = 1;
+    set_next_alarm ( b_blinkfreq, 0 );
+  } // battery level
 
   return;
 }
