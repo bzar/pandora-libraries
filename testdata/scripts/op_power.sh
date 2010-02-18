@@ -47,6 +47,21 @@ if [ "$1" -le "3" ]; then # button was pressed 1-3sec, "suspend"
     echo 14 > /proc/pandora/cpu_mhz_max
   fi
 elif [ "$1" -ge "4" ]; then #button was pressed 4 sec or longer, shutdown
+  xfceuser=$(ps u -C xfce4-session | tail -n1 | awk '{print $1}')
+  time=10
+  countdown () {
+    for i in $(seq $time); do
+      precentage=$(echo $i $time | awk '{ printf("%f\n", $1/$2*100) }')
+      echo $precentage
+      echo "# Shutdown in $i"
+      sleep 1
+    done
+  }
+  countdown  | su -c 'DISPLAY=:0.0  zenity --progress --auto-close --text "Shutdown in X" --title "Shutdown"' $xfceuser
+  if [ $? -eq 0 ]; then
   shutdown -h now
+  else
+  su -c 'DISPLAY=:0.0  zenity --error --text "Shutdown aborted!"' $xfceuser
+  fi
 fi
 
