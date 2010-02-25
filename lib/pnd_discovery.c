@@ -122,11 +122,27 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       char pngbuffer [ 16 ]; // \211 P N G \r \n \032 \n
       pngbuffer [ 0 ] = 137;      pngbuffer [ 1 ] = 80;      pngbuffer [ 2 ] = 78;      pngbuffer [ 3 ] = 71;
       pngbuffer [ 4 ] = 13;       pngbuffer [ 5 ] = 10;       pngbuffer [ 6 ] = 26;      pngbuffer [ 7 ] = 10;
-      if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
-	if ( memcmp ( pngbuffer, pngbuffer + 8, 8 ) == 0 ) {
-	  pxml_close_pos = pos;
-	}
+
+      unsigned char padtests = 10;
+      unsigned int padstart = ftell ( f );
+      while ( padtests ) {
+
+	if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
+	  if ( memcmp ( pngbuffer, pngbuffer + 8, 8 ) == 0 ) {
+	    pxml_close_pos = pos;
+	    break;
+	  } // if
+	  fseek ( f, -7, SEEK_CUR ); // seek back 7 (so we're 1 further than we started, since PNG header is 8b)
+	} // if read
+
+	padtests --;
+      } // while
+
+      if ( ! padtests ) {
+	// no icon found, so back to where we started looking
+	fseek ( f, padstart, SEEK_SET );
       }
+
     } // icon
 #endif
 
