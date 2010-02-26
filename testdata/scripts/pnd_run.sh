@@ -7,19 +7,20 @@
 #/etc/sudoers needs to be adjusted if you touch any of the sudo lines
  
 # look at the comments in the nox part, adjust 
- 
 #use "lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq > whitelist" with nothing running to generate the whitelist
  
 #launch the script with nohup for -x to work!
  
-#todo
+#todo - no proper order
 #validate params better
 #make uid/basename mandatory (and rename var, its confusing!)
 #find a clean way of shutting down x without a fixed dm, mabye avoid nohup usage somehow
+#add options to just mount iso without union and to mount the union later
 #cleanup
+#Rewrite! - this sucks
  
 # parse arguments
-TEMP=`getopt -o p:e:a:b:s:m::u::n::x::j: -- "$@"`
+TEMP=`getopt -o p:e:a:b:s:m::u::n::x::j:c: -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -37,6 +38,7 @@ while true ; do
 		-u) echo "umount";umount=1;shift 2;;
 		-x) echo "no x";nox=1;shift 2;;
 		-j) echo "join/ also mount those folders";append=$2;shift 2;;
+		-j) echo "set cpu speed to";cpuspeed=$2;shift 2;;
 		-a) 
 			case "$2" in
 				"") echo "no arguments"; shift 2 ;;
@@ -118,6 +120,9 @@ if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #uni
 #mount
  
 if [ ! $umount ]; then
+	if [ ! $cpuspeed -eq $(cat /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/max_brightness) ]; then 
+	  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
+	fi
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
@@ -180,7 +185,7 @@ if [ ! $umount ]; then
 	sleep 10s
 	PID=`pidof -o %PPID -x $EXENAME`
 	done
-	echo end
+	echo app exited
  
 	#app exited
 	cd $oCWD #cd out of the mountpoint so we can umount, doesnt really matter to where...
@@ -206,6 +211,8 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 		sudo rm $FREELOOP
 	fi
 	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
+else
+echo umount failed, didnt clean up
 fi
 
 if [ $nox ]; then #restart x if it was killed
@@ -215,5 +222,5 @@ sudo /etc/init.d/slim-init start
 fi
 }
 echo forking now!
-fork &
+fork &> /tmp/pndrun.out & 
 disown
