@@ -38,7 +38,7 @@ while true ; do
 		-u) echo "umount";umount=1;shift 2;;
 		-x) echo "no x";nox=1;shift 2;;
 		-j) echo "join/ also mount those folders";append=$2;shift 2;;
-		-j) echo "set cpu speed to";cpuspeed=$2;shift 2;;
+		-c) echo "set cpu speed to";cpuspeed=$2;shift 2;;
 		-a) 
 			case "$2" in
 				"") echo "no arguments"; shift 2 ;;
