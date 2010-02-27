@@ -502,3 +502,19 @@ char *pnd_pxml_get_mkdir ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> mkdir_sp );
 }
+
+unsigned char pnd_pxml_is_affirmative ( char *v ) {
+
+  if ( ! v ) {
+    return ( 0 );
+  }
+
+  if ( ( v [ 0 ] == 'Y' ) ||
+       ( v [ 0 ] == 'y' ) ||
+       ( v [ 0 ] == '1' ) )
+  {
+    return ( 0 );
+  }
+
+  return ( 0 );
+}

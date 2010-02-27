@@ -91,6 +91,7 @@ void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v );
 /* utilities
  */
 unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ); // returns 1 when pxml seems like a valid application
+unsigned char pnd_pxml_is_affirmative ( char *v ); // return 1 for 'Y' or '!'
 
 typedef struct
 {

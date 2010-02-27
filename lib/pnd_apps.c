@@ -15,7 +15,8 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 			      char *rel_exec, char *rel_startdir,
 			      unsigned int clockspeed, unsigned int options )
 {
-  char *argv [ 20 ];
+  char *argv [ 60 ];
+  char s_clockspeed [ 100 ];
   int f;
 
   //printf ( "Entering pnd_apps_exec\n" );
@@ -59,6 +60,11 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   }
   argv [ f++ ] = "-b";
   argv [ f++ ] = unique_id;
+  if ( clockspeed ) {
+    argv [ f++ ] = "-c";
+    snprintf ( s_clockspeed, 100, "%u", clockspeed );
+    argv [ f++ ] = s_clockspeed;
+  }
 
   // skip -a (arguments) for now
 

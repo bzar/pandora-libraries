@@ -111,8 +111,14 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
       strncat ( buffer, p -> startdir, 1020 );
     }
 
+    // clockspeed
+    if ( p -> clockspeed && atoi ( p -> clockspeed ) != 0 ) {
+      strncat ( buffer, " -c ", 1020 );
+      strncat ( buffer, p -> clockspeed, 1020 );
+    }
+
     // exec options
-    if ( p -> option_no_x11 ) {
+    if ( pnd_pxml_is_affirmative ( p -> option_no_x11 ) ) {
       strncat ( buffer, " -x ", 1020 );
     }
 
