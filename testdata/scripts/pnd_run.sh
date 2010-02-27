@@ -120,7 +120,7 @@ if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #uni
 #mount
  
 if [ ! $umount ]; then
-	if [ ! $cpuspeed -eq $(cat /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/max_brightness) ]; then 
+	if [ ! $cpuspeed -eq $(/proc/pandora/cpu_mhz_max) ]; then 
 	  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
 	fi
 	#is the union already mounted? if not mount evrything, else launch the stuff
