@@ -186,9 +186,11 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 }
 
 unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
+  //#define BITLEN (8*1024)
+#define BITLEN (64*1024)
   char buffer [ FILENAME_MAX ]; // target filename
   char from [ FILENAME_MAX ];   // source filename
-  char bits [ 8 * 1024 ];
+  char bits [ BITLEN ];
   unsigned int bitlen;
   FILE *pnd, *target;
 
@@ -236,8 +238,8 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
 
   while ( len ) {
 
-    if ( len > (8*1024) ) {
-      bitlen = (8*1024);
+    if ( len > (BITLEN) ) {
+      bitlen = (BITLEN);
     } else {
       bitlen = len;
     }
