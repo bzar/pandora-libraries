@@ -200,7 +200,7 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   }
 
   // determine filename for target
-  sprintf ( buffer, "%s/%s#%u.png", targetpath, p -> unique_id, p -> subapp_number ); // target
+  sprintf ( buffer, "%s/%s.png", targetpath, p -> unique_id /*, p -> subapp_number*/ ); // target
 
   /* first.. open the source file, by type of application:
    * are we looking through a pnd file or a dir?
