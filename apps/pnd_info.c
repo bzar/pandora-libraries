@@ -78,36 +78,45 @@ int main ( int argc, char *argv[] ) {
   }
 
   pnd_pxml_handle h = NULL;
+  pnd_pxml_handle *apps = NULL;
   if ( pnd_pnd_seek_pxml ( f ) ) {
     if ( pnd_pnd_accrue_pxml ( f, pxmlbuf, pxmlbuflen ) ) {
-      h = pnd_pxml_fetch_buffer ( "pnd_run", pxmlbuf );
+      apps = pnd_pxml_fetch_buffer ( "pnd_run", pxmlbuf );
     }
   }
 
   fclose ( f );
 
-  if ( ! h ) {
+  if ( ! apps ) {
     printf ( "ERROR: Couldn't pull PXML.xml from the pndfile.\n" );
     exit ( 0 );
   }
 
-  // display sections
-  for ( i = 0; i < sections; i++ ) {
-    char *t;
+  // iterate across apps
+  while ( *apps ) {
+    h = *apps;
 
-    if ( strcasecmp ( section [ i ], "description" ) == 0 ) {
+    // display sections
+    for ( i = 0; i < sections; i++ ) {
+      char *t;
 
-      printf ( "Section: %s\n", section [ i ] );
+      if ( strcasecmp ( section [ i ], "description" ) == 0 ) {
 
-      if ( ( t = pnd_pxml_get_description_en ( h ) ) ) {
-	printf ( "%s\n", t );
-      } else {
-	printf ( "Not supplied by PXML.xml in the pnd-file\n" );
+	printf ( "Section: %s\n", section [ i ] );
+
+	if ( ( t = pnd_pxml_get_description_en ( h ) ) ) {
+	  printf ( "%s\n", t );
+	} else {
+	  printf ( "Not supplied by PXML.xml in the pnd-file\n" );
+	}
+
       }
 
-    }
+    } // for
 
-  } // for
+    // next
+    apps++;
+  } // while
 
   return ( 0 );
 } // main

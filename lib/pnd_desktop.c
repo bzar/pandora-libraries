@@ -11,6 +11,7 @@
 #include "pnd_pndfiles.h"
 #include "pnd_conf.h"
 #include "pnd_desktop.h"
+#include "pnd_logger.h"
 
 unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t *p ) {
   char filename [ FILENAME_MAX ];
@@ -23,24 +24,28 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
   // validation
 
   if ( ! p -> unique_id ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing unique-id\n", targetpath );
     return ( 0 );
   }
 
   if ( ! p -> exec ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing exec\n", targetpath );
     return ( 0 );
   }
 
   if ( ! targetpath ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing target path\n", targetpath );
     return ( 0 );
   }
 
   if ( ! pndrun ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing pnd_run.sh\n", targetpath );
     return ( 0 );
   }
 
   // set up
 
-  sprintf ( filename, "%s/%s.desktop", targetpath, p -> unique_id );
+  sprintf ( filename, "%s/%s#%u.desktop", targetpath, p -> unique_id, p -> subapp_number );
 
   // emit
 
@@ -195,7 +200,7 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   }
 
   // determine filename for target
-  sprintf ( buffer, "%s/%s.png", targetpath, p -> unique_id ); // target
+  sprintf ( buffer, "%s/%s#%u.png", targetpath, p -> unique_id, p -> subapp_number ); // target
 
   /* first.. open the source file, by type of application:
    * are we looking through a pnd file or a dir?

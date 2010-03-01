@@ -8,6 +8,9 @@ extern "C" {
 /* <PXML id="..."> ...*/
 #define PND_PXML_ATTRNAME_UID "id"
 
+/* <application id="123">*/
+#define PND_PXML_APP "application"
+
 /* <title lang="..."> */
 #define PND_PXML_ENAME_TITLE "title"
 #define PND_PXML_ATTRNAME_TITLELANG "lang"

@@ -47,6 +47,8 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 {
   unsigned char valid = pnd_object_type_unknown;
   pnd_pxml_handle pxmlh = 0;
+  pnd_pxml_handle *pxmlapps = NULL;
+  pnd_pxml_handle *pxmlappiter;
   unsigned int pxml_close_pos = 0;
   unsigned char logit = pnd_log_do_buried_logging();
 
@@ -84,7 +86,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     //printf ( "PXML: disco callback encountered '%s'\n", fpath );
 
     // pick up the PXML if we can
-    pxmlh = pnd_pxml_fetch ( (char*) fpath );
+    pxmlapps = pnd_pxml_fetch ( (char*) fpath );
 
   } else if ( valid == pnd_object_type_pnd ) {
     // PND ... ??
@@ -147,7 +149,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 #endif
 
     // by now, we have <PXML> .. </PXML>, try to parse..
-    pxmlh = pnd_pxml_fetch_buffer ( (char*) fpath, pxmlbuf );
+    pxmlapps = pnd_pxml_fetch_buffer ( (char*) fpath, pxmlbuf );
 
     // done with file
     fclose ( f );
@@ -155,7 +157,19 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
   }
 
   // pxmlh is useful?
-  if ( pxmlh ) {
+  if ( ! pxmlapps ) {
+    return ( 0 ); // continue tree walk
+  }
+
+  // iterate across apps in the PXML
+  pxmlappiter = pxmlapps;
+  while ( 1 ) {
+    pxmlh = *pxmlappiter;
+    pxmlappiter++;
+
+    if ( ! pxmlh ) {
+      break; // all done
+    }
 
     // look for any overrides, if requested
     pnd_pxml_merge_override ( pxmlh, disco_overrides );
@@ -165,6 +179,8 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       pnd_disco_t *p;
       char *fixpxml;
       char *z;
+
+      pnd_log ( PND_LOG_DEFAULT, "Setting up discovered app %u\n", ((pnd_pxml_t*) pxmlh) -> subapp_number );
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
 
@@ -180,6 +196,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( ( fixpxml = strrchr ( fpath, '/' ) ) ) {
 	p -> object_filename = strdup ( fixpxml + 1 );
       }
+
+      // subapp-number
+      p -> subapp_number = ((pnd_pxml_t*) pxmlh) -> subapp_number;
 
       // png icon path
       p -> pnd_icon_pos = pxml_close_pos;
@@ -250,7 +269,10 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     // ditch pxml
     pnd_pxml_delete ( pxmlh );
 
-  } // got a pxmlh
+  } // while pxmlh is good
+
+  // free up the applist
+  free ( pxmlapps );
 
   return ( 0 ); // continue the tree walk
 }

@@ -12,14 +12,16 @@ extern "C" {
 #define PXML_TAGHEAD "<PXML" /* case insensitive; allow for trailing attributes */
 #define PXML_TAGFOOT "</PXML>" /* case insensitive */
 
+#define PXML_MAXAPPS 20 /* max number of <application>'s within a single PXML */
+
 // use this handle to interact with PXML; this hides the mechanics of parsing a PXML file so that
 // it can be upgraded with impacting applications
 typedef void* pnd_pxml_handle;
 
 /* pxml_fetch() will return NULL on fail, otherwise a valid handle which may be further queried
  */
-pnd_pxml_handle pnd_pxml_fetch ( char *fullpath );
-pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer );
+pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath );
+pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer );
 void pnd_pxml_delete ( pnd_pxml_handle h );
 
 /* overrides() allow for customization of a PXML that persists; ie: An application might be sitting
@@ -101,6 +103,7 @@ typedef struct
 
 typedef struct
 {
+        unsigned char subapp_number; // 0 for 'only app'; 1+ for <application> # .. first <application> is 1.
 	pnd_localized_string_t *titles;
 	int titles_c;
 	int titles_alloc_c;

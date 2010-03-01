@@ -661,7 +661,7 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
     // check if icon already exists (from a previous extraction say); if so, we needn't
     // do it again
     char existingpath [ FILENAME_MAX ];
-    sprintf ( existingpath, "%s/%s.png", emiticonpath, d -> unique_id );
+    sprintf ( existingpath, "%s/%s#%u.png", emiticonpath, d -> unique_id, d -> subapp_number );
 
     struct stat dirs;
     if ( stat ( existingpath, &dirs ) == 0 ) {

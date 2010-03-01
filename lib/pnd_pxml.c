@@ -11,30 +11,47 @@
 #include "pnd_pathiter.h"
 #include "pnd_tinyxml.h"
 
-pnd_pxml_handle pnd_pxml_fetch ( char *fullpath ) {
+pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
+  FILE *f;
+  char *b;
+  unsigned int len;
 
-  pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
+  f = fopen ( fullpath, "r" );
 
-  memset ( p, '\0', sizeof(pnd_pxml_t) );
-
-  if ( ! pnd_pxml_load ( fullpath, p ) ) {
+  if ( ! f ) {
     return ( 0 );
   }
 
-  return ( p );
+  fseek ( f, 0, SEEK_END );
+
+  len = ftell ( f );
+
+  fseek ( f, 0, SEEK_SET );
+
+  b = (char*) malloc ( len );
+
+  if ( ! b ) {
+    fclose ( f );
+    return ( 0 );
+  }
+
+  fread ( b, 1, len, f );
+
+  fclose ( f );
+
+  return ( pnd_pxml_fetch_buffer ( fullpath, b ) );
 }
 
-pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
+pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
 
-  pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
-
-  memset ( p, '\0', sizeof(pnd_pxml_t) );
+  pnd_pxml_t **p = malloc ( sizeof(pnd_pxml_t*) * PXML_MAXAPPS );
+  memset ( p, '\0', sizeof(pnd_pxml_t*) * PXML_MAXAPPS );
 
   if ( ! pnd_pxml_parse ( filename, buffer, strlen ( buffer ), p ) ) {
     return ( 0 );
   }
 
-  return ( p );
+  return ( (pnd_pxml_handle*) p );
 }
 
 void pnd_pxml_delete ( pnd_pxml_handle h ) {
@@ -226,6 +243,8 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
   // the pxml includes a unique-id; use this value to attempt to find an
   // override in the given searchpath
   signed char retval = 0;
+
+#if 0 // TODO: Unfinished entirely now
   pnd_pxml_handle mergeh;
 
   if ( ! pnd_pxml_get_unique_id ( h ) ) {
@@ -241,10 +260,12 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
     strncat ( buffer, ".xml", FILENAME_MAX );
     //printf ( "  Path to seek merges: '%s'\n", buffer );
 
+    // TODO: handle multiple subapps!
     mergeh = pnd_pxml_fetch ( buffer );
 
     if ( mergeh ) {
 
+      // TODO: handle all the various data bits
       if ( pnd_pxml_get_app_name_en ( mergeh ) ) {
 	pnd_pxml_set_app_name ( h, pnd_pxml_get_app_name_en ( mergeh ) );
       }
@@ -254,6 +275,7 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
 
   }
   SEARCHPATH_POST
+#endif
 
   return ( retval );
 }
