@@ -190,7 +190,7 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
 #define BITLEN (64*1024)
   char buffer [ FILENAME_MAX ]; // target filename
   char from [ FILENAME_MAX ];   // source filename
-  char bits [ BITLEN ];
+  unsigned char bits [ BITLEN ];
   unsigned int bitlen;
   FILE *pnd, *target;
 
@@ -213,9 +213,10 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
     sprintf ( from, "%s/%s", p -> object_path, p -> object_filename );
   }
 
-  pnd = fopen ( from, "r" );
+  pnd = fopen ( from, "rb" );
 
   if ( ! pnd ) {
+    pnd_log ( PND_LOG_DEFAULT, "    Emit icon, couldn't open source\n" );
     return ( 0 );
   }
 
@@ -225,6 +226,7 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
 
   if ( ! target ) {
     fclose ( pnd );
+    pnd_log ( PND_LOG_DEFAULT, "    Emit icon, couldn't open target\n" );
     return ( 0 );
   }
 
@@ -235,6 +237,8 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   fseek ( pnd, p -> pnd_icon_pos, SEEK_SET );
 
   len -= p -> pnd_icon_pos;
+
+  pnd_log ( PND_LOG_DEFAULT, "    Emit icon, length: %u\n", len );
 
   while ( len ) {
 
@@ -248,21 +252,41 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
       fclose ( pnd );
       fclose ( target );
       unlink ( buffer );
+      pnd_log ( PND_LOG_DEFAULT, "    Emit icon, bad read\n" );
       return ( 0 );
     }
+
+#if 0
+    {
+      unsigned int i = 0;
+      char bigbuffer [ 200 * 1024 ] = "\0";
+      char b [ 10 ];
+      pnd_log ( PND_LOG_DEFAULT, "    Read hexdump\n" );
+      while ( i < bitlen ) {
+	sprintf ( b, "%x,", bits [ i ] );
+	strcat ( bigbuffer, b );
+	i++;
+      }
+      pnd_log ( PND_LOG_DEFAULT, bigbuffer );
+    }
+#endif
 
     if ( fwrite ( bits, bitlen, 1, target ) != 1 ) {
       fclose ( pnd );
       fclose ( target );
       unlink ( buffer );
+      pnd_log ( PND_LOG_DEFAULT, "    Emit icon, bad write\n" );
       return ( 0 );
     }
 
     len -= bitlen;
+    //pnd_log ( PND_LOG_DEFAULT, "    Emit icon, next block, length: %u\n", len );
   } // while
 
   fclose ( pnd );
   fclose ( target );
+
+  //pnd_log ( PND_LOG_DEFAULT, "    Emit icon, done.\n" );
 
   return ( 1 );
 }
