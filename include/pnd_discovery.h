@@ -56,6 +56,7 @@ typedef struct {
   char *unique_id;
   char *icon;
   char *exec;
+  char *execargs;
   char *clockspeed;
   char *startdir;
   char *option_no_x11;

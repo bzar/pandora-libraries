@@ -116,6 +116,12 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
       strncat ( buffer, p -> startdir, 1020 );
     }
 
+    // args
+    if ( p -> execargs ) {
+      strncat ( buffer, " -a ", 1020 );
+      strncat ( buffer, p -> execargs, 1020 );
+    }
+
     // clockspeed
     if ( p -> clockspeed && atoi ( p -> clockspeed ) != 0 ) {
       strncat ( buffer, " -c ", 1020 );

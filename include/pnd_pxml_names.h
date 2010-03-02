@@ -24,6 +24,7 @@ extern "C" {
 #define PND_PXML_ATTRNAME_EXECBG "background"
 #define PND_PXML_ATTRNAME_EXECSTAL "standalone"
 #define PND_PXML_ATTRNAME_EXECCMD "command"
+#define PND_PXML_ATTRNAME_EXECARGS "arguments"
 #define PND_PXML_ATTRNAME_EXECWD "startdir"
 #define PND_PXML_ATTRNAME_EXECNOX11 "no_x11"
 

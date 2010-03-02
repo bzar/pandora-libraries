@@ -172,6 +172,7 @@ int main ( int argc, char *argv[] ) {
 			   pnd_pxml_get_unique_id ( h ),
 			   pnd_pxml_get_exec ( h ),
 			   pnd_pxml_get_startdir ( h ),
+			   NULL /* args */,
 			   clock,
 			   options )
 	 )

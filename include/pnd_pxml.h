@@ -62,6 +62,7 @@ char *pnd_pxml_get_version_minor ( pnd_pxml_handle h );
 char *pnd_pxml_get_version_release ( pnd_pxml_handle h );
 char *pnd_pxml_get_version_build ( pnd_pxml_handle h );
 char *pnd_pxml_get_exec ( pnd_pxml_handle h );
+char *pnd_pxml_get_execargs ( pnd_pxml_handle h );
 char *pnd_pxml_get_exec_option_no_x11 ( pnd_pxml_handle h );
 char *pnd_pxml_get_main_category ( pnd_pxml_handle h );
 char *pnd_pxml_get_subcategory1 ( pnd_pxml_handle h );
@@ -122,6 +123,7 @@ typedef struct
 	char *version_release;
 	char *version_build;
 	char *exec;
+	char *execargs;
 	char *main_category;
 	char *subcategory1;
 	char *subcategory2;

@@ -28,6 +28,7 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> unique_id ) {      free ( p -> unique_id );   }
   if ( p -> icon )     {       free ( p -> icon );        }
   if ( p -> exec )     {       free ( p -> exec );        }
+  if ( p -> execargs ) {       free ( p -> execargs );    }
   if ( p -> clockspeed ) {     free ( p -> clockspeed );  }
   if ( p -> startdir ) {       free ( p -> startdir );    }
   if ( p -> option_no_x11 ) {  free ( p -> option_no_x11 );  }
@@ -218,6 +219,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( pnd_pxml_get_exec ( pxmlh ) ) {
 	p -> exec = strdup ( pnd_pxml_get_exec ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_execargs ( pxmlh ) ) {
+	p -> execargs = strdup ( pnd_pxml_get_execargs ( pxmlh ) );
       }
       if ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) ) {
 	p -> option_no_x11 = strdup ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) );
