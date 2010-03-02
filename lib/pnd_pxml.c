@@ -10,6 +10,7 @@
 #include "pnd_pxml.h"
 #include "pnd_pathiter.h"
 #include "pnd_tinyxml.h"
+#include "pnd_logger.h"
 
 pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
   FILE *f;
@@ -283,12 +284,17 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
 char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int strings_c, char *iso_lang)
 {
   int i;
-  int similarity_weight = 0xff; /*Set to something Really Bad in the beginning*/
+  int similarity_weight = 0xffff; /*Set to something Really Bad in the beginning*/
   char *best_match = NULL;
 
   for(i = 0; i < strings_c; i++)
   {
-    int new_weight = abs(strcmp(strings[i].language, iso_lang));
+    // factor in the length -- if we're given 'en' and have a string 'en_US', thats better than 'de_something'; if we don't
+    // use length, then en_US and de_FO are same to 'en'.
+    int maxcount = strlen ( strings[i].language ) < strlen ( iso_lang ) ? strlen ( strings[i].language ) : strlen ( iso_lang );
+    int new_weight = abs(strncmp(strings[i].language, iso_lang, maxcount));
+    //pnd_log ( PND_LOG_DEFAULT, "looking for lang %s, looking at lang %s (weight %d, old %d): %s\n",
+    //          iso_lang, strings [ i ].language, new_weight, similarity_weight, strings [ i ].string );
     if (new_weight < similarity_weight)
     {
       similarity_weight = new_weight;
@@ -297,8 +303,11 @@ char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int s
   }
 
   if ( best_match ) {
+    //pnd_log ( PND_LOG_DEFAULT, "best match: %s\n", best_match );
     return strdup(best_match);
   }
+
+  //pnd_log ( PND_LOG_DEFAULT, "best match: FAIL\n" );
 
   return ( NULL );
 }
