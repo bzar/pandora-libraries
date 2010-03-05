@@ -109,8 +109,8 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   // care if it crashed, was killed, was suspended, whatever.)
   if ( options & PND_EXEC_OPTION_BLOCK ) {
     int status = 0;
-    //waitpid ( f, &status. 0 /* no options */ );
-    wait ( &status );
+    waitpid ( f, &status. 0 /* no options */ );
+    //wait ( &status );
   }
 
   // printf ( "Exiting pnd_apps_exec\n" );
