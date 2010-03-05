@@ -10,31 +10,49 @@
 #include "pnd_pxml.h"
 #include "pnd_pathiter.h"
 #include "pnd_tinyxml.h"
+#include "pnd_logger.h"
 
-pnd_pxml_handle pnd_pxml_fetch ( char *fullpath ) {
+pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
+  FILE *f;
+  char *b;
+  unsigned int len;
 
-  pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
+  f = fopen ( fullpath, "r" );
 
-  memset ( p, '\0', sizeof(pnd_pxml_t) );
-
-  if ( ! pnd_pxml_load ( fullpath, p ) ) {
+  if ( ! f ) {
     return ( 0 );
   }
 
-  return ( p );
+  fseek ( f, 0, SEEK_END );
+
+  len = ftell ( f );
+
+  fseek ( f, 0, SEEK_SET );
+
+  b = (char*) malloc ( len );
+
+  if ( ! b ) {
+    fclose ( f );
+    return ( 0 );
+  }
+
+  fread ( b, 1, len, f );
+
+  fclose ( f );
+
+  return ( pnd_pxml_fetch_buffer ( fullpath, b ) );
 }
 
-pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
+pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
 
-  pnd_pxml_t *p = malloc ( sizeof(pnd_pxml_t) );
-
-  memset ( p, '\0', sizeof(pnd_pxml_t) );
+  pnd_pxml_t **p = malloc ( sizeof(pnd_pxml_t*) * PXML_MAXAPPS );
+  memset ( p, '\0', sizeof(pnd_pxml_t*) * PXML_MAXAPPS );
 
   if ( ! pnd_pxml_parse ( filename, buffer, strlen ( buffer ), p ) ) {
     return ( 0 );
   }
 
-  return ( p );
+  return ( (pnd_pxml_handle*) p );
 }
 
 void pnd_pxml_delete ( pnd_pxml_handle h ) {
@@ -226,6 +244,8 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
   // the pxml includes a unique-id; use this value to attempt to find an
   // override in the given searchpath
   signed char retval = 0;
+
+#if 0 // TODO: Unfinished entirely now
   pnd_pxml_handle mergeh;
 
   if ( ! pnd_pxml_get_unique_id ( h ) ) {
@@ -241,10 +261,12 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
     strncat ( buffer, ".xml", FILENAME_MAX );
     //printf ( "  Path to seek merges: '%s'\n", buffer );
 
+    // TODO: handle multiple subapps!
     mergeh = pnd_pxml_fetch ( buffer );
 
     if ( mergeh ) {
 
+      // TODO: handle all the various data bits
       if ( pnd_pxml_get_app_name_en ( mergeh ) ) {
 	pnd_pxml_set_app_name ( h, pnd_pxml_get_app_name_en ( mergeh ) );
       }
@@ -254,6 +276,7 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
 
   }
   SEARCHPATH_POST
+#endif
 
   return ( retval );
 }
@@ -261,12 +284,17 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
 char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int strings_c, char *iso_lang)
 {
   int i;
-  int similarity_weight = 0xff; /*Set to something Really Bad in the beginning*/
+  int similarity_weight = 0xffff; /*Set to something Really Bad in the beginning*/
   char *best_match = NULL;
 
   for(i = 0; i < strings_c; i++)
   {
-    int new_weight = abs(strcmp(strings[i].language, iso_lang));
+    // factor in the length -- if we're given 'en' and have a string 'en_US', thats better than 'de_something'; if we don't
+    // use length, then en_US and de_FO are same to 'en'.
+    int maxcount = strlen ( strings[i].language ) < strlen ( iso_lang ) ? strlen ( strings[i].language ) : strlen ( iso_lang );
+    int new_weight = abs(strncmp(strings[i].language, iso_lang, maxcount));
+    //pnd_log ( PND_LOG_DEFAULT, "looking for lang %s, looking at lang %s (weight %d, old %d): %s\n",
+    //          iso_lang, strings [ i ].language, new_weight, similarity_weight, strings [ i ].string );
     if (new_weight < similarity_weight)
     {
       similarity_weight = new_weight;
@@ -275,8 +303,11 @@ char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int s
   }
 
   if ( best_match ) {
+    //pnd_log ( PND_LOG_DEFAULT, "best match: %s\n", best_match );
     return strdup(best_match);
   }
+
+  //pnd_log ( PND_LOG_DEFAULT, "best match: FAIL\n" );
 
   return ( NULL );
 }
@@ -381,6 +412,11 @@ char *pnd_pxml_get_version_build ( pnd_pxml_handle h ) {
 char *pnd_pxml_get_exec ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> exec );
+}
+
+char *pnd_pxml_get_execargs ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> execargs );
 }
 
 char *pnd_pxml_get_exec_option_no_x11 ( pnd_pxml_handle h ) {

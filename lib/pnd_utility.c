@@ -173,9 +173,9 @@ void pnd_exec_no_wait_1 ( char *fullpath, char *arg1 ) {
   return;
 }
 
-pnd_pxml_handle pnd_pxml_get_by_path ( char *fullpath ) {
+pnd_pxml_handle *pnd_pxml_get_by_path ( char *fullpath ) {
   unsigned char valid = pnd_object_type_unknown;
-  pnd_pxml_handle pxmlh = 0;
+  pnd_pxml_handle *pxmlapps = 0;
 
   // WARN: this is way too close to callback in pnd_disco .. should be refactored!
 
@@ -192,7 +192,7 @@ pnd_pxml_handle pnd_pxml_get_by_path ( char *fullpath ) {
 
   // potentially a valid application
   if ( valid == pnd_object_type_directory ) {
-    pxmlh = pnd_pxml_fetch ( (char*) fullpath );
+    pxmlapps = pnd_pxml_fetch ( (char*) fullpath );
 
   } else if ( valid == pnd_object_type_pnd ) {
     FILE *f;
@@ -214,7 +214,7 @@ pnd_pxml_handle pnd_pxml_get_by_path ( char *fullpath ) {
     }
 
     // by now, we have <PXML> .. </PXML>, try to parse..
-    pxmlh = pnd_pxml_fetch_buffer ( (char*) fullpath, pxmlbuf );
+    pxmlapps = pnd_pxml_fetch_buffer ( (char*) fullpath, pxmlbuf );
 
     // done with file
     fclose ( f );
@@ -223,7 +223,7 @@ pnd_pxml_handle pnd_pxml_get_by_path ( char *fullpath ) {
 
   // ..
 
-  return ( pxmlh );
+  return ( pxmlapps );
 }
 
 unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, unsigned char mountpoint_len ) {

@@ -224,7 +224,7 @@ int main ( int argc, char *argv[] ) {
 	  }
 
 	  printf ( "Trying to exec '%s'\n", fullpath );
-	  pnd_apps_exec ( pndrun, fullpath, d -> unique_id, d -> exec, d -> startdir, atoi ( d -> clockspeed ), PND_EXEC_OPTION_BLOCK );
+	  pnd_apps_exec ( pndrun, fullpath, d -> unique_id, d -> exec, d -> startdir, NULL, atoi ( d -> clockspeed ), PND_EXEC_OPTION_BLOCK );
 	}
       }
 

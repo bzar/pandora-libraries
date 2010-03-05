@@ -12,14 +12,16 @@ extern "C" {
 #define PXML_TAGHEAD "<PXML" /* case insensitive; allow for trailing attributes */
 #define PXML_TAGFOOT "</PXML>" /* case insensitive */
 
+#define PXML_MAXAPPS 20 /* max number of <application>'s within a single PXML */
+
 // use this handle to interact with PXML; this hides the mechanics of parsing a PXML file so that
 // it can be upgraded with impacting applications
 typedef void* pnd_pxml_handle;
 
 /* pxml_fetch() will return NULL on fail, otherwise a valid handle which may be further queried
  */
-pnd_pxml_handle pnd_pxml_fetch ( char *fullpath );
-pnd_pxml_handle pnd_pxml_fetch_buffer ( char *filename, char *buffer );
+pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath );
+pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer );
 void pnd_pxml_delete ( pnd_pxml_handle h );
 
 /* overrides() allow for customization of a PXML that persists; ie: An application might be sitting
@@ -60,6 +62,7 @@ char *pnd_pxml_get_version_minor ( pnd_pxml_handle h );
 char *pnd_pxml_get_version_release ( pnd_pxml_handle h );
 char *pnd_pxml_get_version_build ( pnd_pxml_handle h );
 char *pnd_pxml_get_exec ( pnd_pxml_handle h );
+char *pnd_pxml_get_execargs ( pnd_pxml_handle h );
 char *pnd_pxml_get_exec_option_no_x11 ( pnd_pxml_handle h );
 char *pnd_pxml_get_main_category ( pnd_pxml_handle h );
 char *pnd_pxml_get_subcategory1 ( pnd_pxml_handle h );
@@ -101,6 +104,7 @@ typedef struct
 
 typedef struct
 {
+        unsigned char subapp_number; // 0 for 'only app'; 1+ for <application> # .. first <application> is 1.
 	pnd_localized_string_t *titles;
 	int titles_c;
 	int titles_alloc_c;
@@ -119,6 +123,7 @@ typedef struct
 	char *version_release;
 	char *version_build;
 	char *exec;
+	char *execargs;
 	char *main_category;
 	char *subcategory1;
 	char *subcategory2;

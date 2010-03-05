@@ -139,40 +139,50 @@ int main ( int argc, char *argv[] ) {
   }
 
   pnd_pxml_handle h = NULL;
+  pnd_pxml_handle *apps = NULL;
   if ( pnd_pnd_seek_pxml ( f ) ) {
     if ( pnd_pnd_accrue_pxml ( f, pxmlbuf, pxmlbuflen ) ) {
-      h = pnd_pxml_fetch_buffer ( "pnd_run", pxmlbuf );
+      apps = pnd_pxml_fetch_buffer ( "pnd_run", pxmlbuf );
     }
   }
 
   fclose ( f );
 
-  if ( ! h ) {
+  if ( ! apps ) {
     printf ( "ERROR: Couldn't pull PXML.xml from the pndfile.\n" );
     exit ( 0 );
   }
 
-  // attempt to invoke
-  unsigned int options = 0;
-  if ( no_x11 ) {
-    options |= PND_EXEC_OPTION_NOX11;
-  }
+  // attempt to invoke.. all of the subapps? just first one?
 
-  unsigned int clock = 200;
-  if ( pnd_pxml_get_clockspeed ( h ) ) {
-    clock = atoi ( pnd_pxml_get_clockspeed ( h ) );
-  }
+  while ( *apps ) {
+    h = *apps;
 
-  if ( ! pnd_apps_exec ( pnd_run, pndfile,
-			 pnd_pxml_get_unique_id ( h ),
-			 pnd_pxml_get_exec ( h ),
-			 pnd_pxml_get_startdir ( h ),
-			 clock,
-			 options )
-       )
-  {
-    printf ( "ERROR: PXML.xml data is bad\n" );
-  }
+    unsigned int options = 0;
+    if ( no_x11 ) {
+      options |= PND_EXEC_OPTION_NOX11;
+    }
+
+    unsigned int clock = 200;
+    if ( pnd_pxml_get_clockspeed ( h ) ) {
+      clock = atoi ( pnd_pxml_get_clockspeed ( h ) );
+    }
+
+    if ( ! pnd_apps_exec ( pnd_run, pndfile,
+			   pnd_pxml_get_unique_id ( h ),
+			   pnd_pxml_get_exec ( h ),
+			   pnd_pxml_get_startdir ( h ),
+			   NULL /* args */,
+			   clock,
+			   options )
+	 )
+    {
+      printf ( "ERROR: PXML.xml data is bad\n" );
+    }
+
+    // next
+    apps++;
+  } // while
 
   return ( 0 );
 } // main

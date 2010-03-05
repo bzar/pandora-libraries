@@ -68,33 +68,44 @@ int main ( int argc, char *argv[] ) {
   // actually do useful work
   //
 
-  pnd_pxml_handle pxmlh;
+  pnd_pxml_handle *pxmlapps;
 
-  pxmlh = pnd_pxml_get_by_path ( fullpath );
+  pxmlapps = pnd_pxml_get_by_path ( fullpath );
 
-  if ( ! pxmlh ) {
+  if ( ! pxmlapps ) {
     printf ( "ERROR: PXML could not be extracted meaningfully.\n" );
     return ( 0 );
   }
 
-  printf ( "Got back a meaningful PXML structure.\n" );
+  printf ( "Got back a meaningful list of PXMLs.\n" );
 
-  /* check the content
-   */
+  pnd_pxml_handle h = *pxmlapps;
 
-  // check for required fields
+  while ( h ) {
 
-  // exec-path?
+    /* check the content
+     */
 
-  // app name?
+    // check for required fields
 
-  // unique ID
+    // exec-path?
 
-  // package-name (shortname)
+    // app name?
+
+    // unique ID
+
+    // package-name (shortname)
+
+    // free up that particular pxml_handle within the return-list
+
+    // next
+    pxmlapps++;
+    h = pxmlapps;
+  } // while
 
   /* done!
    */
-  pnd_pxml_delete ( pxmlh );
+  pnd_pxml_delete ( pxmlapps );
 
   return ( 0 );
 }

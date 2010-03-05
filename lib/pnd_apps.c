@@ -13,6 +13,7 @@
 
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 			      char *rel_exec, char *rel_startdir,
+			      char *args,
 			      unsigned int clockspeed, unsigned int options )
 {
   char *argv [ 60 ];
@@ -57,6 +58,10 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   if ( rel_startdir ) {
     argv [ f++ ] = "-s";
     argv [ f++ ] = rel_startdir;
+  }
+  if ( args ) {
+    argv [ f++ ] = "-a";
+    argv [ f++ ] = args;
   }
   argv [ f++ ] = "-b";
   argv [ f++ ] = unique_id;
@@ -104,8 +109,8 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   // care if it crashed, was killed, was suspended, whatever.)
   if ( options & PND_EXEC_OPTION_BLOCK ) {
     int status = 0;
-    //waitpid ( f, &status. 0 /* no options */ );
-    wait ( &status );
+    waitpid ( f, &status, 0 /* no options */ );
+    //wait ( &status );
   }
 
   // printf ( "Exiting pnd_apps_exec\n" );

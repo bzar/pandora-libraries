@@ -198,7 +198,7 @@ static unsigned char pnd_pnd_mountie ( char *pndrun, char *fullpath, char *uniqu
 
   // wait until mountscript actually completes
   int status = 0;
-  wait ( &status );
+  waitpid ( f, &status, 0 /* options */ );
 
   return ( 1 );
 }

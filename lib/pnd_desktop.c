@@ -11,6 +11,7 @@
 #include "pnd_pndfiles.h"
 #include "pnd_conf.h"
 #include "pnd_desktop.h"
+#include "pnd_logger.h"
 
 unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t *p ) {
   char filename [ FILENAME_MAX ];
@@ -23,24 +24,28 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
   // validation
 
   if ( ! p -> unique_id ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing unique-id\n", targetpath );
     return ( 0 );
   }
 
   if ( ! p -> exec ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing exec\n", targetpath );
     return ( 0 );
   }
 
   if ( ! targetpath ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing target path\n", targetpath );
     return ( 0 );
   }
 
   if ( ! pndrun ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing pnd_run.sh\n", targetpath );
     return ( 0 );
   }
 
   // set up
 
-  sprintf ( filename, "%s/%s.desktop", targetpath, p -> unique_id );
+  sprintf ( filename, "%s/%s#%u.desktop", targetpath, p -> unique_id, p -> subapp_number );
 
   // emit
 
@@ -109,6 +114,12 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     if ( p -> startdir ) {
       strncat ( buffer, " -s ", 1020 );
       strncat ( buffer, p -> startdir, 1020 );
+    }
+
+    // args
+    if ( p -> execargs ) {
+      strncat ( buffer, " -a ", 1020 );
+      strncat ( buffer, p -> execargs, 1020 );
     }
 
     // clockspeed
@@ -181,9 +192,11 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 }
 
 unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
+  //#define BITLEN (8*1024)
+#define BITLEN (64*1024)
   char buffer [ FILENAME_MAX ]; // target filename
   char from [ FILENAME_MAX ];   // source filename
-  char bits [ 8 * 1024 ];
+  unsigned char bits [ BITLEN ];
   unsigned int bitlen;
   FILE *pnd, *target;
 
@@ -195,7 +208,7 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
   }
 
   // determine filename for target
-  sprintf ( buffer, "%s/%s.png", targetpath, p -> unique_id ); // target
+  sprintf ( buffer, "%s/%s.png", targetpath, p -> unique_id /*, p -> subapp_number*/ ); // target
 
   /* first.. open the source file, by type of application:
    * are we looking through a pnd file or a dir?
@@ -206,9 +219,10 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
     sprintf ( from, "%s/%s", p -> object_path, p -> object_filename );
   }
 
-  pnd = fopen ( from, "r" );
+  pnd = fopen ( from, "rb" );
 
   if ( ! pnd ) {
+    pnd_log ( PND_LOG_DEFAULT, "    Emit icon, couldn't open source\n" );
     return ( 0 );
   }
 
@@ -218,6 +232,7 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
 
   if ( ! target ) {
     fclose ( pnd );
+    pnd_log ( PND_LOG_DEFAULT, "    Emit icon, couldn't open target\n" );
     return ( 0 );
   }
 
@@ -229,10 +244,12 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
 
   len -= p -> pnd_icon_pos;
 
+  pnd_log ( PND_LOG_DEFAULT, "    Emit icon, length: %u\n", len );
+
   while ( len ) {
 
-    if ( len > (8*1024) ) {
-      bitlen = (8*1024);
+    if ( len > (BITLEN) ) {
+      bitlen = (BITLEN);
     } else {
       bitlen = len;
     }
@@ -241,21 +258,41 @@ unsigned char pnd_emit_icon ( char *targetpath, pnd_disco_t *p ) {
       fclose ( pnd );
       fclose ( target );
       unlink ( buffer );
+      pnd_log ( PND_LOG_DEFAULT, "    Emit icon, bad read\n" );
       return ( 0 );
     }
+
+#if 0
+    {
+      unsigned int i = 0;
+      char bigbuffer [ 200 * 1024 ] = "\0";
+      char b [ 10 ];
+      pnd_log ( PND_LOG_DEFAULT, "    Read hexdump\n" );
+      while ( i < bitlen ) {
+	sprintf ( b, "%x,", bits [ i ] );
+	strcat ( bigbuffer, b );
+	i++;
+      }
+      pnd_log ( PND_LOG_DEFAULT, bigbuffer );
+    }
+#endif
 
     if ( fwrite ( bits, bitlen, 1, target ) != 1 ) {
       fclose ( pnd );
       fclose ( target );
       unlink ( buffer );
+      pnd_log ( PND_LOG_DEFAULT, "    Emit icon, bad write\n" );
       return ( 0 );
     }
 
     len -= bitlen;
+    //pnd_log ( PND_LOG_DEFAULT, "    Emit icon, next block, length: %u\n", len );
   } // while
 
   fclose ( pnd );
   fclose ( target );
+
+  //pnd_log ( PND_LOG_DEFAULT, "    Emit icon, done.\n" );
 
   return ( 1 );
 }

@@ -8,6 +8,9 @@ extern "C" {
 /* <PXML id="..."> ...*/
 #define PND_PXML_ATTRNAME_UID "id"
 
+/* <application id="123">*/
+#define PND_PXML_APP "application"
+
 /* <title lang="..."> */
 #define PND_PXML_ENAME_TITLE "title"
 #define PND_PXML_ATTRNAME_TITLELANG "lang"
@@ -21,6 +24,7 @@ extern "C" {
 #define PND_PXML_ATTRNAME_EXECBG "background"
 #define PND_PXML_ATTRNAME_EXECSTAL "standalone"
 #define PND_PXML_ATTRNAME_EXECCMD "command"
+#define PND_PXML_ATTRNAME_EXECARGS "arguments"
 #define PND_PXML_ATTRNAME_EXECWD "startdir"
 #define PND_PXML_ATTRNAME_EXECNOX11 "no_x11"
 
