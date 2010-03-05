@@ -220,7 +220,14 @@ echo "starting x in 5s"
 sleep 5
 sudo /etc/init.d/slim-init start
 fi
-}
+
+} #function end!
+
+if [ $nox ]; then
 echo forking now!
 fork &> /tmp/pndrun.out & 
 disown
+else
+echo Running with x, not disowning!
+fork &> /tmp/pndrun.out
+fi
