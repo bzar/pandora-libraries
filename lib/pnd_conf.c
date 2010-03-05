@@ -179,6 +179,11 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
       *mid = '\0';
       mid++;
 
+      // skip past any heading space for the key
+      while ( *mid && isspace ( *mid ) ) {
+	mid++;
+      }
+
       //printf ( "key head: '%s'\n", head );
       //printf ( "key mid: '%s'\n", mid );
 
@@ -206,7 +211,7 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
 	}
 
       } else {
-	// key/value pairing
+	// key only
 	char *v;
 
 	// form the actual new key

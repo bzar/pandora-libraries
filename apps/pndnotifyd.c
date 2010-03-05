@@ -113,7 +113,7 @@ int main ( int argc, char *argv[] ) {
       }
 
     } else {
-      printf ( "%s [-d] [##]\n", argv [ 0 ] );
+      printf ( "%s [-d] [-l] [##]\n", argv [ 0 ] );
       printf ( "-d\tDaemon mode; detach from terminal, chdir to /tmp, suppress output. Optional.\n" );
       printf ( "-n\tDo not scan on launch; default is to run a scan for apps when %s is invoked.\n", argv [ 0 ] );
       printf ( "-l#\tLog-it; -l is 0-and-up (or all), and -l2 means 2-and-up (not all); l[0-3] for now. Log goes to /tmp/pndnotifyd.log\n" );
