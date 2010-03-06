@@ -257,3 +257,15 @@ int pnd_conf_get_as_int ( pnd_conf_handle c, char *key ) {
 
   return ( i );
 }
+
+int pnd_conf_get_as_int_d ( pnd_conf_handle c, char *key, int def ) {
+  char *t = pnd_box_find_by_key ( c, key );
+
+  if ( ! t ) {
+    return ( def ); // non-existant
+  }
+
+  int i = atoi ( t );
+
+  return ( i );
+}
