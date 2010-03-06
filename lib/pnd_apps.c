@@ -10,6 +10,13 @@
 #include "pnd_container.h"
 #include "pnd_pxml.h"
 #include "pnd_apps.h"
+#include "pnd_logger.h"
+
+static char apps_exec_runline [ 1024 ];
+
+char *pnd_apps_exec_runline ( void ) {
+  return ( apps_exec_runline );
+}
 
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 			      char *rel_exec, char *rel_startdir,
@@ -83,6 +90,35 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 
   // finish
   argv [ f++ ] = NULL; // for execv
+
+  // stop here?
+  if ( options & PND_EXEC_OPTION_NORUN ) {
+    unsigned char i;
+    bzero ( apps_exec_runline, 1024 );
+    //pnd_log ( PND_LOG_DEFAULT, "Norun %u\n", f );
+    for ( i = 0; i < ( f - 1 ); i++ ) {
+      //pnd_log ( PND_LOG_DEFAULT, "Norun %u: %s\n", i, argv [ i ] );
+
+      // add spacing between args
+      if ( i > 0 ) {
+	strncat ( apps_exec_runline, " ", 1000 );
+      }
+
+      // if this is for -a, we need to wrap with quotes
+      if ( i > 0 && strcmp ( argv [ i - 1 ], "-a" ) == 0 ) {
+	strncat ( apps_exec_runline, "\"", 1000 );
+      }
+
+      strncat ( apps_exec_runline, argv [ i ], 1000 );
+
+      // if this is for -a, we need to wrap with quotes
+      if ( i > 0 && strcmp ( argv [ i - 1 ], "-a" ) == 0 ) {
+	strncat ( apps_exec_runline, "\"", 1000 );
+      }
+
+    }
+    return ( 1 );
+  }
 
   // debug
 #if 0
