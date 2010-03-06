@@ -132,6 +132,9 @@ char *pnd_box_get_name ( pnd_box_handle box ) {
 
 void *pnd_box_get_head ( pnd_box_handle box ) {
   pnd_box_t *p = (pnd_box_t*) box;
+  if ( ! p ) {
+    return ( NULL ); // fubar!
+  }
   if ( ! p -> head ) {
     return ( NULL );
   }
@@ -150,4 +153,25 @@ void *pnd_box_get_next ( void *node ) {
 char *pnd_box_get_key ( void *node ) {
   pnd_box_node_t *p = PAYLOAD2NODE(node);
   return ( p -> key );
+}
+
+unsigned int pnd_box_get_size ( pnd_box_handle box ) {
+  pnd_box_t *p = (pnd_box_t*) box;
+  pnd_box_node_t *n;
+  unsigned int count = 0;
+
+  if ( ! p ) {
+    return ( 0 );
+  }
+
+  n = p -> head;
+
+  while ( n ) {
+
+    count++;
+
+    n = n -> next;
+  } // while
+
+  return ( count );
 }
