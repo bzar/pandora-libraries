@@ -71,10 +71,20 @@ unsigned char pnd_pnd_seek_pxml ( FILE *f ) {
     // up at all, we've already been here and time to fail
     if ( pos == 0 ) {
       break; // done, FAIL
-    } else if ( pos > PND_PXML_WINDOW_FRACTIONAL ) {
+
+    } else if ( pos > PND_PXML_WINDOW_FRACTIONAL ) { // lots of space to back-seek
       pos -= PND_PXML_WINDOW_FRACTIONAL;
       readable = PND_PXML_WINDOW_SIZE;
-    } else {
+
+      // at some point when back-seeking, we just give up; we could seek through
+      // whole file (and if someone has gone and broken a pnd-file, the behaviour is
+      // 'undefined' .. but lets be kind in case that guy then distributes the broken
+      // file around. So we backseek to a point, but stop after xKB backwards?
+      if ( len - pos > (500*1024) ) {
+	break;
+      }
+
+    } else { // can only backseek less than the window-size
       readable = PND_PXML_WINDOW_SIZE - pos;
       memset ( b + pos, '\0', PND_PXML_WINDOW_SIZE - pos );
       pos = 0;
