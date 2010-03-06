@@ -173,7 +173,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     }
 
     // look for any overrides, if requested
-    pnd_pxml_merge_override ( pxmlh, disco_overrides );
+    if ( disco_overrides ) {
+      pnd_pxml_merge_override ( pxmlh, disco_overrides );
+    }
 
     // check for validity and add to resultset if it looks executable
     if ( pnd_is_pxml_valid_app ( pxmlh ) ) {
