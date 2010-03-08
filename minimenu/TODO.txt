@@ -1,0 +1,39 @@
+
+- libpnd: merge overrides, fix it up;
+  - full-replacement PXML is one option, another is
+  - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
+
+- libpnd: appdata-dir-name
+
+- shoulders on panda
+
+- font!
+
+- menu
+  - zotmenu?
+  - rescan
+  - shutdown
+  - quit
+
+- deploy..
+  - .desktop for deply
+  - Makefile change for building with sdl for djw?
+  - cp files to deply
+  - tell ED how to launch it
+
+- display
+  - preview pics
+  - battery indicator?
+  - status-line at bottom; number of categories, humber of apps found...?
+  - menu hint text (hit "menu")
+
+- touchscreen
+  - launch apps
+  - pick/rotate category
+
+- honor render_mask to know what to update
+- defer icon or preview-pics
+
+- future
+  - add callback to pnd_disco_Search (maybe new func to not break cpas code), so can show number apps found so far
+  - note taking field

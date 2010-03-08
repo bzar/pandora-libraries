@@ -1,0 +1,70 @@
+# for the mmenu 'minimenu'
+#
+
+[minimenu]
+static_art_path		./minimenu/skin/default
+font			arial.ttf
+font_ptsize		24
+pndrun			./testdata/scripts/pnd_run.sh
+
+[apps]
+searchpath		./testdata/app2
+
+[display]
+screen_width		800	# for some calculations
+detail_bg_alpha		100	# when rendering the detail panel background, how transparent?
+font_rgba_r		220	# RGBA for the display text
+font_rgba_g		220	# RGBA for the display text
+font_rgba_b		220	# RGBA for the display text
+font_rgba_a		20	# RGBA for the display text
+
+[tabs]
+wraparound		0	# if 1, last tab wraps around to first when going right; going left from first tab goes to last
+font			arial.ttf
+font_ptsize		16
+tab_offset_x		4	# from left screen to first tab left
+tab_offset_y		3	# from top of screen to first tab top
+tab_width		132	# width of tab
+tab_height		33	# height of tab
+text_offset_x		10	# from left edge of tab to left edge of text
+text_offset_y		10	# from top edge of tab to top edge of text
+text_width		120	# clip text to this width
+
+[grid]
+font			arial.ttf
+font_ptsize		12
+icon_max_width		50	# scale icons to..
+icon_max_height		50	# scale icons to..
+grid_offset_x		15	# from left screen to first cell column
+grid_offset_y		60	# from top screen to first cell row
+icon_offset_x		10	# from left edge of cell to left edge of icon in cell
+icon_offset_y		0	# from top edge of cell to top edge of icon in cell
+text_offset_x		35	# from left edge of cell to center of text centering (ie: center of icon presumably)
+text_offset_y		65	# from top of cell to top of text
+cell_width		70	# cell location is grid_offset_x + ( cell_width * column_number )
+cell_height		90	# cell location is grid_offset_y + ( cell_height * column_number )
+col_max			6	# number of columns to render into grid
+row_max			4	# number of rows to display before we stop rendering
+text_hilite_offset_y	62	# from top of cell to top of hilight
+
+[detailtext]
+font			arial.ttf
+font_ptsize		16
+cell_offset_x		488	# left edge of text cell
+cell_offset_y		312	# top edge of text cell
+cell_width		250	# width of cell (for text clipping)
+
+[previewpic]
+cell_offset_x		480	# left edge of text cell
+cell_offset_y		90	# top edge of text cell
+
+[graphics]
+IMG_BACKGROUND_800480    800480_6.png
+IMG_BACKGROUND_TABMASK   tab1mask.png
+IMG_DETAIL_PANEL         detailpane.png
+IMG_DETAIL_BG            800480_4.png
+IMG_SELECTED_ALPHAMASK   select.png
+IMG_SELECTED_HILITE	 hilite.png
+IMG_TAB_SEL              tab_sel.png
+IMG_TAB_UNSEL            tab_unsel.png
+IMG_ICON_MISSING	 pandora60.png
