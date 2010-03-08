@@ -7,8 +7,6 @@
 
 - shoulders on panda
 
-- font!
-
 - menu
   - zotmenu?
   - rescan
