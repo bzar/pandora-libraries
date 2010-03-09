@@ -65,6 +65,9 @@ void ui_loadscreen ( void );        // show screen while loading the menu
 void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while scanning for apps
 void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while caching icons, categories and preview-pics-Now-mode
 
+// show a menu, return when selection made; -1 means no selection. Enter is pick.
+int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *footer );
+
 /* internal functions follow
  */
 
@@ -82,5 +85,9 @@ void ui_push_rtrigger ( void );
 void ui_register_reset ( void );
 void ui_register_tab ( mm_category_t *category, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
 void ui_register_app ( pnd_disco_t *app, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
+
+// deferred preview timer
+void ui_set_selected ( mm_appref_t *r );
+unsigned int ui_callback_f ( unsigned int t );
 
 #endif

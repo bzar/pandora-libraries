@@ -180,7 +180,12 @@ int main ( int argc, char *argv[] ) {
     pnd_log ( pndn_debug, "Invoking frontend: %s\n", g_frontend );
 
     FILE *fe = popen ( g_frontend, "r" );
-    fgets ( cmdbuf, 1000, fe );
+    while ( fgets ( cmdbuf, 1000, fe ) ) {
+      if ( strstr ( cmdbuf, MM_WATCHIT ) ) {
+	break;
+      }
+      pnd_log ( pndn_debug, "Junk: %s", cmdbuf );
+    }
     pclose ( fe );
 
     if ( ( c = strchr ( cmdbuf, '\n' ) ) ) {

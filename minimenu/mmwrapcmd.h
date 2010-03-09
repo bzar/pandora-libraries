@@ -4,7 +4,9 @@
 
 // since only like 2 or 3 commands, no need for enum's/etc
 
-#define MM_QUIT "quit"
-#define MM_RUN "run"
+#define MM_WATCHIT "--->"
+
+#define MM_QUIT "--->quit"
+#define MM_RUN "--->run"
 
 #endif

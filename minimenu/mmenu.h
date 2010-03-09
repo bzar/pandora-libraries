@@ -5,13 +5,14 @@
 // utility
 #define IFNULL(foo,bar) (foo)?(foo):(bar)
 extern char *pnd_run_script;
+extern char *g_skinpath;
 
 // base searchpath to locate the conf
 #define MMENU_CONF "mmenu.conf"
 #define MMENU_CONF_SEARCHPATH "/etc/pandora/conf:./minimenu"
 
 // keys
-#define MMENU_ARTPATH "minimenu.static_art_path"
+#define MMENU_ARTPATH "minimenu.static_art_searchpath"
 #define MMENU_APP_SEARCHPATH "apps.searchpath"
 
 #define MMENU_GRID_FONT "grid.font"

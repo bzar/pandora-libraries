@@ -56,6 +56,7 @@ char g_username [ 128 ]; // since we have to wait for login (!!), store username
 pnd_conf_handle g_conf = 0;
 
 char *pnd_run_script = NULL;
+char *g_skinpath = NULL;
 
 int main ( int argc, char *argv[] ) {
   int logall = -1; // -1 means normal logging rules; >=0 means log all!
@@ -167,6 +168,33 @@ int main ( int argc, char *argv[] ) {
     emit_and_quit ( MM_QUIT );
   }
 
+  pnd_run_script = strdup ( pnd_run_script ); // so we don't lose it next pnd_locate
+
+  pnd_log ( pndn_rem, "Found pnd_run.sh at '%s'\n", pnd_run_script );
+
+  // figure out skin path
+  if ( ! pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ) ||
+       ! pnd_conf_get_as_char ( g_conf, "minimenu.font" )
+     )
+  {
+    pnd_log ( pndn_error, "ERROR: Couldn't set up skin!\n" );
+    emit_and_quit ( MM_QUIT );
+  }
+
+  g_skinpath = pnd_locate_filename ( pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ),
+				     pnd_conf_get_as_char ( g_conf, "minimenu.font" ) );
+
+  if ( ! g_skinpath ) {
+    pnd_log ( pndn_error, "ERROR: Couldn't locate skin font!\n" );
+    emit_and_quit ( MM_QUIT );
+  }
+
+  g_skinpath = strdup ( g_skinpath ); // so we don't lose it next pnd_locate
+
+  * strstr ( g_skinpath, pnd_conf_get_as_char ( g_conf, "minimenu.font" ) ) = '\0';
+
+  pnd_log ( pndn_debug, "Looks like skin is at '%s'\n", g_skinpath );
+
   // attempt to set up UI
   if ( ! ui_setup() ) {
     pnd_log ( pndn_error, "ERROR: Couldn't set up the UI!\n" );
@@ -177,7 +205,7 @@ int main ( int argc, char *argv[] ) {
   ui_loadscreen();
 
   // set up static image cache
-  if ( ! ui_imagecache ( pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ) ) ) {
+  if ( ! ui_imagecache ( g_skinpath ) ) {
     pnd_log ( pndn_error, "ERROR: Couldn't set up static UI image cache!\n" );
     emit_and_quit ( MM_QUIT );
   }

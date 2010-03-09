@@ -53,7 +53,7 @@ unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app) {
     title->language = lang;
     title->string = text;
 
-    pnd_log ( PND_LOG_DEFAULT, (char*)"    Title/Lang: %s/%s\n", text, lang );
+    //pnd_log ( PND_LOG_DEFAULT, (char*)"    Title/Lang: %s/%s\n", text, lang );
 
   }
 
@@ -140,7 +140,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
   // until we run out of applications in the PXML..
   while ( 1 ) {
 
-    pnd_log ( PND_LOG_DEFAULT, (char*)"  App #%u inside of PXML %s\n", appcount, pFilename );
+    //pnd_log ( PND_LOG_DEFAULT, (char*)"  App #%u inside of PXML %s\n", appcount, pFilename );
 
     // create the buffer to hold the pxml
     apps [ appcount ] = (pnd_pxml_t*) malloc ( sizeof(pnd_pxml_t) );
@@ -157,10 +157,10 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     //Get unique ID first.
     if ( appwrappermode ) {
       app->unique_id = pnd_pxml_get_attribute(appElem, PND_PXML_ATTRNAME_UID);
-      pnd_log ( PND_LOG_DEFAULT, (char*)"  Subapp #%u has unique_id %s\n", appcount, app -> unique_id );
+      //pnd_log ( PND_LOG_DEFAULT, (char*)"  Subapp #%u has unique_id %s\n", appcount, app -> unique_id );
     } else {
       app->unique_id = pnd_pxml_get_attribute(hRoot.Element(), PND_PXML_ATTRNAME_UID);
-      pnd_log ( PND_LOG_DEFAULT, (char*)"  Only-app #%u has unique_id %s\n", appcount, app -> unique_id );
+      //pnd_log ( PND_LOG_DEFAULT, (char*)"  Only-app #%u has unique_id %s\n", appcount, app -> unique_id );
     }
 
     //Everything related to the title:
@@ -373,7 +373,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     if ( appwrappermode ) {
       appElem = appElem -> NextSiblingElement ( PND_PXML_APP );
       if ( ! appElem ) {
-	pnd_log ( PND_LOG_DEFAULT, (char*)"  No more applications within PXML\n" );
+	//pnd_log ( PND_LOG_DEFAULT, (char*)"  No more applications within PXML\n" );
 	break; // no more applications
       }
       // got another application..

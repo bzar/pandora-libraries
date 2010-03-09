@@ -15,6 +15,7 @@
 #include "pnd_container.h"
 #include "pnd_discovery.h"
 #include "pnd_apps.h"
+#include "pnd_device.h"
 
 #include "mmenu.h"
 #include "mmcat.h"
@@ -53,19 +54,12 @@ extern unsigned char g_categorycount;
 static SDL_Surface *ui_scale_image ( SDL_Surface *s, unsigned int maxwidth, int maxheight ); // height -1 means ignore
 static int ui_selected_index ( void );
 
-static unsigned int ui_timer ( unsigned int interval ) {
-  sdl_ticks++;
-  return ( interval );
-}
-
 unsigned char ui_setup ( void ) {
 
   /* set up SDL
    */
 
   SDL_Init ( SDL_INIT_EVERYTHING | SDL_INIT_NOPARACHUTE );
-
-  SDL_SetTimer ( 30, ui_timer ); // 30fps
 
   SDL_JoystickOpen ( 0 ); // turn on joy-0
 
@@ -135,7 +129,7 @@ unsigned char ui_setup ( void ) {
 
   char fullpath [ PATH_MAX ];
   // big font
-  sprintf ( fullpath, "%s/%s", pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ), pnd_conf_get_as_char ( g_conf, "minimenu.font" ) );
+  sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, "minimenu.font" ) );
   g_big_font = TTF_OpenFont ( fullpath, pnd_conf_get_as_int_d ( g_conf, "minimenu.font_ptsize", 24 ) );
   if ( ! g_big_font ) {
     pnd_log ( pndn_error, "ERROR: Couldn't load font '%s' for size %u\n",
@@ -144,7 +138,7 @@ unsigned char ui_setup ( void ) {
   }
 
   // grid font
-  sprintf ( fullpath, "%s/%s", pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ), pnd_conf_get_as_char ( g_conf, MMENU_GRID_FONT ) );
+  sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, MMENU_GRID_FONT ) );
   g_grid_font = TTF_OpenFont ( fullpath, pnd_conf_get_as_int_d ( g_conf, MMENU_GRID_FONTSIZE, 10 ) );
   if ( ! g_grid_font ) {
     pnd_log ( pndn_error, "ERROR: Couldn't load font '%s' for size %u\n",
@@ -153,7 +147,7 @@ unsigned char ui_setup ( void ) {
   }
 
   // detailtext font
-  sprintf ( fullpath, "%s/%s", pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ), pnd_conf_get_as_char ( g_conf, "detailtext.font" ) );
+  sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, "detailtext.font" ) );
   g_detailtext_font = TTF_OpenFont ( fullpath, pnd_conf_get_as_int_d ( g_conf, "detailtext.font_ptsize", 10 ) );
   if ( ! g_detailtext_font ) {
     pnd_log ( pndn_error, "ERROR: Couldn't load font '%s' for size %u\n",
@@ -162,7 +156,7 @@ unsigned char ui_setup ( void ) {
   }
 
   // tab font
-  sprintf ( fullpath, "%s/%s", pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ), pnd_conf_get_as_char ( g_conf, "tabs.font" ) );
+  sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, "tabs.font" ) );
   g_tab_font = TTF_OpenFont ( fullpath, pnd_conf_get_as_int_d ( g_conf, "tabs.font_ptsize", 10 ) );
   if ( ! g_tab_font ) {
     pnd_log ( pndn_error, "ERROR: Couldn't load font '%s' for size %u\n",
@@ -388,7 +382,7 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width ) + text_offset_x;
       dest -> y = tab_offset_y + text_offset_y;
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      SDL_FreeSurface ( rtext );
       dest++;
 
     } // for
@@ -534,7 +528,7 @@ void ui_render ( unsigned int render_mask ) {
 	    }
 	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + text_offset_y;
 	    SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-	    //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+	    SDL_FreeSurface ( rtext );
 	    dest++;
 	  }
 
@@ -586,7 +580,7 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = cell_offset_x;
       dest -> y = desty;
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      SDL_FreeSurface ( rtext );
       dest++;
       desty += src.h;
     }
@@ -606,7 +600,7 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = cell_offset_x;
       dest -> y = desty;
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      SDL_FreeSurface ( rtext );
       dest++;
       desty += src.h;
     }
@@ -626,7 +620,7 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = cell_offset_x;
       dest -> y = desty;
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      SDL_FreeSurface ( rtext );
       dest++;
       desty += src.h;
     }
@@ -652,6 +646,39 @@ void ui_render ( unsigned int render_mask ) {
 
   } // selected?
 
+  // extras
+  //
+
+  // battery
+  if ( 1 ) {
+    unsigned char batterylevel = pnd_device_get_battery_gauge_perc();
+    char buffer [ 100 ];
+
+    sprintf ( buffer, "Battery: %u%%", batterylevel );
+
+    SDL_Surface *rtext;
+    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+    dest -> x = pnd_conf_get_as_int_d ( g_conf, "display.battery_x", 20 );
+    dest -> y = pnd_conf_get_as_int_d ( g_conf, "display.battery_y", 450 );
+    SDL_BlitSurface ( rtext, NULL /* all */, sdl_realscreen, dest );
+    SDL_FreeSurface ( rtext );
+    dest++;
+  }
+
+  // hints
+  if ( pnd_conf_get_as_char ( g_conf, "display.hintline" ) ) {
+    char *buffer = pnd_conf_get_as_char ( g_conf, "display.hintline" );
+    SDL_Surface *rtext;
+    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+    dest -> x = pnd_conf_get_as_int_d ( g_conf, "display.hint_x", 40 );
+    dest -> y = pnd_conf_get_as_int_d ( g_conf, "display.hint_y", 450 );
+    SDL_BlitSurface ( rtext, NULL /* all */, sdl_realscreen, dest );
+    SDL_FreeSurface ( rtext );
+    dest++;
+  }
+
   // update all the rects and send it all to sdl
   SDL_UpdateRects ( sdl_realscreen, dest - rects, rects );
 
@@ -668,6 +695,29 @@ void ui_process_input ( unsigned char block_p ) {
   {
 
     switch ( event.type ) {
+
+    case SDL_USEREVENT:
+      // update something
+
+      if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
+
+	pnd_log ( pndn_debug, "Deferred preview pic load ----------\n" );
+
+	// load the preview pics now!
+	pnd_disco_t *iter = ui_selected -> ref;
+
+	if ( iter -> preview_pic1 &&
+	     ! cache_preview ( iter, pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 200 ), pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_height", 180 ) ) )
+	{
+	  pnd_log ( pndn_debug, "  Couldn't load preview pic: '%s' -> '%s'\n", IFNULL(iter->title_en,"No Name"), iter -> preview_pic1 );
+	}
+
+	pnd_log ( pndn_debug, "Deferred preview pic load finish ---\n" );
+
+	ui_event++;
+      }
+
+      break;
 
 #if 0 // joystick motion
     case SDL_JOYAXISMOTION:
@@ -765,6 +815,8 @@ void ui_process_input ( unsigned char block_p ) {
 
       //pnd_log ( pndn_debug, "key up %u\n", event.key.keysym.sym );
 
+      // SDLK_LALT -> Start
+
       // directional
       if ( event.key.keysym.sym == SDLK_RIGHT ) {
 	ui_push_right();
@@ -786,6 +838,43 @@ void ui_process_input ( unsigned char block_p ) {
 	ui_event++;
       } else if ( event.key.keysym.sym == SDLK_x || event.key.keysym.sym == SDLK_RCTRL ) {
 	ui_push_rtrigger();
+	ui_event++;
+
+      } else if ( event.key.keysym.sym == SDLK_LALT ) { // start button
+	char *opts [ 10 ] = {
+	  "Return to Minimenu",
+	  "Shutdown Pandora",
+	  "Rescan for Applications",
+	  "Set to full desktop and reboot",
+	  "Set to pmenu and reboot",
+	  "Quit (<- beware)"
+	};
+	int sel = ui_modal_single_menu ( opts, 6, "Minimenu", "Enter to select; other to return." );
+
+	char buffer [ 100 ];
+	if ( sel == 0 ) {
+	  return ( -1 ); // return
+	} else if ( sel == 1 ) {
+	  sprintf ( buffer, "sudo poweroff" );
+	  system ( buffer );
+	} else if ( sel == 2 ) {
+	  // rescan apps
+	} else if ( sel == 3 ) {
+	  // set env to xfce
+	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
+	  system ( buffer );
+	  sprintf ( buffer, "sudo poweroff" );
+	  system ( buffer );
+	} else if ( sel == 4 ) {
+	  // set env to pmenu
+	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
+	  system ( buffer );
+	  sprintf ( buffer, "sudo poweroff" );
+	  system ( buffer );
+	} else if ( sel == 5 ) {
+	  emit_and_quit ( MM_QUIT );
+	}
+
 	ui_event++;
       }
 
@@ -850,6 +939,8 @@ void ui_push_left ( void ) {
     }
   }
 
+  ui_set_selected ( ui_selected );
+
   return;
 }
 
@@ -864,6 +955,8 @@ void ui_push_right ( void ) {
   } else {
     ui_selected = g_categories [ ui_category ].refs;
   }
+
+  ui_set_selected ( ui_selected );
 
   return;
 }
@@ -927,6 +1020,7 @@ void ui_push_ltrigger ( void ) {
 
   if ( oldcat != ui_category ) {
     ui_selected = NULL;
+    ui_set_selected ( ui_selected );
   }
 
   // make tab visible?
@@ -956,6 +1050,7 @@ void ui_push_rtrigger ( void ) {
 
   if ( oldcat != ui_category ) {
     ui_selected = NULL;
+    ui_set_selected ( ui_selected );
   }
 
   // make tab visible?
@@ -1018,6 +1113,7 @@ void ui_loadscreen ( void ) {
   dest.y = 20;
   SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, &dest );
   SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+  SDL_FreeSurface ( rtext );
 
   return;
 }
@@ -1060,6 +1156,7 @@ void ui_discoverscreen ( unsigned char clearscreen ) {
   }
   SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, &dest );
   SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+  SDL_FreeSurface ( rtext );
 
   // render icon
   if ( g_imagecache [ IMG_ICON_MISSING ].i ) {
@@ -1113,6 +1210,7 @@ void ui_cachescreen ( unsigned char clearscreen, char *filename ) {
     dest -> y = 40;
   }
   SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+  SDL_FreeSurface ( rtext );
   dest++;
 
   // render icon
@@ -1129,6 +1227,7 @@ void ui_cachescreen ( unsigned char clearscreen, char *filename ) {
     dest -> x = 20;
     dest -> y = 50;
     SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+    SDL_FreeSurface ( rtext );
     dest++;
   }
 
@@ -1159,6 +1258,176 @@ int ui_selected_index ( void ) {
     r = r -> next;
     counter++;
   }
+
+  return ( -1 );
+}
+
+static mm_appref_t *timer_ref = NULL;
+void ui_set_selected ( mm_appref_t *r ) {
+
+  if ( ! pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
+    return; // no desire to defer anything
+  }
+
+  if ( ! r ) {
+    // cancel timer
+    SDL_SetTimer ( 0, NULL );
+    timer_ref = NULL;
+    return;
+  }
+
+  SDL_SetTimer ( pnd_conf_get_as_int_d ( g_conf, "previewpic.defer_timer_ms", 1000 ), ui_callback_f );
+  timer_ref = r;
+
+  return;
+}
+
+unsigned int ui_callback_f ( unsigned int t ) {
+
+  if ( ui_selected != timer_ref ) {
+    return ( 0 ); // user has moved it, who cares
+  }
+
+  SDL_Event e;
+  e.type = SDL_USEREVENT;
+  SDL_PushEvent ( &e );
+
+  return ( 0 );
+}
+
+int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *footer ) {
+  SDL_Rect rects [ 40 ];
+  SDL_Rect *dest = rects;
+  SDL_Rect src;
+  SDL_Surface *rtext;
+
+  bzero ( rects, sizeof(SDL_Rect) * 40 );
+
+  unsigned int sel = 0;
+
+  unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
+  unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
+  unsigned int font_rgba_b = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_b", 200 );
+  unsigned int font_rgba_a = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_a", 100 );
+
+  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+
+  SDL_Color selfontcolor = { 0/*font_rgba_r*/, font_rgba_g, font_rgba_b, font_rgba_a };
+
+  unsigned int i;
+  SDL_Event event;
+
+  while ( 1 ) {
+
+    // clear
+    dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+    dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+    dest -> w = ((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> w;
+    dest -> h = ((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> h;
+    SDL_FillRect( sdl_realscreen, dest, 0 );
+
+    // show dialog background
+    if ( g_imagecache [ IMG_DETAIL_BG ].i ) {
+      src.x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+      src.y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+      src.w = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_PANEL ].i)) -> w;
+      src.h = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_PANEL ].i)) -> h;
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
+      // repeat for darken?
+      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
+      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
+      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      dest++;
+    }
+
+    // show dialog frame
+    if ( g_imagecache [ IMG_DETAIL_PANEL ].i ) {
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_PANEL ].i, NULL /* whole image */, sdl_realscreen, dest );
+      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      dest++;
+    }
+
+    // show header
+    if ( title ) {
+      rtext = TTF_RenderText_Blended ( g_tab_font, title, tmpfontcolor );
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 20;
+      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+    }
+
+    // show footer
+    if ( footer ) {
+      rtext = TTF_RenderText_Blended ( g_tab_font, footer, tmpfontcolor );
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) +
+	((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> h
+	- 60;
+      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+    }
+
+    // show options
+    for ( i = 0; i < argc; i++ ) {
+
+      // show options
+      if ( sel == i ) {
+	rtext = TTF_RenderText_Blended ( g_tab_font, argv [ i ], selfontcolor );
+      } else {
+	rtext = TTF_RenderText_Blended ( g_tab_font, argv [ i ], tmpfontcolor );
+      }
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 40 + ( 20 * ( i + 1 ) );
+      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+
+    } // for
+
+    // update all the rects and send it all to sdl
+    SDL_UpdateRects ( sdl_realscreen, dest - rects, rects );
+    dest = rects;
+
+    // check for input
+    while ( SDL_WaitEvent ( &event ) ) {
+
+      switch ( event.type ) {
+
+      case SDL_KEYUP:
+
+	if ( event.key.keysym.sym == SDLK_UP ) {
+	  if ( sel ) {
+	    sel--;
+	  }
+	} else if ( event.key.keysym.sym == SDLK_DOWN ) {
+	  if ( sel < argc - 1 ) {
+	    sel++;
+	  }
+
+	} else if ( event.key.keysym.sym == SDLK_RETURN ) {
+	  return ( sel );
+
+	} else if ( event.key.keysym.sym == SDLK_q ) {
+	  exit ( 0 );
+
+	} else {
+	  return ( -1 ); // nada
+	}
+
+	break;
+
+      } // switch
+
+      break;
+    } // while
+
+  } // while
 
   return ( -1 );
 }
