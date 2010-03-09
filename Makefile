@@ -27,7 +27,7 @@ all: ${SOLIB} ${LIB} conftest discotest notifytest pndnotifyd rawpxmltest pndval
 
 clean:
 	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest dbusnotifytest.o bin/dbusnotifytest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o pnd_info.o bin/pnd_info bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/bin/pnd_info deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd testdata/menuicons/* evtest.o bin/evtest bin/mmenu bin/mmwrapper mmenu.o mmwrapper.o deployment/usr/bin/mmenu deployment/usr/bin/mmwrapper mmcache.o mmui.o mmcat.o
-	${RM} -rf deployment/media
+	${RM} -rf deployment/media deployment/etc/pandora/mmenu
 	find . -name "*~*" -exec rm {} \; -print
 
 # component targets
@@ -78,6 +78,7 @@ deploy:
 	# populate deployment directory for copying into image bakes
 	# make dirs
 	mkdir -p deployment/etc/pandora/conf
+	mkdir -p deployment/etc/pandora/mmenu/skins/default
 	mkdir -p deployment/usr/lib
 	mkdir -p deployment/usr/bin
 	mkdir -p deployment/usr/pandora/apps
@@ -100,8 +101,9 @@ deploy:
 	cp testdata/sh/pndnotifyd deployment/etc/init.d/pndnotifyd
 	cp testdata/sh/sudoers deployment/etc/sudoers
 	# minimenu
-	cp bin/mmenu /deployment/usr/bin
-	cp bin/mmwrapper /deployment/usr/bin
+	cp bin/mmenu deployment/usr/bin
+	cp bin/mmwrapper deployment/usr/bin
+	cp minimenu/skin/default/* deployment/etc/pandora/mmenu/skins/default
 
 # test tool targets
 #
