@@ -303,7 +303,7 @@ void ui_render ( unsigned int render_mask ) {
     int topleft = col_max * ui_rows_scrolled_down;
     int botright = ( col_max * ( ui_rows_scrolled_down + row_max ) - 1 );
 
-    pnd_log ( PND_LOG_DEFAULT, "index %u tl %u br %u\n", index, topleft, botright );
+    //pnd_log ( PND_LOG_DEFAULT, "index %u tl %u br %u\n", index, topleft, botright );
 
     if ( index < topleft ) {
       ui_rows_scrolled_down -= pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
@@ -499,7 +499,7 @@ void ui_render ( unsigned int render_mask ) {
 	  if ( ic ) {
 	    iconsurface = ic -> i;
 	  } else {
-	    pnd_log ( pndn_warning, "WARNING: TBD: Need Missin-icon icon for '%s'\n", IFNULL(appiter -> ref -> title_en,"No Name") );
+	    //pnd_log ( pndn_warning, "WARNING: TBD: Need Missin-icon icon for '%s'\n", IFNULL(appiter -> ref -> title_en,"No Name") );
 	    iconsurface = g_imagecache [ IMG_ICON_MISSING ].i;
 	  }
 	  if ( iconsurface ) {
@@ -763,7 +763,7 @@ void ui_process_input ( unsigned char block_p ) {
 #if 1 // keyboard events
     case SDL_KEYUP:
 
-      pnd_log ( pndn_debug, "key up %u\n", event.key.keysym.sym );
+      //pnd_log ( pndn_debug, "key up %u\n", event.key.keysym.sym );
 
       // directional
       if ( event.key.keysym.sym == SDLK_RIGHT ) {
@@ -781,10 +781,10 @@ void ui_process_input ( unsigned char block_p ) {
       } else if ( event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_END ) {
 	ui_push_exec();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_z ) {
+      } else if ( event.key.keysym.sym == SDLK_z || event.key.keysym.sym == SDLK_RSHIFT ) {
 	ui_push_ltrigger();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_x ) {
+      } else if ( event.key.keysym.sym == SDLK_x || event.key.keysym.sym == SDLK_RCTRL ) {
 	ui_push_rtrigger();
 	ui_event++;
       }
@@ -1053,9 +1053,11 @@ void ui_discoverscreen ( unsigned char clearscreen ) {
   return;
 }
 
-void ui_cachescreen ( unsigned char clearscreen ) {
+void ui_cachescreen ( unsigned char clearscreen, char *filename ) {
 
-  SDL_Rect dest;
+  SDL_Rect rects [ 4 ];
+  SDL_Rect *dest = rects;
+  bzero ( dest, sizeof(SDL_Rect)* 4 );
 
   unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
   unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
@@ -1070,12 +1072,12 @@ void ui_cachescreen ( unsigned char clearscreen ) {
 
     // render background
     if ( g_imagecache [ IMG_BACKGROUND_800480 ].i ) {
-      dest.x = 0;
-      dest.y = 0;
-      dest.w = sdl_realscreen -> w;
-      dest.h = sdl_realscreen -> h;
+      dest -> x = 0;
+      dest -> y = 0;
+      dest -> w = sdl_realscreen -> w;
+      dest -> h = sdl_realscreen -> h;
       SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_800480 ].i, NULL /* whole image */, sdl_realscreen, NULL /* 0,0 */ );
-      SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+      dest++;
     }
 
   }
@@ -1085,21 +1087,30 @@ void ui_cachescreen ( unsigned char clearscreen ) {
   SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
   rtext = TTF_RenderText_Blended ( g_big_font, "Caching applications artwork...", tmpfontcolor );
   if ( clearscreen ) {
-    dest.x = 20;
-    dest.y = 20;
+    dest -> x = 20;
+    dest -> y = 20;
   } else {
-    dest.x = 20;
-    dest.y = 40;
+    dest -> x = 20;
+    dest -> y = 40;
   }
-  SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, &dest );
-  SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+  SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+  dest++;
 
   // render icon
   if ( g_imagecache [ IMG_ICON_MISSING ].i ) {
-    dest.x = rtext -> w + 30 + stepx;
-    dest.y = 20;
-    SDL_BlitSurface ( g_imagecache [ IMG_ICON_MISSING ].i, NULL, sdl_realscreen, &dest );
-    SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+    dest -> x = rtext -> w + 30 + stepx;
+    dest -> y = 20;
+    SDL_BlitSurface ( g_imagecache [ IMG_ICON_MISSING ].i, NULL, sdl_realscreen, dest );
+    dest++;
+  }
+
+  // filename
+  if ( filename ) {
+    rtext = TTF_RenderText_Blended ( g_tab_font, filename, tmpfontcolor );
+    dest -> x = 20;
+    dest -> y = 50;
+    SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+    dest++;
   }
 
   // move across
@@ -1108,6 +1119,8 @@ void ui_cachescreen ( unsigned char clearscreen ) {
   if ( stepx > 350 ) {
     stepx = 0;
   }
+
+  SDL_UpdateRects ( sdl_realscreen, dest - rects, rects );
 
   return;
 }

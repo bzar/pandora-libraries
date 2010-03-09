@@ -33,5 +33,7 @@
 - defer icon or preview-pics
 
 - future
+  - make mmwrapper take all input and..
+    - make the commanbd line have unique token up front ("--->"), so that the command can be found in the mess anyway?
   - add callback to pnd_disco_Search (maybe new func to not break cpas code), so can show number apps found so far
   - note taking field

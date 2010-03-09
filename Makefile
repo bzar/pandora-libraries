@@ -13,7 +13,7 @@ RM = rm
 # environment
 VPATH = lib test apps minimenu
 CFLAG_SO = -fPIC #-fPIC not always needed, but good to have
-CFLAGS = -Wall -I./include -g ${CFLAG_SO} -I/usr/include/SDL
+CFLAGS = -Wall -I./include -g ${CFLAG_SO} -I${PNDSTUFF}/usr/include/SDL
 CXXFLAGS = -Wall -I./include -g ${CFLAG_SO}
 
 # code
@@ -61,7 +61,7 @@ pndevmapperd:	pndevmapperd.o ${SOLIB1}
 	${CC} -lstdc++ -o bin/pndevmapperd pndevmapperd.o ${SOLIB1}
 
 mmenu:	mmenu.o mmui.o mmcache.o mmcat.o ${SOLIB1}
-	${CC} -lstdc++ -o bin/mmenu mmenu.o mmui.o mmcache.o mmcat.o ${SOLIB1} -lSDL -lSDL_image -lSDL_ttf -lSDL_gfx
+	${CC} -lstdc++ -o bin/mmenu mmenu.o mmui.o mmcache.o mmcat.o ${SOLIB1} -L${PNDSTUFF}/usr/lib -lSDL -lSDL_image -lSDL_ttf -lSDL_gfx
 mmwrapper:	mmwrapper.o ${SOLIB1}
 	${CC} -lstdc++ -o bin/mmwrapper mmwrapper.o ${SOLIB1}
 

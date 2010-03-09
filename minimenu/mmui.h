@@ -63,7 +63,7 @@ void ui_render ( unsigned int render_mask );
 
 void ui_loadscreen ( void );        // show screen while loading the menu
 void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while scanning for apps
-void ui_cachescreen ( unsigned char clearscreen ); // while caching icons, categories and preview-pics-Now-mode
+void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while caching icons, categories and preview-pics-Now-mode
 
 /* internal functions follow
  */

@@ -68,20 +68,20 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned char maxwidth, unsigned
     return ( 0 );
   }
 
-  pnd_log ( pndn_debug, "Image size is %u x %u (max %u x %u)\n", s -> w, s -> h, maxwidth, maxheight );
+  //pnd_log ( pndn_debug, "Image size is %u x %u (max %u x %u)\n", s -> w, s -> h, maxwidth, maxheight );
 
   // scale
   if ( s -> w < maxwidth ) {
     SDL_Surface *scaled;
     double scale = (double)maxwidth / (double)s -> w;
-    pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
+    //pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
     scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
     SDL_FreeSurface ( s );
     s = scaled;
   } else if ( s -> w > maxwidth ) {
     SDL_Surface *scaled;
     double scale = (double)maxwidth / (double)s -> w;
-    pnd_log ( pndn_debug, "  Downscaling; scale factor %f\n", scale );
+    //pnd_log ( pndn_debug, "  Downscaling; scale factor %f\n", scale );
     scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
     SDL_FreeSurface ( s );
     s = scaled;
@@ -136,20 +136,20 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
 
   free ( iconbuf ); // ditch the icon from ram
 
-  pnd_log ( pndn_debug, "Image size is %u x %u (max %u x %u)\n", s -> w, s -> h, maxwidth, maxheight );
+  //pnd_log ( pndn_debug, "Image size is %u x %u (max %u x %u)\n", s -> w, s -> h, maxwidth, maxheight );
 
   // scale the icon?
   if ( s -> w < maxwidth ) {
     SDL_Surface *scaled;
     double scale = (double)maxwidth / (double)s -> w;
-    pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
+    //pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
     scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
     SDL_FreeSurface ( s );
     s = scaled;
   } else if ( s -> w > maxwidth ) {
     SDL_Surface *scaled;
     double scale = (double)maxwidth / (double)s -> w;
-    pnd_log ( pndn_debug, "  Downscaling; scale factor %f\n", scale );
+    //pnd_log ( pndn_debug, "  Downscaling; scale factor %f\n", scale );
     scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
     SDL_FreeSurface ( s );
     s = scaled;

@@ -198,15 +198,15 @@ int main ( int argc, char *argv[] ) {
   maxheight = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_HEIGHT, 50 );
 
   // show cache screen
-  ui_cachescreen ( 1 /* clear screen */ );
+  ui_cachescreen ( 1 /* clear screen */, NULL );
 
   pnd_log ( pndn_debug, "Found pnd applications, and caching icons:\n" );
   pnd_disco_t *iter = pnd_box_get_head ( g_active_apps );
   while ( iter ) {
-    pnd_log ( pndn_debug, "  App: '%s'\n", IFNULL(iter->title_en,"No Name") );
+    //pnd_log ( pndn_debug, "  App: '%s'\n", IFNULL(iter->title_en,"No Name") );
 
     // update cachescreen
-    ui_cachescreen ( 1 /* clear screen */ );
+    ui_cachescreen ( 1 /* clear screen */, IFNULL(iter->title_en,"No Name") );
 
     // cache the icon
     if ( iter -> pnd_icon_pos &&
@@ -242,7 +242,7 @@ int main ( int argc, char *argv[] ) {
   } // while
 
   // dump categories
-  category_dump();
+  //category_dump();
 
   /* actual work now
    */
