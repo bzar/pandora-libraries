@@ -370,7 +370,7 @@ void ui_render ( unsigned int render_mask ) {
       src.y = 0;
       src.w = tab_width;
       src.h = tab_height;
-      dest -> x = tab_offset_x + ( col * tab_width );
+      dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
       dest -> y = tab_offset_y;
       //pnd_log ( pndn_debug, "tab %u at %ux%u\n", col, dest.x, dest.y );
       SDL_BlitSurface ( s, &src, sdl_realscreen, dest );
@@ -385,7 +385,7 @@ void ui_render ( unsigned int render_mask ) {
       src.y = 0;
       src.w = rtext -> w < text_width ? rtext -> w : text_width;
       src.h = rtext -> h;
-      dest -> x = tab_offset_x + ( col * tab_width ) + text_offset_x;
+      dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width ) + text_offset_x;
       dest -> y = tab_offset_y + text_offset_y;
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
       //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
@@ -929,11 +929,22 @@ void ui_push_ltrigger ( void ) {
     ui_selected = NULL;
   }
 
+  // make tab visible?
+  if ( ui_catshift > 0 && ui_category == ui_catshift - 1 ) {
+    ui_catshift--;
+  }
+
+  // unscroll
+  ui_rows_scrolled_down = 0;
+
   return;
 }
 
 void ui_push_rtrigger ( void ) {
   unsigned char oldcat = ui_category;
+
+  unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+  unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
 
   if ( ui_category < ( g_categorycount - 1 ) ) {
     ui_category++;
@@ -946,6 +957,14 @@ void ui_push_rtrigger ( void ) {
   if ( oldcat != ui_category ) {
     ui_selected = NULL;
   }
+
+  // make tab visible?
+  if ( ui_category > ui_catshift + ( screen_width / tab_width ) - 1 ) {
+    ui_catshift++;
+  }
+
+  // unscroll
+  ui_rows_scrolled_down = 0;
 
   return;
 }

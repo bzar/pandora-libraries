@@ -5,18 +5,16 @@
 
 - libpnd: appdata-dir-name
 
-- shoulders on panda
-
 - menu
   - zotmenu?
   - rescan
   - shutdown
   - quit
 
+- defer preview pics
+
 - deploy..
   - .desktop for deply
-  - Makefile change for building with sdl for djw?
-  - cp files to deply
   - tell ED how to launch it
 
 - display

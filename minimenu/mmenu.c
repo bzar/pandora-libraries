@@ -232,12 +232,47 @@ int main ( int argc, char *argv[] ) {
     }
 
     // push the categories
-    if ( iter -> main_category ) {
+    //
+
+    // main categories
+    if ( iter -> main_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) ) {
       if ( ! category_push ( iter -> main_category, iter ) ) {
 	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category, IFNULL(iter -> title_en, "No Name") );
       }
     }
 
+    if ( iter -> main_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) ) {
+      if ( ! category_push ( iter -> main_category1, iter ) ) {
+	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category1, IFNULL(iter -> title_en, "No Name") );
+      }
+    }
+
+    if ( iter -> main_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) ) {
+      if ( ! category_push ( iter -> main_category2, iter ) ) {
+	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category2, IFNULL(iter -> title_en, "No Name") );
+      }
+    }
+
+    // alt categories
+    if ( iter -> alt_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) ) {
+      if ( ! category_push ( iter -> alt_category, iter ) ) {
+	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category, IFNULL(iter -> title_en, "No Name") );
+      }
+    }
+
+    if ( iter -> alt_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) ) {
+      if ( ! category_push ( iter -> alt_category1, iter ) ) {
+	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category1, IFNULL(iter -> title_en, "No Name") );
+      }
+    }
+
+    if ( iter -> alt_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) ) {
+      if ( ! category_push ( iter -> alt_category2, iter ) ) {
+	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category2, IFNULL(iter -> title_en, "No Name") );
+      }
+    }
+
+    // next
     iter = pnd_box_get_next ( iter );
   } // while
 
