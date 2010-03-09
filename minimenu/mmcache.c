@@ -24,7 +24,7 @@ extern pnd_conf_handle g_conf;
 mm_cache_t *g_icon_cache = NULL;
 mm_cache_t *g_preview_cache = NULL;
 
-unsigned char cache_preview ( pnd_disco_t *app, unsigned char maxwidth, unsigned char maxheight ) {
+unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned int maxheight ) {
   SDL_Surface *s;
   mm_cache_t *c;
 

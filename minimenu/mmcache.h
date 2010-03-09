@@ -18,7 +18,7 @@ typedef struct _mm_cache_t {
 } mm_cache_t;
 
 unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned char maxheight );
-unsigned char cache_preview ( pnd_disco_t *app, unsigned char maxwidth, unsigned char maxheight );
+unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned int maxheight );
 
 mm_cache_t *cache_query ( char *id, mm_cache_t *head );
 mm_cache_t *cache_query_icon ( char *id ); // specialized version
