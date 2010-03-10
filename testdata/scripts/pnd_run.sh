@@ -51,7 +51,6 @@ if [ ! $PND ]; then #check if theres a pnd suplied, need to clean that up a bit 
 	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
-
 if [ ! $EXENAME ]; then
 	if [ ! $mount ] && [ ! $umount ]; then
 		echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
@@ -63,7 +62,7 @@ fi
 fork () {
 echo in fork!
 if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
-	if [ $(pidof X) ]; then 
+	if [ ! $(pidof X) ]; then 
 		unset $nox
 	else
 		applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
@@ -231,22 +230,22 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
 	echo cleanup done
 else
-echo umount failed, didnt clean up
+	echo umount failed, didnt clean up
 fi
 
 if [ $nox ]; then #restart x if it was killed
-echo "starting x in 5s"
-sleep 5
-sudo /etc/init.d/slim-init start
+	echo "starting x in 5s"
+	sleep 5
+	sudo /etc/init.d/slim-init start
 fi
 
 } #function end!
 
 if [ $nox ]; then
-echo forking now!
-fork &> /tmp/pndrun$BASENAME$mount.out & 
-disown
+	echo forking now!
+	fork &> /tmp/pndrun$BASENAME$mount.out & 
+	disown
 else
-echo Running with x, not disowning!
-fork &> /tmp/pndrun$BASENAME$mount.out
+	echo Running with x, not disowning!
+	fork &> /tmp/pndrun$BASENAME$mount.out
 fi
