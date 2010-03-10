@@ -183,7 +183,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       char *fixpxml;
       char *z;
 
-      pnd_log ( PND_LOG_DEFAULT, "Setting up discovered app %u\n", ((pnd_pxml_t*) pxmlh) -> subapp_number );
+      //pnd_log ( PND_LOG_DEFAULT, "Setting up discovered app %u\n", ((pnd_pxml_t*) pxmlh) -> subapp_number );
 
       p = pnd_box_allocinsert ( disco_box, (char*) fpath, sizeof(pnd_disco_t) );
 

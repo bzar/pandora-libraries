@@ -1,0 +1,27 @@
+
+- libpnd: merge overrides, fix it up;
+  - full-replacement PXML is one option, another is
+  - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
+
+- libpnd: appdata-dir-name
+
+- wrapper black screen?
+
+- manual app rescan
+
+- deploy..
+  - .desktop for deply
+  - tell ED how to launch it
+
+- touchscreen
+  - launch apps
+  - pick/rotate category
+
+- honor render_mask to know what to update
+- figure out why deferred preview pics blow up
+- handle SD eject/insert
+
+- future
+  - defer icon load?
+  - add callback to pnd_disco_Search (maybe new func to not break cpas code), so can show number apps found so far
+  - note taking field
