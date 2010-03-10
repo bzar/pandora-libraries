@@ -69,7 +69,7 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 	filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
 	if [ ${#filteredlist} -ge 1 ]; then
 		message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
-		echo -e “ae[34me[30m”
+		echo -e ?ae[34me[30m?
 		xmessage -center "$message", -buttons yes,no
 		if [ $? = 102 ]; then
 		exit 1
@@ -77,7 +77,7 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 		sudo /etc/init.d/slim-init stop
 		sleep 5s
 	else
-		echo -e “ae[34me[30m”
+		echo -e ?ae[34me[30m?
 		xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
 		if [ $? = 102 ]; then
 		exit 1
@@ -127,48 +127,63 @@ if [ ! $umount ]; then
 	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
 
-	  FREELOOP=$(sudo /sbin/losetup -f) #get first free loop device
-	  if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
-		  #find a free loop device and use it 
-		  usedminor=$(sudo /sbin/losetup -a | tail -n1)
-		  usedminor=${usedminor:9:1}
-		  echo usedminor $usedminor
-		  freeminor=$(($usedminor+1))
-		  echo freeminor $freeminor
-		  sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
-		  FREELOOP=/dev/loop$freeminor
-	  fi
-	  
-	  #detect fs
-	  if [ $DFS = ISO ]; then
-		  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-		  mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
-	  #	mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
-		  echo "Filetype is $DFS"
-	  elif [ $DFS = directory ]; then
-		  mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
-	  #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
-		  echo "Filetype is $DFS"
-	  elif [ $DFS = Squashfs ]; then
-		  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-		  mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
-		  echo "Filetype is $DFS"
-	  else
-		  echo "error determining fs, output was $DFS"
-		  exit 1;
-	  fi
+		echo not mounted on loop yet, doing so
+		#check if pnd is already attached to loop 
+		LOOP=$(sudo losetup -a | grep $PND | tail -n1 | awk -F: '{print $1}')
+		#check if the loop device is already mounted
+		loopmountedon=$( mount | grep $(mount | grep $LOOP | awk '{print $3}') | grep utmp | awk '{print $3}' )
+		if [ ! $loopmountedon ]; then #check if the pnd is already attached to some loop device but not used
+			FREELOOP=$LOOP 
+			#reuse existing loop
+			if [ ! $LOOP ]; then
+				FREELOOP=$(sudo /sbin/losetup -f) #get first free loop device
+				if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
+					    #find a free loop device and use it 
+					    usedminor=$(sudo /sbin/losetup -a | tail -n1)
+					    usedminor=${usedminor:9:1}
+					    echo usedminor $usedminor
+					    freeminor=$(($usedminor+1))
+					    echo freeminor $freeminor
+					    sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
+					    FREELOOP=/dev/loop$freeminor
+				fi			
+			fi
+			  #detect fs
+			
+			if [ $DFS = ISO ]; then
+				sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
+				mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
+				#mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
+				echo "Filetype is $DFS"
+			elif [ $DFS = directory ]; then
+				  mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
+			  #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
+				  echo "Filetype is $DFS"
+			elif [ $DFS = Squashfs ]; then
+				  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
+				  mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
+				  echo "Filetype is $DFS"
+			else
+				  echo "error determining fs, output was $DFS"
+				  exit 1;
+			fi
 
-
-		echo "$mntline"
-		$mntline #mount the pnd/folder
-		echo "mounting union!"
-		if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
-		#append is fucking dirty, need to clean that up
-		sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
-		else
-		sudo mount -t aufs -o exec,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
+			echo "$mntline"
+			$mntline #mount the pnd/folder
+			echo "mounting union!"
+			if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
+				#append is fucking dirty, need to clean that up
+				sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
+				else
+				sudo mount -t aufs -o exec,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
+			fi
+		else #the pnd is already mounted but a mount was requested with a different basename/uid, just link it there
+			      echo $LOOP already mounted on $loopmountedon skipping losetup - putting link to old mount
+			      #this is bullshit
+			      sudo rmdir /mnt/utmp/$BASENAME
+			      sudo ln -s $loopmountedon /mnt/utmp/$BASENAME 
 		fi
- 
+	
 	else
 		echo "Union already mounted"
 	fi
@@ -195,6 +210,7 @@ fi
  
  
 #clean up
+sudo rmdir /mnt/utmp/$BASENAME
 sudo umount /mnt/utmp/$BASENAME #umount union
 if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
 	#umount the actual pnd
@@ -207,10 +223,12 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 	#delete tmp mountpoint
 	sudo rmdir /mnt/utmp/$BASENAME;
 	if [ $DFS = ISO ] || [ $DFS = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
-		sudo /sbin/losetup -d $FREELOOP
-		sudo rm $FREELOOP
+		LOOP=$(sudo losetup -a | grep $PND | tail -n1 | awk -F: '{print $1}')
+		sudo /sbin/losetup -d $LOOP
+		sudo rm $LOOP
 	fi
 	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
+	echo cleanup done
 else
 echo umount failed, didnt clean up
 fi
@@ -225,9 +243,9 @@ fi
 
 if [ $nox ]; then
 echo forking now!
-fork &> /tmp/pndrun.out & 
+fork &> /tmp/pndrun$BASENAME.out & 
 disown
 else
 echo Running with x, not disowning!
-fork &> /tmp/pndrun.out
+fork &> /tmp/pndrun$BASENAME.out
 fi
