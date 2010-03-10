@@ -15,6 +15,7 @@ ALL ALL=NOPASSWD: NOEXEC: \
 	/bin/chmod -R a+xrw */pandora/appdata/*, \
 	/bin/rmdir /mnt/pnd/*, \
 	/bin/rmdir /mnt/utmp/*, \
+	/bin/rm /mnt/utmp/*, \
 	/bin/rmdir */pandora/appdata/*/.wh..wh.plnk, \
 	/bin/rmdir */pandora/appdata/*/.wh..wh..tmp, \
 	/bin/rmdir -p */pandora/appdata/*/, \
