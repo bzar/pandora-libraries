@@ -847,13 +847,14 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Rescan for Applications",
 	  "Set to full desktop and reboot",
 	  "Set to pmenu and reboot",
-	  "Quit (<- beware)"
+	  "Quit (<- beware)",
+	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 6, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 7, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
-	  return ( -1 ); // return
+	  // do nothing
 	} else if ( sel == 1 ) {
 	  sprintf ( buffer, "sudo poweroff" );
 	  system ( buffer );
@@ -873,6 +874,8 @@ void ui_process_input ( unsigned char block_p ) {
 	  system ( buffer );
 	} else if ( sel == 5 ) {
 	  emit_and_quit ( MM_QUIT );
+	} else if ( sel == 6 ) {
+	  // about
 	}
 
 	ui_event++;

@@ -85,7 +85,7 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   }
 
   if ( options & PND_EXEC_OPTION_NOX11 ) {
-    argv [ f++ ] = "-x"; // no union for now
+    argv [ f++ ] = "-x"; // shut down X!
   }
 
   // finish

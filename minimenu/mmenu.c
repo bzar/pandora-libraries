@@ -57,6 +57,7 @@ pnd_conf_handle g_conf = 0;
 
 char *pnd_run_script = NULL;
 char *g_skinpath = NULL;
+unsigned char g_x11_present = 1; // >0 if X is present
 
 int main ( int argc, char *argv[] ) {
   int logall = -1; // -1 means normal logging rules; >=0 means log all!
@@ -160,6 +161,27 @@ int main ( int argc, char *argv[] ) {
   /* setup
    */
 
+  // X11?
+  if ( pnd_conf_get_as_char ( g_conf, "minimenu.x11_present_sh" ) ) {
+    FILE *fx = popen ( pnd_conf_get_as_char ( g_conf, "minimenu.x11_present_sh" ), "r" );
+    char buffer [ 100 ];
+    if ( fx ) {
+      if ( fgets ( buffer, 100, fx ) ) {
+	if ( atoi ( buffer ) ) {
+	  g_x11_present = 1;
+	  pnd_log ( pndn_rem, "X11 seems to be present [pid %u]\n", atoi(buffer) );
+	} else {
+	  g_x11_present = 0;
+	  pnd_log ( pndn_rem, "X11 seems NOT to be present\n" );
+	}
+      } else {
+	  g_x11_present = 0;
+	  pnd_log ( pndn_rem, "X11 seems NOT to be present\n" );
+      }
+      pclose ( fx );
+    }
+  } // x11?
+
   // pnd_run.sh
   pnd_run_script = pnd_locate_filename ( pnd_conf_get_as_char ( g_conf, "minimenu.pndrun" ), "pnd_run.sh" );
 
@@ -253,52 +275,58 @@ int main ( int argc, char *argv[] ) {
       }
     } // preview now?
 
-    // push to All category
-    // we do this first, so first category is always All
-    if ( ! category_push ( CATEGORY_ALL, iter ) ) {
-      pnd_log ( pndn_warning, "  Couldn't categorize to All: '%s'\n", IFNULL(iter -> title_en, "No Name") );
-    }
-
-    // push the categories
+    // push the categories .. or suppress application
     //
+    if ( ( pnd_pxml_get_x11 ( iter -> option_no_x11 ) != pnd_pxml_x11_required ) ||
+	 ( pnd_pxml_get_x11 ( iter -> option_no_x11 ) == pnd_pxml_x11_required && g_x11_present == 1 )
+       )
+    {
 
-    // main categories
-    if ( iter -> main_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) ) {
-      if ( ! category_push ( iter -> main_category, iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category, IFNULL(iter -> title_en, "No Name") );
+      // push to All category
+      // we do this first, so first category is always All
+      if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter ) ) {
+	pnd_log ( pndn_warning, "  Couldn't categorize to All: '%s'\n", IFNULL(iter -> title_en, "No Name") );
       }
-    }
 
-    if ( iter -> main_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) ) {
-      if ( ! category_push ( iter -> main_category1, iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category1, IFNULL(iter -> title_en, "No Name") );
+      // main categories
+      if ( iter -> main_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) ) {
+	if ( ! category_push ( iter -> main_category, iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category, IFNULL(iter -> title_en, "No Name") );
+	}
       }
-    }
 
-    if ( iter -> main_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) ) {
-      if ( ! category_push ( iter -> main_category2, iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category2, IFNULL(iter -> title_en, "No Name") );
+      if ( iter -> main_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) ) {
+	if ( ! category_push ( iter -> main_category1, iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category1, IFNULL(iter -> title_en, "No Name") );
+	}
       }
-    }
 
-    // alt categories
-    if ( iter -> alt_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) ) {
-      if ( ! category_push ( iter -> alt_category, iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category, IFNULL(iter -> title_en, "No Name") );
+      if ( iter -> main_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) ) {
+	if ( ! category_push ( iter -> main_category2, iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category2, IFNULL(iter -> title_en, "No Name") );
+	}
       }
-    }
 
-    if ( iter -> alt_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) ) {
-      if ( ! category_push ( iter -> alt_category1, iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category1, IFNULL(iter -> title_en, "No Name") );
+      // alt categories
+      if ( iter -> alt_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) ) {
+	if ( ! category_push ( iter -> alt_category, iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category, IFNULL(iter -> title_en, "No Name") );
+	}
       }
-    }
 
-    if ( iter -> alt_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) ) {
-      if ( ! category_push ( iter -> alt_category2, iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category2, IFNULL(iter -> title_en, "No Name") );
+      if ( iter -> alt_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) ) {
+	if ( ! category_push ( iter -> alt_category1, iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category1, IFNULL(iter -> title_en, "No Name") );
+	}
       }
-    }
+
+      if ( iter -> alt_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) ) {
+	if ( ! category_push ( iter -> alt_category2, iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category2, IFNULL(iter -> title_en, "No Name") );
+	}
+      }
+
+    } // register with categories or filter out
 
     // next
     iter = pnd_box_get_next ( iter );
