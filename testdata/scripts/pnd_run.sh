@@ -243,9 +243,9 @@ fi
 
 if [ $nox ]; then
 echo forking now!
-fork &> /tmp/pndrun.out & 
+fork &> /tmp/pndrun$BASENAME.out & 
 disown
 else
 echo Running with x, not disowning!
-fork
+fork &> /tmp/pndrun$BASENAME.out
 fi
