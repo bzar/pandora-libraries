@@ -51,6 +51,7 @@ if [ ! $PND ]; then #check if theres a pnd suplied, need to clean that up a bit 
 	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
+
 if [ ! $EXENAME ]; then
 	if [ ! $mount ] && [ ! $umount ]; then
 		echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
