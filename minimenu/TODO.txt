@@ -9,7 +9,6 @@
 - manual app rescan
 - conf: use real app searchpaths
 - About screen
-- redraw after deferred preview load
 
 - deploy..
   - .desktop for deply
