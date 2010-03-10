@@ -48,7 +48,7 @@ while true ; do
 		*) echo "Error while parsing arguments!" ; exit 1 ;;
 	esac
 done
- 
+
 if [ ! $PND ]; then #check if theres a pnd suplied, need to clean that up a bit more
 	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
@@ -59,6 +59,10 @@ if [ ! $EXENAME ]; then
 		echo "Usage for mounting/umounting pnd_run.sh -p your.pnd -b uid -m or -u"
 		exit 1
 	fi
+fi
+
+if [ $(pidof X) ]; then 
+unset $nox
 fi
 
 fork () {
@@ -211,6 +215,7 @@ fi
  
 #clean up
 sudo rmdir /mnt/utmp/$BASENAME
+sudo rm /mnt/utmp/$BASENAME
 sudo umount /mnt/utmp/$BASENAME #umount union
 if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
 	#umount the actual pnd
@@ -221,9 +226,9 @@ if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it woul
 	#delete appdata folder and ancestors if empty
 	sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
 	#delete tmp mountpoint
-	sudo rmdir /mnt/utmp/$BASENAME;
+	sudo rmdir /mnt/utmp/$BASENAME
 	if [ $DFS = ISO ] || [ $DFS = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
-		LOOP=$(sudo losetup -a | grep $PND | tail -n1 | awk -F: '{print $1}')
+		LOOP=$(sudo losetup -a | grep $(basename $PND) | tail -n1 | awk -F: '{print $1}')
 		sudo /sbin/losetup -d $LOOP
 		sudo rm $LOOP
 	fi
@@ -243,9 +248,9 @@ fi
 
 if [ $nox ]; then
 echo forking now!
-fork &> /tmp/pndrun$BASENAME.out & 
+fork &> /tmp/pndrun$BASENAME$mount.out & 
 disown
 else
 echo Running with x, not disowning!
-fork &> /tmp/pndrun$BASENAME.out
+fork &> /tmp/pndrun$BASENAME$mount.out
 fi
