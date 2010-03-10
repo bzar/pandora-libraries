@@ -4,6 +4,7 @@ ALL ALL=NOPASSWD: \
 	/bin/mount -t aufs -o exec\,noplink\,dirs\=*/pandora/appdata/*\=rw+nolwh\:/mnt/pnd/*\=rr none /mnt/utmp/*, \
 	/bin/umount /mnt/utmp/*
 ALL ALL=NOPASSWD: NOEXEC: \
+	/bin/ln -s /mnt/utmp/* /mnt/utmp/*, \
 	/bin/mount /dev/loop* /mnt/pnd/*, \
 	/bin/mount --bind -o ro * /mnt/pnd/*, \
 	/bin/mount -t squashfs * /mnt/pnd/*, \
