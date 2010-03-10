@@ -54,6 +54,7 @@ pnd_box_handle *g_active_apps = NULL;
 unsigned int g_active_appcount = 0;
 char g_username [ 128 ]; // since we have to wait for login (!!), store username here
 pnd_conf_handle g_conf = 0;
+pnd_conf_handle g_desktopconf = 0;
 
 char *pnd_run_script = NULL;
 char *g_skinpath = NULL;
@@ -155,6 +156,13 @@ int main ( int argc, char *argv[] ) {
     emit_and_quit ( MM_QUIT );
   }
 
+  g_desktopconf = pnd_conf_fetch_by_id ( pnd_conf_desktop, PND_CONF_SEARCHPATH );
+
+  if ( ! g_desktopconf ) {
+    pnd_log ( pndn_error, "ERROR: Couldn't fetch desktop conf file\n" );
+    emit_and_quit ( MM_QUIT );
+  }
+
   // redo log filter
   pnd_log_set_filter ( pnd_conf_get_as_int_d ( g_conf, "minimenu.loglevel", pndn_error ) );
 
@@ -239,8 +247,8 @@ int main ( int argc, char *argv[] ) {
   ui_discoverscreen ( 1 /* clear screen */ );
 
   // determine current app list, cache icons
-  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n", pnd_conf_get_as_char ( g_conf, MMENU_APP_SEARCHPATH ) );
-  g_active_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_conf, MMENU_APP_SEARCHPATH ), NULL ); // ignore overrides for now
+  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n", pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ) );
+  g_active_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ), NULL ); // ignore overrides for now
   g_active_appcount = pnd_box_get_size ( g_active_apps );
 
   unsigned char maxwidth, maxheight;
