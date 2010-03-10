@@ -9,8 +9,6 @@
 # look at the comments in the nox part, adjust 
 #use "lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq > whitelist" with nothing running to generate the whitelist
  
-#launch the script with nohup for -x to work!
- 
 #todo - no proper order
 #validate params better
 #make uid/basename mandatory (and rename var, its confusing!)
@@ -61,34 +59,34 @@ if [ ! $EXENAME ]; then
 	fi
 fi
 
-if [ $(pidof X) ]; then 
-unset $nox
-fi
-
 fork () {
 echo in fork!
 if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it once the app quits
-	applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
-	whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
-	filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
-	if [ ${#filteredlist} -ge 1 ]; then
-		message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
-		echo -e ?ae[34me[30m?
-		xmessage -center "$message", -buttons yes,no
-		if [ $? = 102 ]; then
-		exit 1
-		fi
-		sudo /etc/init.d/slim-init stop
-		sleep 5s
+	if [ $(pidof X) ]; then 
+		unset $nox
 	else
-		echo -e ?ae[34me[30m?
-		xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
-		if [ $? = 102 ]; then
-		exit 1
+		applist=$(lsof /usr/lib/libX11.so.6 | awk '{print $1}'| sort | uniq)
+		whitelist=$(cat ~/pndtest/whitelist) #adjust this to a fixed whitelist, maybe in the config dir
+		filteredlist=$(echo -e "$applist\n\n$whitelist\n\n$whitelist" | sort | uniq -u) #whitelist appended two times so those items are always removed
+		if [ ${#filteredlist} -ge 1 ]; then
+			message=$(echo -e "The following applications are still running, are you sure you want to close x? \n$filteredlist")
+			echo -e ?ae[34me[30m?
+			xmessage -center "$message", -buttons yes,no
+			if [ $? = 102 ]; then
+			exit 1
+			fi
+			sudo /etc/init.d/slim-init stop
+			sleep 5s
+		else
+			echo -e ?ae[34me[30m?
+			xmessage -center "killing x, nothing of value will be lost", -buttons ok,cancel
+			if [ $? = 102 ]; then
+			exit 1
+			fi
+			# close x now, do we want to use slim stop or just kill x?
+			sudo /etc/init.d/slim-init stop
+			sleep 5s
 		fi
-		# close x now, do we want to use slim stop or just kill x?
-		sudo /etc/init.d/slim-init stop
-		sleep 5s
 	fi
 fi
  
@@ -96,8 +94,7 @@ fi
 DFS=$(file -b $PND | awk '{ print $1 }') #is -p a zip/iso or folder?
 MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
 if [ ! -d "$MOUNTPOINT" ]; then MOUNTPOINT="/"; fi #make sure folder exists, if it doesnt assume rootfs
-FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
-echo "Filesystem is $FILESYSTEM"
+
 #if the pnd is on / set mountpoint to "" so we dont and up with // at the start,
 #this is to make sure sudo doesnt get confused
 if [ $MOUNTPOINT = "/" ]; then MOUNTPOINT=""; fi
@@ -111,19 +108,15 @@ if [ ! $BASENAME ]; then BASENAME=$(basename "$PND" | cut -d'.' -f1) ; fi
  
  
  
-oCWD=$(pwd)
+if [ ! $umount ]; then 
 
+	oCWD=$(pwd)
+	#create mountpoints, check if they exist already first to avoid annoying error messages
+	if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi #mountpoint for iso, ro
+	#writeable dir for union
+	if [ ! -d $MOUNTPOINT/pandora/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/pandora/appdata/$BASENAME; sudo chmod -R a+xrw $MOUNTPOINT/pandora/appdata/$BASENAME; fi
+	if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #union over the two
 
- 
-#create mountpoints, check if they exist already first to avoid annoying error messages
-if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi #mountpoint for iso, ro
-#writeable dir for union
-if [ ! -d $MOUNTPOINT/pandora/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/pandora/appdata/$BASENAME; sudo chmod -R a+xrw $MOUNTPOINT/pandora/appdata/$BASENAME; fi
-if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #union over the two
-
-#mount
- 
-if [ ! $umount ]; then
 	if [ ! $cpuspeed -eq $(cat /proc/pandora/cpu_mhz_max) ]; then 
 	  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
 	fi
@@ -175,6 +168,8 @@ if [ ! $umount ]; then
 			echo "$mntline"
 			$mntline #mount the pnd/folder
 			echo "mounting union!"
+			FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
+			echo "Filesystem is $FILESYSTEM"
 			if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
 				#append is fucking dirty, need to clean that up
 				sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
