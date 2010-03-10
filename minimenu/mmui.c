@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <time.h>
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_image.h"
@@ -268,6 +269,7 @@ void ui_render ( unsigned int render_mask ) {
 
   unsigned int icon_offset_x = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_x" );
   unsigned int icon_offset_y = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_y" );
+  unsigned int icon_max_width = pnd_conf_get_as_int ( g_conf, "grid.icon_max_width" );
 
   unsigned int text_width = pnd_conf_get_as_int ( g_conf, "grid.text_width" );
   unsigned int text_clip_x = pnd_conf_get_as_int ( g_conf, "grid.text_clip_x" );
@@ -503,7 +505,7 @@ void ui_render ( unsigned int render_mask ) {
 	    src.y = 0;
 	    src.w = 60;
 	    src.h = 60;
-	    dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x;
+	    dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + (( icon_max_width - iconsurface -> w ) / 2);
 	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y;
 
 	    SDL_BlitSurface ( iconsurface, &src, sdl_realscreen, dest );
@@ -679,6 +681,24 @@ void ui_render ( unsigned int render_mask ) {
     dest++;
   }
 
+  // hints
+  if ( pnd_conf_get_as_int_d ( g_conf, "display.clock_x", -1 ) != -1 ) {
+    char buffer [ 50 ];
+
+    time_t t = time ( NULL );
+    struct tm *tm = localtime ( &t );
+    strftime ( buffer, 50, "%a %H:%M %F", tm );
+
+    SDL_Surface *rtext;
+    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+    dest -> x = pnd_conf_get_as_int_d ( g_conf, "display.clock_x", 700 );
+    dest -> y = pnd_conf_get_as_int_d ( g_conf, "display.clock_y", 450 );
+    SDL_BlitSurface ( rtext, NULL /* all */, sdl_realscreen, dest );
+    SDL_FreeSurface ( rtext );
+    dest++;
+  }
+
   // update all the rects and send it all to sdl
   SDL_UpdateRects ( sdl_realscreen, dest - rects, rects );
 
@@ -727,10 +747,10 @@ void ui_process_input ( unsigned char block_p ) {
 	if ( event.jaxis.axis == 0 ) {
 	  // horiz
 	  if ( event.jaxis.value < 0 ) {
-	    ui_push_left();
+	    ui_push_left ( 0 );
 	    pnd_log ( PND_LOG_DEFAULT, "joystick axis - LEFT\n" );
 	  } else if ( event.jaxis.value > 0 ) {
-	    ui_push_right();
+	    ui_push_right ( 0 );
 	    pnd_log ( PND_LOG_DEFAULT, "joystick axis - RIGHT\n" );
 	  }
 	} else if ( event.jaxis.axis == 1 ) {
@@ -819,10 +839,10 @@ void ui_process_input ( unsigned char block_p ) {
 
       // directional
       if ( event.key.keysym.sym == SDLK_RIGHT ) {
-	ui_push_right();
+	ui_push_right ( 0 );
 	ui_event++;
       } else if ( event.key.keysym.sym == SDLK_LEFT ) {
-	ui_push_left();
+	ui_push_left ( 0 );
 	ui_event++;
       } else if ( event.key.keysym.sym == SDLK_UP ) {
 	ui_push_up();
@@ -841,40 +861,47 @@ void ui_process_input ( unsigned char block_p ) {
 	ui_event++;
 
       } else if ( event.key.keysym.sym == SDLK_LALT ) { // start button
-	char *opts [ 10 ] = {
+	char *opts [ 20 ] = {
 	  "Return to Minimenu",
 	  "Shutdown Pandora",
 	  "Rescan for Applications",
+	  "Run xfce4 from Minimenu",
 	  "Set to full desktop and reboot",
 	  "Set to pmenu and reboot",
 	  "Quit (<- beware)",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 7, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 8, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
 	  // do nothing
 	} else if ( sel == 1 ) {
+	  // shutdown
 	  sprintf ( buffer, "sudo poweroff" );
 	  system ( buffer );
 	} else if ( sel == 2 ) {
 	  // rescan apps
 	} else if ( sel == 3 ) {
+	  // run xfce
+	  char buffer [ PATH_MAX ];
+	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/bin/startxfce4" );
+	  emit_and_quit ( buffer );
+	} else if ( sel == 4 ) {
 	  // set env to xfce
 	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
 	  system ( buffer );
 	  sprintf ( buffer, "sudo poweroff" );
 	  system ( buffer );
-	} else if ( sel == 4 ) {
+	} else if ( sel == 5 ) {
 	  // set env to pmenu
 	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
 	  system ( buffer );
 	  sprintf ( buffer, "sudo poweroff" );
 	  system ( buffer );
-	} else if ( sel == 5 ) {
-	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 6 ) {
+	  emit_and_quit ( MM_QUIT );
+	} else if ( sel == 7 ) {
 	  // about
 	}
 
@@ -920,16 +947,30 @@ void ui_process_input ( unsigned char block_p ) {
   return;
 }
 
-void ui_push_left ( void ) {
+void ui_push_left ( unsigned char forcecoil ) {
 
   if ( ! ui_selected ) {
-    ui_push_right();
+    ui_push_right ( 0 );
     return;
   }
 
+  // what column we in?
+  unsigned int col = ui_determine_screen_col ( ui_selected );
+
   // are we alreadt at first item?
-  if ( g_categories [ ui_category ].refs == ui_selected ) {
+  if ( forcecoil == 0 &&
+       pnd_conf_get_as_int_d ( g_conf, "grid.wrap_horiz_samerow", 0 ) &&
+       col == 0 )
+  {
+    unsigned int i = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1;
+    while ( i ) {
+      ui_push_right ( 0 );
+      i--;
+    }
+
+  } else if ( g_categories [ ui_category ].refs == ui_selected ) {
     // can't go any more left, we're at the head
+
   } else {
     // figure out the previous item; yay for singly linked list :/
     mm_appref_t *i = g_categories [ ui_category ].refs;
@@ -947,12 +988,32 @@ void ui_push_left ( void ) {
   return;
 }
 
-void ui_push_right ( void ) {
+void ui_push_right ( unsigned char forcecoil ) {
 
   if ( ui_selected ) {
 
-    if ( ui_selected -> next ) {
-      ui_selected = ui_selected -> next;
+    // what column we in?
+    unsigned int col = ui_determine_screen_col ( ui_selected );
+
+    // wrap same or no?
+    if ( forcecoil == 0 &&
+	 pnd_conf_get_as_int_d ( g_conf, "grid.wrap_horiz_samerow", 0 ) &&
+	 col == pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1 )
+    {
+      // same wrap
+      unsigned int i = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1;
+      while ( i ) {
+	ui_push_left ( 0 );
+	i--;
+      }
+
+    } else {
+      // just go to the next
+
+      if ( ui_selected -> next ) {
+	ui_selected = ui_selected -> next;
+      }
+
     }
 
   } else {
@@ -967,9 +1028,46 @@ void ui_push_right ( void ) {
 void ui_push_up ( void ) {
   unsigned char col_max = pnd_conf_get_as_int ( g_conf, MMENU_DISP_COLMAX );
 
-  while ( col_max ) {
-    ui_push_left();
-    col_max--;
+  // what row we in?
+  unsigned int row = ui_determine_row ( ui_selected );
+
+  if ( row == 0 &&
+       pnd_conf_get_as_int_d ( g_conf, "grid.wrap_vert_stop", 1 ) == 0 )
+  {
+    // wrap around instead
+
+    unsigned int col = ui_determine_screen_col ( ui_selected );
+
+    // go to end
+    ui_selected = g_categories [ ui_category ].refs;
+    while ( ui_selected -> next ) {
+      ui_selected = ui_selected -> next;
+    }
+
+    // try to move to same column
+    unsigned int newcol = ui_determine_screen_col ( ui_selected );
+    if ( newcol > col ) {
+      col = newcol - col;
+      while ( col ) {
+	ui_push_left ( 0 );
+	col--;
+      }
+    }
+
+    // scroll down to show it
+    int r = ui_determine_row ( ui_selected ) - 1;
+    if ( r - pnd_conf_get_as_int ( g_conf, MMENU_DISP_ROWMAX ) > 0 ) {
+      ui_rows_scrolled_down = (unsigned int) r;
+    }
+
+  } else {
+    // stop at top/bottom
+
+    while ( col_max ) {
+      ui_push_left ( 1 );
+      col_max--;
+    }
+
   }
 
   return;
@@ -979,12 +1077,43 @@ void ui_push_down ( void ) {
   unsigned char col_max = pnd_conf_get_as_int ( g_conf, MMENU_DISP_COLMAX );
 
   if ( ui_selected ) {
-    while ( col_max ) {
-      ui_push_right();
-      col_max--;
+
+    // what row we in?
+    unsigned int row = ui_determine_row ( ui_selected );
+
+    // max rows?
+    unsigned int icon_rows = g_categories [ ui_category ].refcount / col_max;
+    if ( g_categories [ ui_category ].refcount % col_max > 0 ) {
+      icon_rows++;
     }
+
+    // we at the end?
+    if ( row == ( icon_rows - 1 ) &&
+	 pnd_conf_get_as_int_d ( g_conf, "grid.wrap_vert_stop", 1 ) == 0 )
+    {
+
+      unsigned char col = ui_determine_screen_col ( ui_selected );
+
+      ui_selected = g_categories [ ui_category ].refs;
+
+      while ( col ) {
+	ui_selected = ui_selected -> next;
+	col--;
+      }
+
+      ui_rows_scrolled_down = 0;
+
+    } else {
+
+      while ( col_max ) {
+	ui_push_right ( 1 );
+	col_max--;
+      }
+
+    }
+
   } else {
-    ui_push_right();
+    ui_push_right ( 0 );
   }
 
   return;
@@ -1088,7 +1217,6 @@ SDL_Surface *ui_scale_image ( SDL_Surface *s, unsigned int maxwidth, int maxheig
 
   }
 
-  pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
   scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
   SDL_FreeSurface ( s );
   s = scaled;
@@ -1433,4 +1561,34 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
   } // while
 
   return ( -1 );
+}
+
+unsigned char ui_determine_row ( mm_appref_t *a ) {
+  unsigned int row = 0;
+
+  mm_appref_t *i = g_categories [ ui_category ].refs;
+  while ( i != a ) {
+    i = i -> next;
+    row++;
+  } // while
+  row /= pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
+
+  return ( row );
+}
+
+unsigned char ui_determine_screen_row ( mm_appref_t *a ) {
+  return ( ui_determine_row ( a ) % pnd_conf_get_as_int_d ( g_conf, "grid.row_max", 5 ) );
+}
+
+unsigned char ui_determine_screen_col ( mm_appref_t *a ) {
+  unsigned int col = 0;
+
+  mm_appref_t *i = g_categories [ ui_category ].refs;
+  while ( i != a ) {
+    i = i -> next;
+    col++;
+  } // while
+  col %= pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
+
+  return ( col );
 }
