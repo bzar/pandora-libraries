@@ -129,7 +129,7 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     }
 
     // exec options
-    if ( pnd_pxml_is_affirmative ( p -> option_no_x11 ) ) {
+    if ( pnd_pxml_get_x11 ( p -> option_no_x11 ) == pnd_pxml_x11_stop ) {
       strncat ( buffer, " -x ", 1020 );
     }
 

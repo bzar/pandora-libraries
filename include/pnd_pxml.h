@@ -93,6 +93,13 @@ void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v );
 
 /* utilities
  */
+typedef enum {
+  pnd_pxml_x11_error = 0,
+  pnd_pxml_x11_required,
+  pnd_pxml_x11_ignored,
+  pnd_pxml_x11_stop
+} pnd_pxml_x11_req_e;
+pnd_pxml_x11_req_e pnd_pxml_get_x11 ( char *pxmlvalue ); // returns error, required, ignored, stop hint
 unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ); // returns 1 when pxml seems like a valid application
 unsigned char pnd_pxml_is_affirmative ( char *v ); // return 1 for 'Y' or '!'
 

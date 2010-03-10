@@ -5,9 +5,15 @@
 
 - libpnd: appdata-dir-name
 
+- libpnd pxml change for no-X
+
 - wrapper black screen?
 
 - manual app rescan
+
+- conf: use real app searchpaths
+
+- About screen
 
 - deploy..
   - .desktop for deply

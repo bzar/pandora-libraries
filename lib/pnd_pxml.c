@@ -554,3 +554,18 @@ unsigned char pnd_pxml_is_affirmative ( char *v ) {
 
   return ( 0 );
 }
+
+pnd_pxml_x11_req_e pnd_pxml_get_x11 ( char *pxmlvalue ) {
+
+  if ( ! pxmlvalue ) {
+    return ( pnd_pxml_x11_ignored );
+  } else if ( strcasecmp ( pxmlvalue, "req" ) == 0 ) {
+    return ( pnd_pxml_x11_required );
+  } else if ( strcasecmp ( pxmlvalue, "stop" ) == 0 ) {
+    return ( pnd_pxml_x11_stop );
+  } else if ( strcasecmp ( pxmlvalue, "ignore" ) == 0 ) {
+    return ( pnd_pxml_x11_ignored );
+  }
+
+  return ( pnd_pxml_x11_ignored ); // default
+}
