@@ -57,6 +57,7 @@ char *desktop_appspath = NULL;
 char *menu_dotdesktoppath = NULL;
 char *menu_iconpath = NULL;
 char *menu_appspath = NULL;
+char *info_dotdesktoppath = NULL;
 // pnd runscript
 char *run_searchpath; // searchpath to find pnd_run.sh
 char *run_script;     // name of pnd_run.sh script from config
@@ -67,6 +68,7 @@ char g_username [ 128 ]; // since we have to wait for login (!!), store username
 // notifier handle
 pnd_notify_handle nh = 0;
 pnd_dbusnotify_handle dbh = 0;
+unsigned char g_info_p = 0; // spit out info .desktops
 
 // constants
 #define PNDNOTIFYD_LOGLEVEL "pndnotifyd.loglevel"
@@ -229,6 +231,7 @@ int main ( int argc, char *argv[] ) {
   pnd_log ( pndn_rem, "Apps searchpath is '%s'\n", menu_appspath );
   pnd_log ( pndn_rem, ".desktop files emit to '%s'\n", menu_dotdesktoppath );
   pnd_log ( pndn_rem, ".desktop icon files emit to '%s'\n", menu_iconpath );
+  pnd_log ( pndn_rem, ".desktop info files emit to '%s'\n", info_dotdesktoppath ? info_dotdesktoppath : "n/a" );
 
   /* set up signal handler
    */
@@ -401,6 +404,7 @@ void consume_configuration ( void ) {
     desktop_dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_DESKTOP_DOTDESKTOP_PATH_KEY );
     desktop_iconpath = pnd_conf_get_as_char ( desktoph, PND_DESKTOP_ICONS_PATH_KEY );
     desktop_appspath = pnd_conf_get_as_char ( desktoph, PND_DESKTOP_SEARCH_KEY );
+    info_dotdesktoppath = pnd_conf_get_as_char ( desktoph, "info.dotdesktoppath" );
   }
 
   if ( ! desktop_dotdesktoppath ) {
@@ -420,6 +424,11 @@ void consume_configuration ( void ) {
     menu_dotdesktoppath = pnd_conf_get_as_char ( desktoph, PND_MENU_DOTDESKTOP_PATH_KEY );
     menu_iconpath = pnd_conf_get_as_char ( desktoph, PND_MENU_ICONS_PATH_KEY );
     menu_appspath = pnd_conf_get_as_char ( desktoph, PND_MENU_SEARCH_KEY );
+  }
+
+  // info
+  if ( desktoph ) {
+    g_info_p = pnd_conf_get_as_int_d ( desktoph, "info.emit_info", 0 );
   }
 
   /* try to locate a runscript and optional hupscript
@@ -556,6 +565,11 @@ void consume_configuration ( void ) {
   desktop_iconpath = pnd_expand_tilde ( strdup ( desktop_iconpath ) );
   mkdir ( desktop_dotdesktoppath, 0777 );
   mkdir ( desktop_iconpath, 0777 );
+
+  if ( info_dotdesktoppath ) {
+    info_dotdesktoppath = pnd_expand_tilde ( strdup ( info_dotdesktoppath ) );
+    mkdir ( info_dotdesktoppath, 0777 );
+  }
 
   if ( menu_dotdesktoppath ) {
     menu_dotdesktoppath = pnd_expand_tilde ( strdup ( menu_dotdesktoppath ) );
@@ -703,6 +717,15 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
 #endif
     } else {
       pnd_log ( pndn_rem, "ERROR: Error creating .desktop file for app: %s\n", pnd_box_get_key ( d ) );
+    }
+
+    // info .desktop
+    if ( g_info_p && info_dotdesktoppath ) {
+      if ( pnd_emit_dotinfo ( info_dotdesktoppath, pndrun, d ) ) {
+	// nada
+      } else {
+	pnd_log ( pndn_rem, "ERROR: Error creating info .desktop file for app: %s\n", pnd_box_get_key ( d ) );
+      }
     }
 
     // does this object request any mkdir's?

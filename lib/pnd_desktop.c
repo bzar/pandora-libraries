@@ -83,7 +83,7 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
   }
 #endif
 
-#if 0 // we let pnd_run.sh handle this
+#if 0 // we let pnd_run.sh command line handle this instead of in .desktop
   if ( p -> startdir ) {
     snprintf ( buffer, 1020, "Path=%s\n", p -> startdir );
     fprintf ( f, "%s", buffer );
@@ -118,8 +118,9 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 
     // args
     if ( p -> execargs ) {
-      strncat ( buffer, " -a ", 1020 );
-      strncat ( buffer, p -> execargs, 1020 );
+      char argbuf [ 1024 ];
+      snprintf ( argbuf, 1000, " -a \"%s\"", p -> execargs );
+      strncat ( buffer, argbuf, 1020 );
     }
 
     // clockspeed
@@ -182,6 +183,147 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
       fprintf ( f, "Categories=%s\n", defaults );
     }
 
+  }
+
+  fprintf ( f, "%s\n", PND_DOTDESKTOP_SOURCE ); // should we need to know 'who' created the file during trimming
+
+  fclose ( f );
+
+  return ( 1 );
+}
+
+unsigned char pnd_emit_dotinfo ( char *targetpath, char *pndrun, pnd_disco_t *p ) {
+  char filename [ FILENAME_MAX ];
+  char buffer [ 1024 ];
+  FILE *f;
+  char *viewer, *searchpath;
+  pnd_conf_handle desktoph;
+
+  // specification
+  // http://standards.freedesktop.org/desktop-entry-spec
+
+  // validation
+  //
+
+  // viewer
+  searchpath = pnd_conf_query_searchpath();
+
+  desktoph = pnd_conf_fetch_by_id ( pnd_conf_desktop, searchpath );
+
+  if ( ! desktoph ) {
+    return ( 0 );
+  }
+
+  viewer = pnd_conf_get_as_char ( desktoph, "info.viewer" );
+
+  if ( ! viewer ) {
+    return ( 0 ); // no way to view the file
+  }
+
+  // etc
+  if ( ! p -> unique_id ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing unique-id\n", targetpath );
+    return ( 0 );
+  }
+
+  if ( ! p -> info_filename ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing info_filename\n", targetpath );
+    return ( 0 );
+  }
+
+  if ( ! p -> info_name ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing info_name\n", targetpath );
+    return ( 0 );
+  }
+
+  if ( ! targetpath ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing target path\n", targetpath );
+    return ( 0 );
+  }
+
+  if ( ! pndrun ) {
+    pnd_log ( PND_LOG_DEFAULT, "Can't emit dotdesktop for %s, missing pnd_run.sh\n", targetpath );
+    return ( 0 );
+  }
+
+  // set up
+
+  sprintf ( filename, "%s/%s#info.desktop", targetpath, p -> unique_id );
+
+  // emit
+
+  f = fopen ( filename, "w" );
+
+  if ( ! f ) {
+    return ( 0 );
+  }
+
+  fprintf ( f, "%s\n", PND_DOTDESKTOP_HEADER );
+
+  if ( p -> info_name ) {
+    snprintf ( buffer, 1020, "Name=%s\n", p -> info_name );
+    fprintf ( f, "%s", buffer );
+  }
+
+  fprintf ( f, "Type=Application\n" );
+  fprintf ( f, "Version=1.0\n" );
+
+#if 0
+  if ( p -> icon ) {
+    snprintf ( buffer, 1020, "Icon=%s\n", p -> icon );
+    fprintf ( f, "%s", buffer );
+  }
+#endif
+
+  if ( p -> unique_id ) {
+    fprintf ( f, "X-Pandora-UID=%s\n", p -> unique_id );
+  }
+
+  if ( p -> title_en && p -> title_en [ 0 ] ) {
+    snprintf ( buffer, 1020, "Comment=Automatic menu info entry for %s\n", p -> title_en );
+    fprintf ( f, "%s", buffer );
+  }
+
+#if 0 // we let pnd_run.sh command line handle this instead of in .desktop
+  if ( p -> startdir ) {
+    snprintf ( buffer, 1020, "Path=%s\n", p -> startdir );
+    fprintf ( f, "%s", buffer );
+  } else {
+    fprintf ( f, "Path=%s\n", PND_DEFAULT_WORKDIR );
+  }
+#endif
+
+  // exec line
+  char args [ 1001 ];
+  char *pargs = args;
+  if ( pnd_conf_get_as_char ( desktoph, "info.viewer_args" ) ) {
+    snprintf ( pargs, 1001, "%s %s",
+	       pnd_conf_get_as_char ( desktoph, "info.viewer_args" ), p -> info_filename );
+  } else {
+    pargs = NULL;
+  }
+
+  char pndfile [ 1024 ];
+  if ( p -> object_type == pnd_object_type_directory ) {
+    // for PXML-app-dir, pnd_run.sh doesn't want the PXML.xml.. it just wants the dir-name
+    strncpy ( pndfile, p -> object_path, 1000 );
+  } else if ( p -> object_type == pnd_object_type_pnd ) {
+    // pnd_run.sh wants the full path and filename for the .pnd file
+    snprintf ( pndfile, 1020, "%s/%s", p -> object_path, p -> object_filename );
+  }
+
+  if ( ! pnd_apps_exec ( pndrun, pndfile, p -> unique_id, viewer, p -> startdir, pargs,
+			 p -> clockspeed ? atoi ( p -> clockspeed ) : 0, PND_EXEC_OPTION_NORUN ) )
+  {
+    return ( 0 );
+  }
+
+  fprintf ( f, "Exec=%s\n", pnd_apps_exec_runline() );
+
+  if ( pnd_conf_get_as_char ( desktoph, "info.category" ) ) {
+    fprintf ( f, "Categories=%s\n", pnd_conf_get_as_char ( desktoph, "info.category" ) );
+  } else {
+    fprintf ( f, "Categories=Documentation\n" );
   }
 
   fprintf ( f, "%s\n", PND_DOTDESKTOP_SOURCE ); // should we need to know 'who' created the file during trimming

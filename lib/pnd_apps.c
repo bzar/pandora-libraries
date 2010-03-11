@@ -96,6 +96,7 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
     unsigned char i;
     bzero ( apps_exec_runline, 1024 );
     //pnd_log ( PND_LOG_DEFAULT, "Norun %u\n", f );
+    unsigned char quotenext = 0;
     for ( i = 0; i < ( f - 1 ); i++ ) {
       //pnd_log ( PND_LOG_DEFAULT, "Norun %u: %s\n", i, argv [ i ] );
 
@@ -104,19 +105,30 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 	strncat ( apps_exec_runline, " ", 1000 );
       }
 
-      // if this is for -a, we need to wrap with quotes
-      if ( i > 0 && strcmp ( argv [ i - 1 ], "-a" ) == 0 ) {
+      // quoting
+      if ( quotenext ) {
 	strncat ( apps_exec_runline, "\"", 1000 );
       }
 
+      // arg
       strncat ( apps_exec_runline, argv [ i ], 1000 );
 
-      // if this is for -a, we need to wrap with quotes
-      if ( i > 0 && strcmp ( argv [ i - 1 ], "-a" ) == 0 ) {
+      // unquoting
+      if ( quotenext ) {
 	strncat ( apps_exec_runline, "\"", 1000 );
       }
 
-    }
+      // clear quoting
+      if ( quotenext ) {
+	quotenext = 0;
+      } else {
+	// if this is for -a, we need to wrap with quotes
+	if ( strcmp ( argv [ i ], "-a" ) == 0 ) {
+	  quotenext = 1;
+	}
+      }
+
+    } // for
     return ( 1 );
   }
 
