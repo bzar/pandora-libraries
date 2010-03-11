@@ -569,3 +569,18 @@ pnd_pxml_x11_req_e pnd_pxml_get_x11 ( char *pxmlvalue ) {
 
   return ( pnd_pxml_x11_ignored ); // default
 }
+
+char *pnd_pxml_get_info_name ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> info_name );
+}
+
+char *pnd_pxml_get_info_type ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> info_type );
+}
+
+char *pnd_pxml_get_info_src ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> info_filename );
+}

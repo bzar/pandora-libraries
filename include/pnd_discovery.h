@@ -69,6 +69,9 @@ typedef struct {
   char *preview_pic1;
   char *preview_pic2;
   char *mkdir_sp;
+  char *info_name;      // should be a struct..
+  char *info_filename;
+  char *info_type;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided
