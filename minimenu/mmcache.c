@@ -72,12 +72,15 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
 
   // scale
   if ( s -> w < maxwidth ) {
-    SDL_Surface *scaled;
-    double scale = (double)maxwidth / (double)s -> w;
-    //pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
-    scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
-    SDL_FreeSurface ( s );
-    s = scaled;
+    // scale up?
+    if ( pnd_conf_get_as_int_d ( g_conf, "previewpic.scale_up_bool", 1 ) ) {
+      SDL_Surface *scaled;
+      double scale = (double)maxwidth / (double)s -> w;
+      //pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
+      scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
+      SDL_FreeSurface ( s );
+      s = scaled;
+    }
   } else if ( s -> w > maxwidth ) {
     SDL_Surface *scaled;
     double scale = (double)maxwidth / (double)s -> w;
@@ -140,12 +143,15 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
 
   // scale the icon?
   if ( s -> w < maxwidth ) {
-    SDL_Surface *scaled;
-    double scale = (double)maxwidth / (double)s -> w;
-    //pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
-    scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
-    SDL_FreeSurface ( s );
-    s = scaled;
+    // scale up?
+    if ( pnd_conf_get_as_int_d ( g_conf, "grid.scale_up_bool", 1 ) ) {
+      SDL_Surface *scaled;
+      double scale = (double)maxwidth / (double)s -> w;
+      //pnd_log ( pndn_debug, "  Upscaling; scale factor %f\n", scale );
+      scaled = rotozoomSurface ( s, 0 /* angle*/, scale /* scale */, 1 /* smooth==1*/ );
+      SDL_FreeSurface ( s );
+      s = scaled;
+    }
   } else if ( s -> w > maxwidth ) {
     SDL_Surface *scaled;
     double scale = (double)maxwidth / (double)s -> w;

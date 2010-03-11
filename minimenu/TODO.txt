@@ -5,11 +5,13 @@
 
 - libpnd: appdata-dir-name
 
-- wrapper black screen?
+- mmwrapper black screen?
 - manual app rescan
-- conf: use real app searchpaths
+- conf .. use also menu searchpath
 - About screen
-- redraw after deferred preview load
+- override
+  - .desktop in same place as .pnd, override category
+  - icon
 
 - deploy..
   - .desktop for deply

@@ -73,13 +73,16 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
 // change the focus
 void ui_process_input ( unsigned char block_p );
-void ui_push_left ( void );
-void ui_push_right ( void );
+void ui_push_left ( unsigned char forcecoil );
+void ui_push_right ( unsigned char forcecoil );
 void ui_push_up ( void );
 void ui_push_down ( void );
 void ui_push_exec ( void );
 void ui_push_ltrigger ( void );
 void ui_push_rtrigger ( void );
+unsigned char ui_determine_row ( mm_appref_t *a );
+unsigned char ui_determine_screen_row ( mm_appref_t *a );
+unsigned char ui_determine_screen_col ( mm_appref_t *a );
 
 // ui_render() can register tappable-areas which touchscreen code can then figure out if we made a hit
 void ui_register_reset ( void );

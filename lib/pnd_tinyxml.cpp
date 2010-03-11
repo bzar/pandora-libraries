@@ -185,6 +185,14 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
       app->icon       = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ICONSRC);
     }
 
+    // <info>
+    if ( (pElem = hRoot.FirstChild(PND_PXML_ENAME_INFO).Element()) )
+     {
+       app-> info_name = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_INFONAME );
+       app-> info_filename = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_INFOSRC );
+       app-> info_type = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_INFOTYPE );
+     }
+
     //The preview pics:
     if ( (pElem = hRoot.FirstChild(PND_PXML_NODENAME_PREVPICS).Element()) )
     {

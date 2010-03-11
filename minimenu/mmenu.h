@@ -13,7 +13,6 @@ extern char *g_skinpath;
 
 // keys
 #define MMENU_ARTPATH "minimenu.static_art_searchpath"
-#define MMENU_APP_SEARCHPATH "apps.searchpath"
 
 #define MMENU_GRID_FONT "grid.font"
 #define MMENU_GRID_FONTSIZE "grid.font_ptsize"

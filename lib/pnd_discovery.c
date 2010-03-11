@@ -39,6 +39,9 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> alt_category1 ) {  free ( p -> alt_category1 );  }
   if ( p -> alt_category2 ) {  free ( p -> alt_category2 );  }
   if ( p -> mkdir_sp )      {  free ( p -> mkdir_sp );       }
+  if ( p -> info_name )     {  free ( p -> info_name );       }
+  if ( p -> info_type )     {  free ( p -> info_type );       }
+  if ( p -> info_filename ) {  free ( p -> info_filename );       }
 
   return;
 }
@@ -266,6 +269,16 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       // mkdirs
       if ( pnd_pxml_get_mkdir ( pxmlh ) ) {
 	p -> mkdir_sp = strdup ( pnd_pxml_get_mkdir ( pxmlh ) );
+      }
+      // info
+      if ( pnd_pxml_get_info_src ( pxmlh ) ) {
+	p -> info_filename = strdup ( pnd_pxml_get_info_src ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_info_name ( pxmlh ) ) {
+	p -> info_name = strdup ( pnd_pxml_get_info_name ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_info_type ( pxmlh ) ) {
+	p -> info_type = strdup ( pnd_pxml_get_info_type ( pxmlh ) );
       }
 
     } else {
