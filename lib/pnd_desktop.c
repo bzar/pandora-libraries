@@ -248,7 +248,7 @@ unsigned char pnd_emit_dotinfo ( char *targetpath, char *pndrun, pnd_disco_t *p 
 
   // set up
 
-  sprintf ( filename, "%s/%s#info.desktop", targetpath, p -> unique_id );
+  sprintf ( filename, "%s/%s#%uinfo.desktop", targetpath, p -> unique_id, p -> subapp_number );
 
   // emit
 
