@@ -861,6 +861,10 @@ void ui_process_input ( unsigned char block_p ) {
 	ui_event++;
 
       } else if ( event.key.keysym.sym == SDLK_LALT ) { // start button
+	ui_push_exec();
+	ui_event++;
+
+      } else if ( event.key.keysym.sym == SDLK_LCTRL /*LALT*/ ) { // select button
 	char *opts [ 20 ] = {
 	  "Return to Minimenu",
 	  "Shutdown Pandora",
@@ -882,6 +886,13 @@ void ui_process_input ( unsigned char block_p ) {
 	  system ( buffer );
 	} else if ( sel == 2 ) {
 	  // rescan apps
+	  pnd_log ( pndn_debug, "Freeing up applications\n" );
+	  applications_free();
+	  pnd_log ( pndn_debug, "Rescanning applications\n" );
+	  applications_scan();
+	  // reset view
+	  ui_selected = NULL;
+	  ui_rows_scrolled_down = 0;
 	} else if ( sel == 3 ) {
 	  // run xfce
 	  char buffer [ PATH_MAX ];

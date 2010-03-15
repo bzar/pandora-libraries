@@ -242,6 +242,54 @@ int main ( int argc, char *argv[] ) {
 
   /* inhale applications, icons, categories, etc
    */
+  applications_scan();
+
+  /* actual work now
+   */
+
+  while ( 1 ) { // forever!
+
+    // show the menu, or changes thereof
+    ui_render ( CHANGED_NOTHING );
+
+    // wait for input or time-based events (like animations)
+    // deal with inputs
+    ui_process_input ( 1 /* block */ );
+
+    // sleep? block?
+    usleep ( 5000 );
+
+  } // while
+
+  return ( 0 );
+}
+
+void emit_and_quit ( char *s ) {
+  printf ( "%s\n", s );
+  exit ( 0 );
+}
+
+void applications_free ( void ) {
+
+  // free up all our category apprefs, but keep the preview and icon cache's..
+  category_freeall();
+
+  // free up old disco_t
+  if ( g_active_apps ) {
+    pnd_disco_t *p = pnd_box_get_head ( g_active_apps );
+    pnd_disco_t *n;
+    while ( p ) {
+      n = pnd_box_get_next ( p );
+      pnd_disco_destroy ( p );
+      p = n;
+    }
+    pnd_box_delete ( g_active_apps );
+  }
+
+  return;
+}
+
+void applications_scan ( void ) {
 
   // show disco screen
   ui_discoverscreen ( 1 /* clear screen */ );
@@ -343,27 +391,5 @@ int main ( int argc, char *argv[] ) {
   // dump categories
   //category_dump();
 
-  /* actual work now
-   */
-
-  while ( 1 ) { // forever!
-
-    // show the menu, or changes thereof
-    ui_render ( CHANGED_NOTHING );
-
-    // wait for input or time-based events (like animations)
-    // deal with inputs
-    ui_process_input ( 1 /* block */ );
-
-    // sleep? block?
-    usleep ( 5000 );
-
-  } // while
-
-  return ( 0 );
-}
-
-void emit_and_quit ( char *s ) {
-  printf ( "%s\n", s );
-  exit ( 0 );
+  return;
 }

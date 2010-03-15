@@ -3,10 +3,9 @@
   - full-replacement PXML is one option, another is
   - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
 
-- libpnd: appdata-dir-name
+- libpnd: appdata-dir-name?
 
 - mmwrapper black screen?
-- manual app rescan
 - conf .. use also menu searchpath
 - About screen
 - override

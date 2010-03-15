@@ -32,4 +32,7 @@ typedef enum {
 
 void emit_and_quit ( char *s );
 
+void applications_free ( void );
+void applications_scan ( void );
+
 #endif

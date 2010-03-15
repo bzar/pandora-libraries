@@ -22,5 +22,6 @@ typedef struct {
 unsigned char category_push ( char *catname, pnd_disco_t *app ); // catname is not pulled from app, so we can make them up on the fly (ie: "All")
 mm_category_t *category_query ( char *catname );
 void category_dump ( void ); // sort the apprefs
+void category_freeall ( void );
 
 #endif

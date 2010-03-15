@@ -134,3 +134,24 @@ void category_dump ( void ) {
 
   return;
 }
+
+void category_freeall ( void ) {
+  unsigned int i;
+  mm_appref_t *iter, *next;
+
+  for ( i = 0; i < g_categorycount; i++ ) {
+
+    iter = g_categories [ i ].refs;
+
+    while ( iter ) {
+      next = iter -> next;
+      free ( iter );
+      iter = next;
+    }
+
+    g_categories [ i ].refs = NULL;
+
+  } // for
+
+  return;
+}
