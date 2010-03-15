@@ -175,3 +175,21 @@ unsigned int pnd_box_get_size ( pnd_box_handle box ) {
 
   return ( count );
 }
+
+unsigned char pnd_box_append ( pnd_box_handle box, pnd_box_handle append ) {
+  pnd_box_t *pbox = (pnd_box_t*) box;
+  pnd_box_t *pappend = (pnd_box_t*) append;
+
+  if ( pbox -> head ) {
+    pnd_box_node_t *n = pbox -> head;
+    while ( n -> next ) {
+      n = n -> next;
+    }
+    // by now, n -> next == NULL
+    n -> next = pappend -> head;
+  } else {
+    pbox -> head = pappend -> head;
+  }
+
+  return ( 1 );
+}

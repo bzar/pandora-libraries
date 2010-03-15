@@ -295,8 +295,16 @@ void applications_scan ( void ) {
   ui_discoverscreen ( 1 /* clear screen */ );
 
   // determine current app list, cache icons
-  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n", pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ) );
-  g_active_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ), NULL ); // ignore overrides for now
+  // - ignore overrides for now
+  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n",
+	    pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ) );
+  g_active_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ), NULL );
+  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n",
+	    pnd_conf_get_as_char ( g_desktopconf, "menu.searchpath" ) );
+  pnd_box_handle menu_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "menu.searchpath" ), NULL );
+
+  pnd_box_append ( g_active_apps, menu_apps );
+
   g_active_appcount = pnd_box_get_size ( g_active_apps );
 
   unsigned char maxwidth, maxheight;

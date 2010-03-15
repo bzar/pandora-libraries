@@ -44,6 +44,9 @@ void *pnd_box_allocinsert ( pnd_box_handle box, char *key, unsigned int size );
  */
 void *pnd_box_find_by_key ( pnd_box_handle box, char *key );
 
+/* merge two box lists */
+unsigned char pnd_box_append ( pnd_box_handle box, pnd_box_handle append );
+
 /* should the user want to walk around the container, a couple basic functions are
  * provided.
  */

@@ -153,5 +153,7 @@ void category_freeall ( void ) {
 
   } // for
 
+  g_categorycount = 0;
+
   return;
 }
