@@ -6,15 +6,13 @@
 - libpnd: appdata-dir-name?
 
 - mmwrapper black screen?
-- conf .. use also menu searchpath
 - About screen
 - override
   - .desktop in same place as .pnd, override category
   - icon
 
 - deploy..
-  - .desktop for deply
-  - tell ED how to launch it
+  - .desktop for deployment, for running from xfce
 
 - touchscreen
   - launch apps
