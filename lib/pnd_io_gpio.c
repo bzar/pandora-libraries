@@ -1,4 +1,6 @@
 
+// this is pulled from cpasjuste and/or pickle
+
 #if defined (_PANDORA) || !defined (EMULATOR)
 
 /* cribbed from pnd_keytypes.h so as to make it unnecessary */

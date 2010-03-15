@@ -31,6 +31,14 @@ extern "C" {
 #define PND_DEVICE_LED_BT      "/sys/class/leds/pandora::bluetooth"
 #define PND_DEVICE_LED_SUFFIX_BRIGHTNESS "/brightness"
 
+// device names
+#define PND_EVDEV_NUB1    "vsense66"
+#define PND_EVDEV_NUB2    "vsense67"
+#define PND_EVDEV_KEYPAD  "omap_twl4030keypad"
+#define PND_EVDEV_GPIO    "gpio-keys"
+#define PND_EVDEV_TS      "ADS784x Touchscreen"
+#define PND_EVDEV_POWER   "triton2-pwrbutton"
+
 /* utility
  */
 unsigned char pnd_device_open_write_close ( char *name, char *v );

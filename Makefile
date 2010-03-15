@@ -21,12 +21,12 @@ LIB = libpnd.a
 SOLIB = libpnd.so.1         # canonicle name
 SOLIB1 = libpnd.so.1.0.1    # versioned name
 XMLOBJ = lib/tinyxml/tinystr.o lib/tinyxml/tinyxml.o lib/tinyxml/tinyxmlerror.o lib/tinyxml/tinyxmlparser.o
-ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o pnd_apps.o pnd_utility.o pnd_desktop.o pnd_io_gpio.o pnd_logger.o pnd_dbusnotify.o pnd_device.o
+ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_locate.o pnd_tinyxml.o pnd_pndfiles.o pnd_apps.o pnd_utility.o pnd_desktop.o pnd_io_gpio.o pnd_io_ioctl.o pnd_io_evdev.o pnd_logger.o pnd_dbusnotify.o pnd_device.o
 
-all: ${SOLIB} ${LIB} conftest discotest notifytest pndnotifyd rawpxmltest pndvalidator loggertest dbusnotifytest pnd_run pndevmapperd pnd_info evtest mmenu mmwrapper
+all: ${SOLIB} ${LIB} conftest discotest evdevtest notifytest pndnotifyd rawpxmltest pndvalidator loggertest dbusnotifytest pnd_run pndevmapperd pnd_info evtest mmenu mmwrapper
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o bin/discotest dbusnotifytest.o bin/dbusnotifytest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o pnd_info.o bin/pnd_info bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/bin/pnd_info deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd testdata/menuicons/* evtest.o bin/evtest bin/mmenu bin/mmwrapper mmenu.o mmwrapper.o deployment/usr/bin/mmenu deployment/usr/bin/mmwrapper mmcache.o mmui.o mmcat.o
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o evdevtest.o bin/evdevtest bin/discotest dbusnotifytest.o bin/dbusnotifytest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o pnd_info.o bin/pnd_info bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/bin/pnd_info deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd testdata/menuicons/* evtest.o bin/evtest bin/mmenu bin/mmwrapper mmenu.o mmwrapper.o deployment/usr/bin/mmenu deployment/usr/bin/mmwrapper mmcache.o mmui.o mmcat.o
 	${RM} -rf deployment/media deployment/etc/pandora/mmenu
 	find . -name "*~*" -exec rm {} \; -print
 
@@ -113,6 +113,9 @@ conftest:	conftest.o ${LIB}
 
 discotest:	discotest.o ${LIB}
 	${CC} -lstdc++ -o bin/discotest discotest.o libpnd.a
+
+evdevtest:	evdevtest.o ${LIB}
+	${CC} -lstdc++ -o bin/evdevtest evdevtest.o -static libpnd.a
 
 notifytest:	notifytest.o ${LIB}
 	${CC} -lstdc++ -o bin/notifytest notifytest.o libpnd.a
