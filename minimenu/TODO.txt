@@ -14,15 +14,9 @@
 - deploy..
   - .desktop for deployment, for running from xfce
 
-- touchscreen
-  - launch apps
-  - pick/rotate category
-
-- honor render_mask to know what to update
-- figure out why deferred preview pics blow up
-- handle SD eject/insert
-
 - future
+  - honor render_mask to know what to update
+  - handle SD eject/insert? or leave on manual
   - defer icon load?
   - add callback to pnd_disco_Search (maybe new func to not break cpas code), so can show number apps found so far
   - note taking field

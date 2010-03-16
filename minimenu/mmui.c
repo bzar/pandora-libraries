@@ -293,6 +293,9 @@ void ui_render ( unsigned int render_mask ) {
   }
 #endif
 
+  // reset touchscreen regions
+  ui_register_reset();
+
   // ensure selection is visible
   if ( ui_selected ) {
 
@@ -323,7 +326,6 @@ void ui_render ( unsigned int render_mask ) {
     dest -> w = sdl_realscreen -> w;
     dest -> h = sdl_realscreen -> h;
     SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_800480 ].i, NULL /* whole image */, sdl_realscreen, dest /* 0,0 */ );
-    //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
     dest++;
   }
 
@@ -334,7 +336,6 @@ void ui_render ( unsigned int render_mask ) {
     dest -> w = sdl_realscreen -> w;
     dest -> h = sdl_realscreen -> h;
     SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_TABMASK ].i, NULL /* whole image */, sdl_realscreen, dest /* 0,0 */ );
-    //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
     dest++;
   }
 
@@ -371,7 +372,10 @@ void ui_render ( unsigned int render_mask ) {
       dest -> y = tab_offset_y;
       //pnd_log ( pndn_debug, "tab %u at %ux%u\n", col, dest.x, dest.y );
       SDL_BlitSurface ( s, &src, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+
+      // store touch info
+      ui_register_tab ( col, dest -> x, dest -> y, tab_width, tab_height );
+
       dest++;
 
       // draw text
@@ -401,7 +405,6 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_x", 450 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_y", 80 );
       SDL_BlitSurface ( g_imagecache [ IMG_ARROW_UP ].i, NULL /* whole image */, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
 
       show_bar = 1;
@@ -412,7 +415,6 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_x", 450 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_y", 80 );
       SDL_BlitSurface ( g_imagecache [ IMG_ARROW_DOWN ].i, NULL /* whole image */, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
 
       show_bar = 1;
@@ -427,7 +429,6 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_x", 450 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_y", 100 );
       SDL_BlitSurface ( g_imagecache [ IMG_ARROW_SCROLLBAR ].i, &src /* whole image */, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
     } // bar
 
@@ -444,7 +445,6 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
       SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
     }
 
@@ -453,7 +453,6 @@ void ui_render ( unsigned int render_mask ) {
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
       SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_PANEL ].i, NULL /* whole image */, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
     }
 
@@ -480,13 +479,11 @@ void ui_render ( unsigned int render_mask ) {
 	    dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x;
 	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y;
 	    SDL_BlitSurface ( g_imagecache [ IMG_SELECTED_ALPHAMASK ].i, NULL /* all */, sdl_realscreen, dest );
-	    //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
 	    dest++;
 	    // text
 	    dest -> x = grid_offset_x + ( col * cell_width ) + text_clip_x;
 	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + pnd_conf_get_as_int ( g_conf, "grid.text_hilite_offset_y" );
 	    SDL_BlitSurface ( g_imagecache [ IMG_SELECTED_HILITE ].i, NULL /* all */, sdl_realscreen, dest );
-	    //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
 	    dest++;
 	  } // selected?
 
@@ -510,7 +507,10 @@ void ui_render ( unsigned int render_mask ) {
 	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y;
 
 	    SDL_BlitSurface ( iconsurface, &src, sdl_realscreen, dest );
-	    //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+
+	    // store touch info
+	    ui_register_app ( appiter, dest -> x, dest -> y, src.w, src.h );
+
 	    dest++;
 
 	  }
@@ -663,7 +663,6 @@ void ui_render ( unsigned int render_mask ) {
 	( ( pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 50 ) - previewpic -> w ) / 2 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_offset_y", 50 );
       SDL_BlitSurface ( previewpic, NULL /* whole image */, sdl_realscreen, dest );
-      //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
     }
 
@@ -954,18 +953,19 @@ void ui_process_input ( unsigned char block_p ) {
       break;
 #endif
 
-#if 0 // mouse / touchscreen
+#if 1 // mouse / touchscreen
+#if 0
     case SDL_MOUSEBUTTONDOWN:
       if ( event.button.button == SDL_BUTTON_LEFT ) {
 	cb_pointer_press ( gc, event.button.x / g_scale, event.button.y / g_scale );
 	ui_event++;
       }
       break;
+#endif
 
     case SDL_MOUSEBUTTONUP:
       if ( event.button.button == SDL_BUTTON_LEFT ) {
-	cb_pointer_release ( gc, event.button.x / g_scale, event.button.y / g_scale );
-	retval |= STAT_pen;
+	ui_touch_act ( event.button.x, event.button.y );
 	ui_event++;
       }
       break;
@@ -1708,4 +1708,81 @@ unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p ) {
   }
 
   return ( 1 );
+}
+
+typedef struct {
+  SDL_Rect r;
+  int catnum;
+  mm_appref_t *ref;
+} ui_touch_t;
+#define MAXTOUCH 100
+ui_touch_t ui_touchrects [ MAXTOUCH ];
+unsigned char ui_touchrect_count = 0;
+
+void ui_register_reset ( void ) {
+  bzero ( ui_touchrects, sizeof(ui_touch_t)*MAXTOUCH );
+  ui_touchrect_count = 0;
+  return;
+}
+
+void ui_register_tab ( unsigned char catnum, unsigned int x, unsigned int y, unsigned int w, unsigned int h ) {
+
+  if ( ui_touchrect_count == MAXTOUCH ) {
+    return;
+  }
+
+  ui_touchrects [ ui_touchrect_count ].r.x = x;
+  ui_touchrects [ ui_touchrect_count ].r.y = y;
+  ui_touchrects [ ui_touchrect_count ].r.w = w;
+  ui_touchrects [ ui_touchrect_count ].r.h = h;
+  ui_touchrects [ ui_touchrect_count ].catnum = catnum;
+  ui_touchrect_count++;
+
+  return;
+}
+
+void ui_register_app ( mm_appref_t *app, unsigned int x, unsigned int y, unsigned int w, unsigned int h ) {
+
+  if ( ui_touchrect_count == MAXTOUCH ) {
+    return;
+  }
+
+  ui_touchrects [ ui_touchrect_count ].r.x = x;
+  ui_touchrects [ ui_touchrect_count ].r.y = y;
+  ui_touchrects [ ui_touchrect_count ].r.w = w;
+  ui_touchrects [ ui_touchrect_count ].r.h = h;
+  ui_touchrects [ ui_touchrect_count ].ref = app;
+  ui_touchrect_count++;
+
+  return;
+}
+
+void ui_touch_act ( unsigned int x, unsigned int y ) {
+
+  unsigned char i;
+  ui_touch_t *t;
+
+  for ( i = 0; i < ui_touchrect_count; i++ ) {
+    t = &(ui_touchrects [ i ]);
+
+    if ( x >= t -> r.x &&
+	 x <= t -> r.x + t -> r.w &&
+	 y >= t -> r.y &&
+	 y <= t -> r.y + t -> r.h
+       )
+    {
+
+      if ( t -> ref ) {
+	ui_selected = t -> ref;
+	ui_push_exec();
+      } else {
+	ui_category = t -> catnum;
+      }
+
+      break;
+    }
+
+  } // for
+
+  return;
 }

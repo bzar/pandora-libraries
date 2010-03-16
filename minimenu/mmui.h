@@ -87,8 +87,9 @@ unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p );
 
 // ui_render() can register tappable-areas which touchscreen code can then figure out if we made a hit
 void ui_register_reset ( void );
-void ui_register_tab ( mm_category_t *category, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
-void ui_register_app ( pnd_disco_t *app, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
+void ui_register_tab ( unsigned char catnum, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
+void ui_register_app ( mm_appref_t *app, unsigned int x, unsigned int y, unsigned int w, unsigned int h );
+void ui_touch_act ( unsigned int x, unsigned int y );
 
 // deferred preview timer
 void ui_set_selected ( mm_appref_t *r );
