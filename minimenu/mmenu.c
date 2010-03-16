@@ -296,15 +296,54 @@ void applications_scan ( void ) {
 
   // determine current app list, cache icons
   // - ignore overrides for now
-  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n",
-	    pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ) );
-  g_active_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ), NULL );
-  pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n",
-	    pnd_conf_get_as_char ( g_desktopconf, "menu.searchpath" ) );
-  pnd_box_handle menu_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "menu.searchpath" ), NULL );
 
-  pnd_box_append ( g_active_apps, menu_apps );
+  g_active_apps = 0;
+  pnd_box_handle merge_apps = 0;
 
+  // desktop apps?
+  if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.desktop_apps", 1 ) ) {
+    pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n",
+	      pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ) );
+    g_active_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "desktop.searchpath" ), NULL );
+  }
+
+  // menu apps?
+  if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.menu_apps", 1 ) ) {
+    pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n",
+	      pnd_conf_get_as_char ( g_desktopconf, "menu.searchpath" ) );
+    merge_apps = pnd_disco_search ( pnd_conf_get_as_char ( g_desktopconf, "menu.searchpath" ), NULL );
+  }
+
+  // merge lists
+  if ( merge_apps ) {
+    if ( g_active_apps ) {
+      // got menu apps, and got desktop apps, merge
+      pnd_box_append ( g_active_apps, merge_apps );
+    } else {
+      // got menu apps, had no desktop apps, so just assign
+      g_active_apps = merge_apps;
+    }
+  }
+
+  // aux apps?
+  char *aux_apps = NULL;
+  merge_apps = 0;
+  aux_apps = pnd_conf_get_as_char ( g_conf, "minimenu.aux_searchpath" );
+  if ( aux_apps && aux_apps [ 0 ] ) {
+    pnd_log ( pndn_debug, "Looking for pnd applications here: %s\n", aux_apps );
+    merge_apps = pnd_disco_search ( aux_apps, NULL );
+  }
+
+  // merge aux apps
+  if ( merge_apps ) {
+    if ( g_active_apps ) {
+      pnd_box_append ( g_active_apps, merge_apps );
+    } else {
+      g_active_apps = merge_apps;
+    }
+  }
+
+  // do it
   g_active_appcount = pnd_box_get_size ( g_active_apps );
 
   unsigned char maxwidth, maxheight;

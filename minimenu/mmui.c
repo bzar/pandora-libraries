@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <time.h>
+#include <unistd.h>
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_image.h"
@@ -627,6 +628,26 @@ void ui_render ( unsigned int render_mask ) {
       desty += src.h;
     }
 
+    // info hint
+    if ( ui_selected -> ref -> clockspeed && ui_selected -> ref -> info_filename ) {
+
+      sprintf ( buffer, "Documentation - hit Y" );
+
+      SDL_Surface *rtext;
+      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+      rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+      src.x = 0;
+      src.y = 0;
+      src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+      src.h = rtext -> h;
+      dest -> x = cell_offset_x;
+      dest -> y = desty;
+      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+      desty += src.h;
+    }
+
     // preview pic
     mm_cache_t *ic = cache_query_preview ( ui_selected -> ref -> unique_id );
     SDL_Surface *previewpic;
@@ -708,7 +729,7 @@ void ui_process_input ( unsigned char block_p ) {
   SDL_Event event;
 
   unsigned char ui_event = 0; // if we get a ui event, flip to 1 and break
-  static ui_sdl_button_e ui_mask = uisb_none; // current buttons down
+  //static ui_sdl_button_e ui_mask = uisb_none; // current buttons down
 
   while ( ! ui_event &&
 	  block_p ? SDL_WaitEvent ( &event ) : SDL_PollEvent ( &event ) )
@@ -859,6 +880,12 @@ void ui_process_input ( unsigned char block_p ) {
       } else if ( event.key.keysym.sym == SDLK_x || event.key.keysym.sym == SDLK_RCTRL ) {
 	ui_push_rtrigger();
 	ui_event++;
+      } else if ( event.key.keysym.sym == SDLK_y || event.key.keysym.sym == SDLK_PAGEUP ) {
+	// info
+	if ( ui_selected ) {
+	  ui_show_info ( pnd_run_script, ui_selected -> ref );
+	  ui_event++;
+	}
 
       } else if ( event.key.keysym.sym == SDLK_LALT ) { // start button
 	ui_push_exec();
@@ -1602,4 +1629,83 @@ unsigned char ui_determine_screen_col ( mm_appref_t *a ) {
   col %= pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
 
   return ( col );
+}
+
+unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p ) {
+  char *viewer, *searchpath;
+  pnd_conf_handle desktoph;
+
+  // viewer
+  searchpath = pnd_conf_query_searchpath();
+
+  desktoph = pnd_conf_fetch_by_id ( pnd_conf_desktop, searchpath );
+
+  if ( ! desktoph ) {
+    return ( 0 );
+  }
+
+  viewer = pnd_conf_get_as_char ( desktoph, "info.viewer" );
+
+  if ( ! viewer ) {
+    return ( 0 ); // no way to view the file
+  }
+
+  // etc
+  if ( ! p -> unique_id ) {
+    return ( 0 );
+  }
+
+  if ( ! p -> info_filename ) {
+    return ( 0 );
+  }
+
+  if ( ! p -> info_name ) {
+    return ( 0 );
+  }
+
+  if ( ! pndrun ) {
+    return ( 0 );
+  }
+
+  // exec line
+  char args [ 1001 ];
+  char *pargs = args;
+  if ( pnd_conf_get_as_char ( desktoph, "info.viewer_args" ) ) {
+    snprintf ( pargs, 1001, "%s %s",
+	       pnd_conf_get_as_char ( desktoph, "info.viewer_args" ), p -> info_filename );
+  } else {
+    pargs = NULL;
+  }
+
+  char pndfile [ 1024 ];
+  if ( p -> object_type == pnd_object_type_directory ) {
+    // for PXML-app-dir, pnd_run.sh doesn't want the PXML.xml.. it just wants the dir-name
+    strncpy ( pndfile, p -> object_path, 1000 );
+  } else if ( p -> object_type == pnd_object_type_pnd ) {
+    // pnd_run.sh wants the full path and filename for the .pnd file
+    snprintf ( pndfile, 1020, "%s/%s", p -> object_path, p -> object_filename );
+  }
+
+  if ( ! pnd_apps_exec ( pndrun, pndfile, p -> unique_id, viewer, p -> startdir, pargs,
+			 p -> clockspeed ? atoi ( p -> clockspeed ) : 0, PND_EXEC_OPTION_NORUN ) )
+  {
+    return ( 0 );
+  }
+
+  pnd_log ( pndn_debug, "Info Exec=%s\n", pnd_apps_exec_runline() );
+
+  // try running it
+  int x;
+  if ( ( x = fork() ) < 0 ) {
+    pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+    return ( 0 );
+  }
+
+  if ( x == 0 ) {
+    execl ( "/bin/sh", "/bin/sh", "-c", pnd_apps_exec_runline(), (char*)NULL );
+    pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", pnd_apps_exec_runline() );
+    return ( 0 );
+  }
+
+  return ( 1 );
 }
