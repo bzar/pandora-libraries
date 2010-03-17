@@ -781,21 +781,21 @@ void sigalrm_handler ( int n ) {
       pnd_log ( pndn_debug, "Battery is high again, flipping to non-blinker mode\n" );
       b_active = 0;
       set_next_alarm ( b_frequency, 0 );
-      pnd_device_set_led_power_brightness ( 250 );
+      pnd_device_set_led_charger_brightness ( 250 );
       return;
     }
 
     if ( b_active == 1 ) {
       // turn LED on
       pnd_log ( pndn_debug, "Blink on\n" );
-      pnd_device_set_led_power_brightness ( 200 );
+      pnd_device_set_led_charger_brightness ( 200 );
       // set timer to short duration
       b_active = 2;
       set_next_alarm ( 0, b_blinkdur );
     } else if ( b_active == 2 ) {
       // turn LED off
       pnd_log ( pndn_debug, "Blink off\n" );
-      pnd_device_set_led_power_brightness ( 10 );
+      pnd_device_set_led_charger_brightness ( 10 );
       // back to longer duration
       b_active = 1;
       set_next_alarm ( b_blinkfreq, 0 );

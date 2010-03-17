@@ -99,3 +99,11 @@ unsigned char pnd_device_set_led_power_brightness ( unsigned char v ) {
 
   return ( pnd_device_open_write_close ( PND_DEVICE_LED_POWER PND_DEVICE_LED_SUFFIX_BRIGHTNESS, buffer ) );
 }
+
+unsigned char pnd_device_set_led_charger_brightness ( unsigned char v ) {
+  char buffer [ 100 ];
+
+  sprintf ( buffer, "%u", v );
+
+  return ( pnd_device_open_write_close ( PND_DEVICE_LED_CHARGER PND_DEVICE_LED_SUFFIX_BRIGHTNESS, buffer ) );
+}

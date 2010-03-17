@@ -64,6 +64,7 @@ unsigned int pnd_device_get_backlight ( void );
 
 // set one or more LEDs on
 unsigned char pnd_device_set_led_power_brightness ( unsigned char v ); // 0-255
+unsigned char pnd_device_set_led_charger_brightness ( unsigned char v ); // 0-255
 
 // suspend/hibernate/etc
 
