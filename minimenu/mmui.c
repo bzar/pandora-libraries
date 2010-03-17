@@ -1068,6 +1068,10 @@ void ui_push_right ( unsigned char forcecoil ) {
 void ui_push_up ( void ) {
   unsigned char col_max = pnd_conf_get_as_int ( g_conf, MMENU_DISP_COLMAX );
 
+  if ( ! ui_selected ) {
+    return;
+  }
+
   // what row we in?
   unsigned int row = ui_determine_row ( ui_selected );
 
