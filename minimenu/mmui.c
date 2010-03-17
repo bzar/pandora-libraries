@@ -673,8 +673,14 @@ void ui_render ( unsigned int render_mask ) {
 
   // battery
   if ( 1 ) {
-    unsigned char batterylevel = pnd_device_get_battery_gauge_perc();
+    static last_battlevel = 0;
+    static unsigned char batterylevel = 0;
     char buffer [ 100 ];
+
+    if ( time ( NULL ) - last_battlevel > 60 ) {
+      batterylevel = pnd_device_get_battery_gauge_perc();
+      last_battlevel = time ( NULL );
+    }
 
     sprintf ( buffer, "Battery: %u%%", batterylevel );
 
