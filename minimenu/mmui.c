@@ -896,8 +896,8 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Shutdown Pandora",
 	  "Rescan for Applications",
 	  "Run xfce4 from Minimenu",
-	  "Set to full desktop and reboot",
-	  "Set to pmenu and reboot",
+	  "Exit and run xfce4",
+	  "Exit and run pmenu",
 	  "Quit (<- beware)",
 	  "About Minimenu"
 	};
@@ -928,14 +928,16 @@ void ui_process_input ( unsigned char block_p ) {
 	  // set env to xfce
 	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
 	  system ( buffer );
-	  sprintf ( buffer, "sudo poweroff" );
-	  system ( buffer );
+	  //sprintf ( buffer, "sudo poweroff" );
+	  //system ( buffer );
+	  exit ( 0 );
 	} else if ( sel == 5 ) {
 	  // set env to pmenu
 	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
 	  system ( buffer );
-	  sprintf ( buffer, "sudo poweroff" );
-	  system ( buffer );
+	  //sprintf ( buffer, "sudo poweroff" );
+	  //system ( buffer );
+	  exit ( 0 );
 	} else if ( sel == 6 ) {
 	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 7 ) {
