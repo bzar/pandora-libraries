@@ -20,7 +20,7 @@ minimum_separation	1	# 1 second minimum between a single event repeating
 [battery]
 # for LED-blinking when battery gets low
 threshold	   5		# in %age; at x%, we go into blink-mode as warning
-check_interval	   300		# in seconds to check threshold; should be a high 300s
+check_interval	   90		# in seconds to check threshold; should be a high 300s
 blink_interval	   2		# frequency of blink
 blink_duration	   50000	# how long a blink lasts, in uSecs
 shutdown_threshold 1		# battery %age we force a shutdown (to save the SD!)
