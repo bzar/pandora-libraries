@@ -10,6 +10,7 @@
 #include "SDL_ttf.h"
 #include "SDL_gfxPrimitives.h"
 #include "SDL_rotozoom.h"
+#include "SDL_thread.h"
 
 #include "pnd_conf.h"
 #include "pnd_logger.h"
@@ -29,6 +30,9 @@
  */
 SDL_Surface *sdl_realscreen = NULL;
 unsigned int sdl_ticks = 0;
+SDL_Thread *g_preview_thread = NULL;
+
+enum { sdl_user_ticker = 0, sdl_user_finishedpreview = 1 };
 
 /* app state
  */
@@ -745,22 +749,53 @@ void ui_process_input ( unsigned char block_p ) {
     case SDL_USEREVENT:
       // update something
 
-      if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
+      if ( event.user.code == sdl_user_ticker ) {
 
-	pnd_log ( pndn_debug, "Deferred preview pic load ----------\n" );
+	// timer went off, time to load something
+	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
 
-	// load the preview pics now!
-	pnd_disco_t *iter = ui_selected -> ref;
+	  pnd_log ( pndn_debug, "Deferred preview pic load ----------\n" );
 
-	if ( iter -> preview_pic1 &&
-	     ! cache_preview ( iter, pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 200 ), pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_height", 180 ) ) )
-	{
-	  pnd_log ( pndn_debug, "  Couldn't load preview pic: '%s' -> '%s'\n", IFNULL(iter->title_en,"No Name"), iter -> preview_pic1 );
+	  // load the preview pics now!
+	  pnd_disco_t *iter = ui_selected -> ref;
+
+	  if ( iter -> preview_pic1 ) {
+
+	    if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.threaded_preview", 0 ) ) {
+
+	      g_preview_thread = SDL_CreateThread ( (void*)ui_threaded_defered_preview, iter );
+
+	      if ( ! g_preview_thread ) {
+		pnd_log ( pndn_error, "ERROR: Couldn't create preview thread\n" );
+	      }
+
+	    } else {
+
+	      if ( ! cache_preview ( iter, pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 200 ),
+				     pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_height", 180 ) )
+		 )
+	      {
+		pnd_log ( pndn_debug, "  Couldn't load preview pic: '%s' -> '%s'\n",
+			  IFNULL(iter->title_en,"No Name"), iter -> preview_pic1 );
+	      }
+
+	    } // threaded?
+
+	  } // got a preview at all?
+
+	  pnd_log ( pndn_debug, "Deferred preview pic load finish ---\n" );
+
+	  ui_event++;
 	}
 
-	pnd_log ( pndn_debug, "Deferred preview pic load finish ---\n" );
+      } else if ( event.user.code == sdl_user_finishedpreview ) {
 
-	ui_event++;
+	// if we just finished the one we happen to be looking at, better redraw now; otherwise, if
+	// we finished another, no big woop
+	if ( ui_selected && event.user.data1 == ui_selected -> ref ) {
+	  ui_event++;
+	}
+
       }
 
       break;
@@ -1481,7 +1516,9 @@ unsigned int ui_callback_f ( unsigned int t ) {
   }
 
   SDL_Event e;
+  bzero ( &e, sizeof(SDL_Event) );
   e.type = SDL_USEREVENT;
+  e.user.code = sdl_user_ticker;
   SDL_PushEvent ( &e );
 
   return ( 0 );
@@ -1827,4 +1864,25 @@ unsigned char ui_forkexec ( char *argv[] ) {
 
   // parent, success
   return ( 1 );
+}
+
+unsigned char ui_threaded_defered_preview ( pnd_disco_t *p ) {
+
+  if ( ! cache_preview ( p, pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 200 ),
+			 pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_height", 180 ) )
+     )
+  {
+    pnd_log ( pndn_debug, "THREAD: Couldn't load preview pic: '%s' -> '%s'\n",
+	      IFNULL(p->title_en,"No Name"), p -> preview_pic1 );
+  }
+
+  // trigger that we completed
+  SDL_Event e;
+  bzero ( &e, sizeof(SDL_Event) );
+  e.type = SDL_USEREVENT;
+  e.user.code = sdl_user_finishedpreview;
+  e.user.data1 = p;
+  SDL_PushEvent ( &e );
+
+  return ( 0 );
 }

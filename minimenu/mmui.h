@@ -65,14 +65,17 @@ void ui_loadscreen ( void );        // show screen while loading the menu
 void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while scanning for apps
 void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while caching icons, categories and preview-pics-Now-mode
 
+/* internal functions follow
+ */
+
 // show a menu, return when selection made; -1 means no selection. Enter is pick.
 int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *footer );
 
 // run a forked app (ie: not wait for it to return)
 unsigned char ui_forkexec ( char *argv[] ); // argv[0] is proggy to exec; argv last entry must be NULLptr
 
-/* internal functions follow
- */
+// create a thread of this guy, and it'll try to load the preview pic in background and then signal the app
+unsigned char ui_threaded_defered_preview ( pnd_disco_t *p );
 
 // change the focus
 void ui_process_input ( unsigned char block_p );
