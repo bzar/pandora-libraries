@@ -68,6 +68,9 @@ void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while cach
 // show a menu, return when selection made; -1 means no selection. Enter is pick.
 int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *footer );
 
+// run a forked app (ie: not wait for it to return)
+unsigned char ui_forkexec ( char *argv[] ); // argv[0] is proggy to exec; argv last entry must be NULLptr
+
 /* internal functions follow
  */
 

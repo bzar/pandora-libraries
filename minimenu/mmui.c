@@ -673,7 +673,7 @@ void ui_render ( unsigned int render_mask ) {
 
   // battery
   if ( 1 ) {
-    static last_battlevel = 0;
+    static int last_battlevel = 0;
     static unsigned char batterylevel = 0;
     char buffer [ 100 ];
 
@@ -902,12 +902,13 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Shutdown Pandora",
 	  "Rescan for Applications",
 	  "Run xfce4 from Minimenu",
+	  "Run a terminal/console",
 	  "Exit and run xfce4",
 	  "Exit and run pmenu",
 	  "Quit (<- beware)",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 8, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 9, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
@@ -931,22 +932,32 @@ void ui_process_input ( unsigned char block_p ) {
 	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/bin/startxfce4" );
 	  emit_and_quit ( buffer );
 	} else if ( sel == 4 ) {
+	  // run terminal
+	  char *argv[5];
+	  argv [ 0 ] = pnd_conf_get_as_char ( g_conf, "utility.terminal" );
+	  argv [ 1 ] = NULL;
+
+	  if ( argv [ 0 ] ) {
+	    ui_forkexec ( argv );
+	  }
+
+	} else if ( sel == 5 ) {
 	  // set env to xfce
 	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
 	  system ( buffer );
 	  //sprintf ( buffer, "sudo poweroff" );
 	  //system ( buffer );
 	  exit ( 0 );
-	} else if ( sel == 5 ) {
+	} else if ( sel == 6 ) {
 	  // set env to pmenu
 	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
 	  system ( buffer );
 	  //sprintf ( buffer, "sudo poweroff" );
 	  //system ( buffer );
 	  exit ( 0 );
-	} else if ( sel == 6 ) {
-	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 7 ) {
+	  emit_and_quit ( MM_QUIT );
+	} else if ( sel == 8 ) {
 	  // about
 	}
 
@@ -1797,4 +1808,23 @@ void ui_touch_act ( unsigned int x, unsigned int y ) {
   } // for
 
   return;
+}
+
+unsigned char ui_forkexec ( char *argv[] ) {
+  char *fooby = argv[0];
+  int x;
+
+  if ( ( x = fork() ) < 0 ) {
+    pnd_log ( pndn_error, "ERROR: Couldn't fork() for '%s'\n", fooby );
+    return ( 0 );
+  }
+
+  if ( x == 0 ) { // child
+    execv ( fooby, argv );
+    pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", fooby );
+    return ( 0 );
+  }
+
+  // parent, success
+  return ( 1 );
 }
