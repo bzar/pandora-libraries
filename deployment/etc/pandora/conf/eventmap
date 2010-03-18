@@ -6,6 +6,8 @@
 # pass 'hold duration' to the script
 pandora /usr/pandora/scripts/op_menu.sh
 power	/usr/pandora/scripts/op_power.sh
+lcdbrightdown	/usr/pandora/scripts/op_bright_down.sh
+lcdbrightup	/usr/pandora/scripts/op_bright_up.sh
 
 [events]
 # pass 'action code' to the script

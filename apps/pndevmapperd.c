@@ -61,6 +61,20 @@ keycode_t keycodes[] = {
   { KEY_A, "a" },
   { KEY_MENU, "pandora" },
   { KEY_POWER, "power" },
+  { KEY_DELETE, "del" },
+  { KEY_COMMA, "comma" },
+  { KEY_1, "1" },
+  { KEY_2, "2" },
+  { KEY_3, "3" },
+  { KEY_4, "4" },
+  { KEY_5, "5" },
+  { KEY_6, "6" },
+  { KEY_7, "7" },
+  { KEY_8, "8" },
+  { KEY_9, "9" },
+  { KEY_0, "0" },
+  { KEY_BRIGHTNESSDOWN, "lcdbrightdown" },
+  { KEY_BRIGHTNESSUP, "lcdbrightup" },
   { -1, NULL }
 };
 
