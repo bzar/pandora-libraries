@@ -553,10 +553,14 @@ int main ( int argc, char *argv[] ) {
 
 	// if we do, hand it off to dispatcher to look up if we actually do something with it
 	if ( p -> keycode != -1 ) {
-	  pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
+	  if ( logall >= 0 ) {
+	    pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
+	  }
 	  dispatch_key ( p -> keycode, ev [ i ].value );
 	} else {
-	  pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	  if ( logall >= 0 ) {
+	    pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	  }
 	}
 
       } else if ( ev[i].type == EV_SW ) {
@@ -572,10 +576,14 @@ int main ( int argc, char *argv[] ) {
 
 	// if we do, hand it off to dispatcher to look up if we actually do something with it
 	if ( p -> code != -1 ) {
-	  pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
+	  if ( logall >= 0 ) {
+	    pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
+	  }
 	  dispatch_event ( p -> code, ev [ i ].value );
 	} else {
-	  pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	  if ( logall >= 0 ) {
+	    pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	  }
 	}
 
       } else {
