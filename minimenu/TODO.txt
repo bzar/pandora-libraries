@@ -5,7 +5,6 @@
 
 - libpnd: appdata-dir-name?
 
-- mmwrapper black screen?
 - About screen
 - override
   - .desktop in same place as .pnd, override category

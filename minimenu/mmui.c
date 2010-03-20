@@ -181,6 +181,9 @@ mm_imgcache_t g_imagecache [ IMG_TRUEMAX ] = {
   { IMG_SELECTED_ALPHAMASK,   "graphics.IMG_SELECTED_ALPHAMASK" },
   { IMG_TAB_SEL,              "graphics.IMG_TAB_SEL" },
   { IMG_TAB_UNSEL,            "graphics.IMG_TAB_UNSEL" },
+  { IMG_TAB_LINE,             "graphics.IMG_TAB_LINE" },
+  { IMG_TAB_LINEL,            "graphics.IMG_TAB_LINEL" },
+  { IMG_TAB_LINER,            "graphics.IMG_TAB_LINER" },
   { IMG_ICON_MISSING,         "graphics.IMG_ICON_MISSING" },
   { IMG_SELECTED_HILITE,      "graphics.IMG_SELECTED_HILITE" },
   { IMG_PREVIEW_MISSING,      "graphics.IMG_PREVIEW_MISSING" },
@@ -347,16 +350,16 @@ void ui_render ( unsigned int render_mask ) {
   if ( g_imagecache [ IMG_TAB_SEL ].i && g_imagecache [ IMG_TAB_UNSEL ].i ) {
     unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
     unsigned int tab_height = pnd_conf_get_as_int ( g_conf, "tabs.tab_height" );
+    unsigned int tab_selheight = pnd_conf_get_as_int ( g_conf, "tabs.tab_selheight" );
     unsigned int tab_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_x" );
     unsigned int tab_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_y" );
     unsigned int text_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_x" );
     unsigned int text_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_y" );
     unsigned int text_width = pnd_conf_get_as_int ( g_conf, "tabs.text_width" );
+    unsigned int maxtab = ( screen_width / tab_width ) < g_categorycount ? ( screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift;
 
     for ( col = ui_catshift;
-	  col < ( 
-		   ( screen_width / tab_width ) < g_categorycount ? ( screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift
-		);
+	  col < maxtab;
 	  col++ )
     {
 
@@ -371,7 +374,11 @@ void ui_render ( unsigned int render_mask ) {
       src.x = 0;
       src.y = 0;
       src.w = tab_width;
-      src.h = tab_height;
+      if ( col == ui_category ) {
+	src.h = tab_selheight;
+      } else {
+	src.h = tab_height;
+      }
       dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
       dest -> y = tab_offset_y;
       //pnd_log ( pndn_debug, "tab %u at %ux%u\n", col, dest.x, dest.y );
@@ -381,6 +388,27 @@ void ui_render ( unsigned int render_mask ) {
       ui_register_tab ( col, dest -> x, dest -> y, tab_width, tab_height );
 
       dest++;
+
+      // draw tab line
+      if ( col == ui_category ) {
+	// no line for selected tab
+	printf ( "skipselevting L\n" );
+      } else {
+	if ( col - ui_catshift == 0 ) {
+	  s = g_imagecache [ IMG_TAB_LINEL ].i;
+	  printf ( "selevting L\n" );
+	} else if ( col - ui_catshift == maxtab - 1 ) {
+	  s = g_imagecache [ IMG_TAB_LINER ].i;
+	  printf ( "selevting R\n" );
+	} else {
+	  s = g_imagecache [ IMG_TAB_LINE ].i;
+	  printf ( "selevting M\n" );
+	}
+	dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
+	dest -> y = tab_offset_y + tab_height;
+	SDL_BlitSurface ( s, NULL /* whole image */, sdl_realscreen, dest );
+	dest++;
+      }
 
       // draw text
       SDL_Surface *rtext;
@@ -1400,6 +1428,7 @@ void ui_cachescreen ( unsigned char clearscreen, char *filename ) {
 
   SDL_Rect rects [ 4 ];
   SDL_Rect *dest = rects;
+  SDL_Rect src;
   bzero ( dest, sizeof(SDL_Rect)* 4 );
 
   unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
@@ -1423,19 +1452,30 @@ void ui_cachescreen ( unsigned char clearscreen, char *filename ) {
       dest++;
     }
 
-  }
+  } else {
+
+    // render background
+    if ( g_imagecache [ IMG_BACKGROUND_800480 ].i ) {
+      src.x = 0;
+      src.y = 0;
+      src.w = sdl_realscreen -> w;
+      src.h = 100;
+      dest -> x = 0;
+      dest -> y = 0;
+      dest -> w = sdl_realscreen -> w;
+      dest -> h = sdl_realscreen -> h;
+      SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_800480 ].i, &src, sdl_realscreen, dest );
+      dest++;
+    }
+
+  } // clear it
 
   // render text
   SDL_Surface *rtext;
   SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
   rtext = TTF_RenderText_Blended ( g_big_font, "Caching applications artwork...", tmpfontcolor );
-  if ( clearscreen ) {
-    dest -> x = 20;
-    dest -> y = 20;
-  } else {
-    dest -> x = 20;
-    dest -> y = 40;
-  }
+  dest -> x = 20;
+  dest -> y = 20;
   SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
   SDL_FreeSurface ( rtext );
   dest++;

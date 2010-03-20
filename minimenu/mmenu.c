@@ -355,11 +355,15 @@ void applications_scan ( void ) {
 
   pnd_log ( pndn_debug, "Found pnd applications, and caching icons:\n" );
   pnd_disco_t *iter = pnd_box_get_head ( g_active_apps );
+  unsigned int itercount = 0;
   while ( iter ) {
     //pnd_log ( pndn_debug, "  App: '%s'\n", IFNULL(iter->title_en,"No Name") );
 
     // update cachescreen
-    ui_cachescreen ( 1 /* clear screen */, IFNULL(iter->title_en,"No Name") );
+    // ... every 5 filenames, just to avoid slowing it too much
+    if ( itercount % 5 == 0 ) {
+      ui_cachescreen ( 0 /* clear screen */, IFNULL(iter->title_en,"No Name") );
+    }
 
     // cache the icon
     if ( iter -> pnd_icon_pos &&
@@ -433,6 +437,7 @@ void applications_scan ( void ) {
 
     // next
     iter = pnd_box_get_next ( iter );
+    itercount++;
   } // while
 
   // dump categories
