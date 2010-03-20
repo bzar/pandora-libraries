@@ -67,6 +67,7 @@ void ui_render ( unsigned int render_mask );
 void ui_loadscreen ( void );        // show screen while loading the menu
 void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while scanning for apps
 void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while caching icons, categories and preview-pics-Now-mode
+void ui_post_scan ( void );
 
 /* internal functions follow
  */
@@ -79,6 +80,7 @@ unsigned char ui_forkexec ( char *argv[] ); // argv[0] is proggy to exec; argv l
 
 // create a thread of this guy, and it'll try to load the preview pic in background and then signal the app
 unsigned char ui_threaded_defered_preview ( pnd_disco_t *p );
+unsigned char ui_threaded_defered_icon ( void * );
 
 // change the focus
 void ui_process_input ( unsigned char block_p );

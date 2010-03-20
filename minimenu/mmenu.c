@@ -50,7 +50,7 @@
 #include "mmcat.h"
 #include "mmui.h"
 
-pnd_box_handle *g_active_apps = NULL;
+pnd_box_handle g_active_apps = NULL;
 unsigned int g_active_appcount = 0;
 char g_username [ 128 ]; // since we have to wait for login (!!), store username here
 pnd_conf_handle g_conf = 0;
@@ -365,11 +365,13 @@ void applications_scan ( void ) {
       ui_cachescreen ( 0 /* clear screen */, IFNULL(iter->title_en,"No Name") );
     }
 
-    // cache the icon
-    if ( iter -> pnd_icon_pos &&
-	 ! cache_icon ( iter, maxwidth, maxheight ) )
-    {
-      pnd_log ( pndn_warning, "  Couldn't load icon: '%s'\n", IFNULL(iter->title_en,"No Name") );
+    // cache the icon, unless deferred
+    if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_icons_later", 0 ) == 0 ) {
+      if ( iter -> pnd_icon_pos &&
+	   ! cache_icon ( iter, maxwidth, maxheight ) )
+      {
+	pnd_log ( pndn_warning, "  Couldn't load icon: '%s'\n", IFNULL(iter->title_en,"No Name") );
+      }
     }
 
     // cache the preview --> SHOULD DEFER
@@ -442,6 +444,9 @@ void applications_scan ( void ) {
 
   // dump categories
   //category_dump();
+
+  // let deferred icon cache go now
+  ui_post_scan();
 
   return;
 }

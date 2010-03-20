@@ -32,7 +32,10 @@ SDL_Surface *sdl_realscreen = NULL;
 unsigned int sdl_ticks = 0;
 SDL_Thread *g_preview_thread = NULL;
 
-enum { sdl_user_ticker = 0, sdl_user_finishedpreview = 1 };
+enum { sdl_user_ticker = 0,
+       sdl_user_finishedpreview = 1,
+       sdl_user_finishedicon = 2,
+};
 
 /* app state
  */
@@ -392,17 +395,13 @@ void ui_render ( unsigned int render_mask ) {
       // draw tab line
       if ( col == ui_category ) {
 	// no line for selected tab
-	printf ( "skipselevting L\n" );
       } else {
 	if ( col - ui_catshift == 0 ) {
 	  s = g_imagecache [ IMG_TAB_LINEL ].i;
-	  printf ( "selevting L\n" );
 	} else if ( col - ui_catshift == maxtab - 1 ) {
 	  s = g_imagecache [ IMG_TAB_LINER ].i;
-	  printf ( "selevting R\n" );
 	} else {
 	  s = g_imagecache [ IMG_TAB_LINE ].i;
-	  printf ( "selevting M\n" );
 	}
 	dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
 	dest -> y = tab_offset_y + tab_height;
@@ -823,6 +822,10 @@ void ui_process_input ( unsigned char block_p ) {
 	if ( ui_selected && event.user.data1 == ui_selected -> ref ) {
 	  ui_event++;
 	}
+
+      } else if ( event.user.code == sdl_user_finishedicon ) {
+	// redraw, so we can show the newly loaded icon
+	ui_event++;
 
       }
 
@@ -1923,6 +1926,61 @@ unsigned char ui_threaded_defered_preview ( pnd_disco_t *p ) {
   e.user.code = sdl_user_finishedpreview;
   e.user.data1 = p;
   SDL_PushEvent ( &e );
+
+  return ( 0 );
+}
+
+SDL_Thread *g_icon_thread = NULL;
+void ui_post_scan ( void ) {
+
+  // if deferred icon load, kick off the thread now
+  if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_icons_later", 0 ) == 1 ) {
+
+    g_icon_thread = SDL_CreateThread ( (void*)ui_threaded_defered_icon, NULL );
+
+    if ( ! g_icon_thread ) {
+      pnd_log ( pndn_error, "ERROR: Couldn't create icon thread\n" );
+    }
+
+  } // deferred icon load
+
+  return;
+}
+
+unsigned char ui_threaded_defered_icon ( void *p ) {
+  extern pnd_box_handle g_active_apps;
+  pnd_box_handle h = g_active_apps;
+
+  unsigned char maxwidth, maxheight;
+  maxwidth = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_WIDTH, 50 );
+  maxheight = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_HEIGHT, 50 );
+
+  pnd_disco_t *iter = pnd_box_get_head ( h );
+
+  while ( iter ) {
+
+    // cache it
+    if ( iter -> pnd_icon_pos &&
+	 ! cache_icon ( iter, maxwidth, maxheight ) )
+    {
+      pnd_log ( pndn_warning, "  Couldn't load icon: '%s'\n", IFNULL(iter->title_en,"No Name") );
+    } else {
+
+      // trigger that we completed
+      SDL_Event e;
+      bzero ( &e, sizeof(SDL_Event) );
+      e.type = SDL_USEREVENT;
+      e.user.code = sdl_user_finishedicon;
+      SDL_PushEvent ( &e );
+
+      //pnd_log ( pndn_warning, "  Finished deferred load icon: '%s'\n", IFNULL(iter->title_en,"No Name") );
+      usleep ( pnd_conf_get_as_int_d ( g_conf, "minimenu.defer_icon_us", 50000 ) );
+
+    }
+
+    // next
+    iter = pnd_box_get_next ( iter );
+  } // while
 
   return ( 0 );
 }
