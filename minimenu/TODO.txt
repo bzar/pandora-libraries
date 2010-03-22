@@ -6,9 +6,6 @@
 - libpnd: appdata-dir-name?
 
 - About screen and shoutouts // konami code?
-- override
-  - .desktop in same place as .pnd, override category
-  - icon
 
 - deploy..
   - .desktop for deployment, for running from xfce

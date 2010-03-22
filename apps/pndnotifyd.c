@@ -28,6 +28,7 @@
 #include "pnd_desktop.h"
 #include "pnd_logger.h"
 #include "pnd_dbusnotify.h"
+#include "pnd_pndfiles.h"
 
 // this piece of code was simpler once; but need to grow it a bit and in a rush
 // moving all these to globals rather than refactor the code a bit; tsk tsk..
@@ -693,17 +694,37 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
 
       pnd_log ( pndn_debug, "  Icon not already present, so trying to write it! %s\n", existingpath );
 
+      // handle same-path icon override for davec :)
+      char ovrfile [ PATH_MAX ];
+      char *fixpxml;
+      sprintf ( ovrfile, "%s/%s", d -> object_path, d -> object_filename );
+      fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
+      if ( fixpxml ) {
+	strcpy ( fixpxml, ".png" );
+	fixpxml = NULL;
+	struct stat statbuf;
+	if ( stat ( ovrfile, &statbuf ) == 0 ) {
+	  d -> icon = strdup ( ovrfile );
+	  fixpxml = ovrfile; // !NULL will be the trigger to skip emittinf desktop from .pnd
+	} // stat
+      } // ovr?
+
       // attempt to create icon files; if successful, alter the disco struct to contain new
       // path, otherwise leave it alone (since it could be a generic icon reference..)
-      if ( pnd_emit_icon ( emiticonpath, d ) ) {
-	// success; fix up icon path to new one..
-	if ( d -> icon ) {
-	  free ( d -> icon );
+      if ( fixpxml == NULL ) {
+	// don't have an same-path override icon, so go fetch something from pnd file
+
+	if ( pnd_emit_icon ( emiticonpath, d ) ) {
+	  // success; fix up icon path to new one..
+	  if ( d -> icon ) {
+	    free ( d -> icon );
+	  }
+	  d -> icon = strdup ( existingpath );
+	} else {
+	  pnd_log ( pndn_debug, "  WARN: Couldn't write out icon %s\n", existingpath );
 	}
-	d -> icon = strdup ( existingpath );
-      } else {
-	pnd_log ( pndn_debug, "  WARN: Couldn't write out icon %s\n", existingpath );
-      }
+
+      } // got ovr icon already?
 
     } // icon already exists?
 

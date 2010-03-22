@@ -2,6 +2,9 @@
 #include <stdio.h> /* for FILE etc */
 #include <stdlib.h> /* for malloc */
 #include <unistd.h> /* for unlink */
+#include <limits.h> /* for PATH_MAX */
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define __USE_GNU /* for strcasestr */
 #include <string.h> /* for making ftw.h happy */
@@ -17,6 +20,7 @@
 #include "pnd_apps.h"
 #include "pnd_pndfiles.h"
 #include "pnd_logger.h"
+#include "pnd_conf.h"
 
 // need these 'globals' due to the way nftw and ftw work :/
 static pnd_box_handle disco_box;
@@ -165,6 +169,10 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     return ( 0 ); // continue tree walk
   }
 
+  // for ovr-file
+  char ovrfile [ PATH_MAX ];
+  pnd_box_handle ovrh = 0; // 0 didn't try, -1 tried and failed, >0 tried and got
+
   // iterate across apps in the PXML
   pxmlappiter = pxmlapps;
   while ( 1 ) {
@@ -173,11 +181,6 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
     if ( ! pxmlh ) {
       break; // all done
-    }
-
-    // look for any overrides, if requested
-    if ( disco_overrides ) {
-      pnd_pxml_merge_override ( pxmlh, disco_overrides );
     }
 
     // check for validity and add to resultset if it looks executable
@@ -281,6 +284,77 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	p -> info_type = strdup ( pnd_pxml_get_info_type ( pxmlh ) );
       }
 
+      // look for any PXML overrides, if requested
+      if ( disco_overrides ) {
+	pnd_pxml_merge_override ( pxmlh, disco_overrides );
+      }
+
+      // handle ovr overrides
+      // try to load a same-path-as-pnd override file
+      if ( ovrh == 0 ) {
+	sprintf ( ovrfile, "%s/%s", p -> object_path, p -> object_filename );
+	fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
+	if ( fixpxml ) {
+	  strcpy ( fixpxml, PXML_SAMEPATH_OVERRIDE_FILEEXT );
+	  struct stat statbuf;
+	  if ( stat ( ovrfile, &statbuf ) == 0 ) {
+	    ovrh = pnd_conf_fetch_by_path ( ovrfile );
+
+	    if ( ! ovrh ) {
+	      // couldn't pull conf out of file, so don't try again
+	      ovrh = (void*)(-1);
+	    }
+
+	  } else {
+	    ovrh = (void*)(-1); // not found, don't try again
+	  } // stat
+	} // can find .pnd
+      } // tried ovr yet?
+
+      // is ovr file open?
+      if ( ovrh != 0 && ovrh != (void*)(-1) ) {
+	// pull in appropriate values
+	char key [ 100 ];
+	char *v;
+
+	// title
+	snprintf ( key, 100, "Application-%u.title", p -> subapp_number );
+	pnd_log ( PND_LOG_DEFAULT, "find key %s\n", key );
+	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+	  pnd_log ( PND_LOG_DEFAULT, "   find key %s\n", key );
+	  if ( p -> title_en ) {
+	    free ( p -> title_en );
+	  }
+	  p -> title_en = strdup ( v );
+	}
+
+	// clockspeed
+	snprintf ( key, 100, "Application-%u.clockspeed", p -> subapp_number );
+	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+	  if ( p -> clockspeed ) {
+	    free ( p -> clockspeed );
+	  }
+	  p -> clockspeed = strdup ( v );
+	}
+
+	// categories
+	snprintf ( key, 100, "Application-%u.maincategory", p -> subapp_number );
+	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+	  if ( p -> main_category ) {
+	    free ( p -> main_category );
+	  }
+	  p -> main_category = strdup ( v );
+	}
+	snprintf ( key, 100, "Application-%u.maincategorysub1", p -> subapp_number );
+	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+	  if ( p -> main_category1 ) {
+	    free ( p -> main_category1 );
+	  }
+	  p -> main_category1 = strdup ( v );
+	}
+
+      } // got ovr conf loaded?
+
     } else {
       //printf ( "Invalid PXML; skipping.\n" );
     }
@@ -289,6 +363,11 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     pnd_pxml_delete ( pxmlh );
 
   } // while pxmlh is good
+
+  // free up ovr
+  if ( ovrh != 0 && ovrh != (void*)(-1) ) {
+    pnd_box_delete ( ovrh );
+  }
 
   // free up the applist
   free ( pxmlapps );

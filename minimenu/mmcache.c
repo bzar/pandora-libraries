@@ -1,9 +1,24 @@
 
+#include <stdio.h> /* for FILE etc */
+#include <stdlib.h> /* for malloc */
+#include <unistd.h> /* for unlink */
+#include <limits.h> /* for PATH_MAX */
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#define __USE_GNU /* for strcasestr */
+#include <string.h> /* for making ftw.h happy */
+
+#include <fcntl.h>
 #include <limits.h>
 
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_rotozoom.h"
+
+#define __USE_GNU /* for strcasestr */
+#include <unistd.h> /* for unlink */
+#include <string.h> /* for making ftw.h happy */
 
 #include "pnd_pxml.h"
 #include "pnd_utility.h"
@@ -118,11 +133,37 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
 
   // not cached, load it up
   //
-
-  // pull icon into buffer
+  unsigned char *iconbuf = NULL;
   unsigned int buflen = 0;
-  unsigned char *iconbuf;
-  iconbuf = pnd_emit_icon_to_buffer ( app, &buflen );
+
+  // same-path override?
+  char ovrfile [ PATH_MAX ];
+  char *fixpxml;
+  sprintf ( ovrfile, "%s/%s", app -> object_path, app -> object_filename );
+  fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
+  if ( fixpxml ) {
+    strcpy ( fixpxml, ".png" );
+    struct stat statbuf;
+    if ( stat ( ovrfile, &statbuf ) == 0 ) {
+      buflen = statbuf.st_size;
+      if ( ( iconbuf = malloc ( statbuf.st_size ) ) ) {
+	int fd = open ( ovrfile, O_RDONLY );
+	if ( fd >= 0 ) {
+	  if ( read ( fd, iconbuf, statbuf.st_size ) != statbuf.st_size ) {
+	    free ( iconbuf );
+	    close ( fd );
+	    return ( 0 );
+	  }
+	  close ( fd );
+	} // open
+      } // malloc
+    } // stat
+  } // ovr?
+
+  // pull icon into buffer from .pnd
+  if ( ! iconbuf ) {
+    iconbuf = pnd_emit_icon_to_buffer ( app, &buflen );
+  }
 
   if ( ! iconbuf ) {
     return ( 0 );

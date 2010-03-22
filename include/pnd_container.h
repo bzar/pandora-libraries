@@ -41,6 +41,7 @@ void *pnd_box_allocinsert ( pnd_box_handle box, char *key, unsigned int size );
 
 /* find_by_key() will attempt to locate a payload based on the specified key.
  * Returns the payload pointer or NULL if not found.
+ * CASE INSENSITIVE.
  */
 void *pnd_box_find_by_key ( pnd_box_handle box, char *key );
 

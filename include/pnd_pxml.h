@@ -14,6 +14,9 @@ extern "C" {
 
 #define PXML_MAXAPPS 20 /* max number of <application>'s within a single PXML */
 
+// for DaveC, we will support same-path-as-.pnd file override, that is simple format and not XML
+#define PXML_SAMEPATH_OVERRIDE_FILEEXT ".ovr" /* ./foo/bar.pnd could have overrides in ./foo/bar.ovr */
+
 // use this handle to interact with PXML; this hides the mechanics of parsing a PXML file so that
 // it can be upgraded with impacting applications
 typedef void* pnd_pxml_handle;

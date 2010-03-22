@@ -115,7 +115,7 @@ void *pnd_box_find_by_key ( pnd_box_handle box, char *key ) {
 
   while ( n ) {
 
-    if ( strcmp ( n -> key, key ) == 0 ) {
+    if ( strcasecmp ( n -> key, key ) == 0 ) {
       return ( NODE2PAYLOAD(n) );
     }
 
