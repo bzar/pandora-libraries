@@ -24,4 +24,14 @@ mm_category_t *category_query ( char *catname );
 void category_dump ( void ); // sort the apprefs
 void category_freeall ( void );
 
+// category mapping hack
+typedef struct {
+  mm_category_t *target;  // mapping a category _to_ this other category
+  char *from;             // from this category
+} mm_catmap_t;
+
+unsigned char category_map_setup ( void ); // set up the mappings
+mm_category_t *category_map_query ( char *cat );
+unsigned char category_meta_push ( char *catname, pnd_disco_t *app );
+
 #endif

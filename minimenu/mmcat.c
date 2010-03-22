@@ -8,6 +8,7 @@
 #include "pnd_pxml.h"
 #include "pnd_container.h"
 #include "pnd_discovery.h"
+#include "../lib/pnd_pathiter.h"
 
 #include "mmenu.h"
 #include "mmcache.h"
@@ -15,6 +16,11 @@
 
 mm_category_t g_categories [ MAX_CATS ];
 unsigned char g_categorycount = 0;
+
+mm_catmap_t g_catmaps [ MAX_CATS ];
+unsigned char g_catmapcount = 0;
+
+extern pnd_conf_handle g_conf;
 
 unsigned char category_push ( char *catname, pnd_disco_t *app ) {
   mm_category_t *c;
@@ -37,6 +43,10 @@ unsigned char category_push ( char *catname, pnd_disco_t *app ) {
     g_categories [ g_categorycount ].refs = NULL;
     c = &(g_categories [ g_categorycount ]);
     g_categorycount++;
+  }
+
+  if ( ! app ) {
+    return ( 1 ); // create cat, but skip app
   }
 
   // alloc and populate appref
@@ -156,4 +166,80 @@ void category_freeall ( void ) {
   g_categorycount = 0;
 
   return;
+}
+
+unsigned char category_map_setup ( void ) {
+
+  char *searchpath = pnd_box_get_head ( g_conf );
+
+  if ( ! searchpath ) {
+    return ( 0 );
+  }
+
+  // look through conf for useful keys
+  while ( searchpath ) {
+    char *k = pnd_box_get_key ( searchpath );
+
+    // does this key look like a category mapping key?
+    if ( strncasecmp ( k, "categories.@", 12 ) == 0 ) {
+      k += 12;
+
+      // iterate across 'words' in v, assigning catmaps to them
+      SEARCHCHUNK_PRE
+      {
+	//pnd_log ( pndn_debug, "target(%s) from(%s)\n", k, buffer );
+
+	category_push ( k, NULL );
+	g_catmaps [ g_catmapcount ].target = category_query ( k );
+	g_catmaps [ g_catmapcount ].from = strdup ( buffer );
+	g_catmapcount++;
+
+      }
+      SEARCHCHUNK_POST
+
+    } // if key looks like catmap
+
+    searchpath = pnd_box_get_next ( searchpath );
+  } // while each conf key
+
+  return ( 1 );
+}
+
+mm_category_t *category_map_query ( char *cat ) {
+  unsigned char i;
+
+  for ( i = 0; i < g_catmapcount; i++ ) {
+    if ( strcasecmp ( g_catmaps [ i ].from, cat ) == 0 ) {
+      return ( g_catmaps [ i ].target );
+    }
+  }
+
+  return ( NULL );
+}
+
+unsigned char category_meta_push ( char *catname, pnd_disco_t *app ) {
+  mm_category_t *cat;
+
+  // do we honour cat mapping at all?
+  if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_on", 0 ) ) {
+
+    // is this guy mapped?
+    cat = category_map_query ( catname );
+
+    if ( cat ) {
+      return ( category_push ( cat -> catname, app ) );
+    }
+
+    // not mapped.. but default?
+    if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_default_on", 0 ) ) {
+      char *def = pnd_conf_get_as_char ( g_conf, "categories.map_default_cat" );
+      if ( def ) {
+	return ( category_push ( def, app ) );
+      }
+    }
+
+  } // cat map is desired?
+
+  // not default, just do it
+  return ( category_push ( catname, app ) );
 }
