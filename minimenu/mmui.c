@@ -281,6 +281,7 @@ void ui_render ( unsigned int render_mask ) {
   unsigned int icon_offset_x = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_x" );
   unsigned int icon_offset_y = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_y" );
   unsigned int icon_max_width = pnd_conf_get_as_int ( g_conf, "grid.icon_max_width" );
+  unsigned int icon_max_height = pnd_conf_get_as_int ( g_conf, "grid.icon_max_height" );
 
   unsigned int text_width = pnd_conf_get_as_int ( g_conf, "grid.text_width" );
   unsigned int text_clip_x = pnd_conf_get_as_int ( g_conf, "grid.text_clip_x" );
@@ -361,6 +362,7 @@ void ui_render ( unsigned int render_mask ) {
     unsigned int text_width = pnd_conf_get_as_int ( g_conf, "tabs.text_width" );
     unsigned int maxtab = ( screen_width / tab_width ) < g_categorycount ? ( screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift;
 
+    // draw tabs with categories
     for ( col = ui_catshift;
 	  col < maxtab;
 	  col++ )
@@ -421,6 +423,25 @@ void ui_render ( unsigned int render_mask ) {
       dest -> y = tab_offset_y + text_offset_y;
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
       SDL_FreeSurface ( rtext );
+      dest++;
+
+    } // for
+
+    // draw tab lines under where tabs would be if we had categories
+    maxtab = ( screen_width / tab_width );
+    for ( /* foo */; col < maxtab; col++ ) {
+      SDL_Surface *s;
+
+      if ( col - ui_catshift == 0 ) {
+	s = g_imagecache [ IMG_TAB_LINEL ].i;
+      } else if ( col - ui_catshift == maxtab - 1 ) {
+	s = g_imagecache [ IMG_TAB_LINER ].i;
+      } else {
+	s = g_imagecache [ IMG_TAB_LINE ].i;
+      }
+      dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
+      dest -> y = tab_offset_y + tab_height;
+      SDL_BlitSurface ( s, NULL /* whole image */, sdl_realscreen, dest );
       dest++;
 
     } // for
@@ -535,7 +556,7 @@ void ui_render ( unsigned int render_mask ) {
 	    src.w = 60;
 	    src.h = 60;
 	    dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + (( icon_max_width - iconsurface -> w ) / 2);
-	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y;
+	    dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y + (( icon_max_height - iconsurface -> h ) / 2);
 
 	    SDL_BlitSurface ( iconsurface, &src, sdl_realscreen, dest );
 
@@ -657,6 +678,21 @@ void ui_render ( unsigned int render_mask ) {
       SDL_FreeSurface ( rtext );
       dest++;
       desty += src.h;
+    }
+
+    // show sub-app# on right side of cpu clock?
+    //if ( ui_selected -> ref -> subapp_number )
+    {
+      sprintf ( buffer, "(app#%u)", ui_selected -> ref -> subapp_number );
+
+      SDL_Surface *rtext;
+      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+      rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+      dest -> x = cell_offset_x + cell_width - rtext -> w;
+      dest -> y = desty - src.h;
+      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
     }
 
     // info hint

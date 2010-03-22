@@ -114,7 +114,7 @@ typedef struct
 
 typedef struct
 {
-        unsigned char subapp_number; // 0 for 'only app'; 1+ for <application> # .. first <application> is 1.
+        unsigned char subapp_number; // 0+ for <application> # .. first <application> is 0
 	pnd_localized_string_t *titles;
 	int titles_c;
 	int titles_alloc_c;
