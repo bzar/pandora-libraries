@@ -361,6 +361,7 @@ void ui_render ( unsigned int render_mask ) {
     unsigned int text_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_y" );
     unsigned int text_width = pnd_conf_get_as_int ( g_conf, "tabs.text_width" );
     unsigned int maxtab = ( screen_width / tab_width ) < g_categorycount ? ( screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift;
+    unsigned int maxtabspot = ( screen_width / tab_width );
 
     // draw tabs with categories
     for ( col = ui_catshift;
@@ -400,7 +401,7 @@ void ui_render ( unsigned int render_mask ) {
       } else {
 	if ( col - ui_catshift == 0 ) {
 	  s = g_imagecache [ IMG_TAB_LINEL ].i;
-	} else if ( col - ui_catshift == maxtab - 1 ) {
+	} else if ( col - ui_catshift == maxtabspot - 1 ) {
 	  s = g_imagecache [ IMG_TAB_LINER ].i;
 	} else {
 	  s = g_imagecache [ IMG_TAB_LINE ].i;
@@ -428,13 +429,12 @@ void ui_render ( unsigned int render_mask ) {
     } // for
 
     // draw tab lines under where tabs would be if we had categories
-    maxtab = ( screen_width / tab_width );
-    for ( /* foo */; col < maxtab; col++ ) {
+    for ( /* foo */; col < maxtabspot; col++ ) {
       SDL_Surface *s;
 
       if ( col - ui_catshift == 0 ) {
 	s = g_imagecache [ IMG_TAB_LINEL ].i;
-      } else if ( col - ui_catshift == maxtab - 1 ) {
+      } else if ( col - ui_catshift == maxtabspot - 1 ) {
 	s = g_imagecache [ IMG_TAB_LINER ].i;
       } else {
 	s = g_imagecache [ IMG_TAB_LINE ].i;

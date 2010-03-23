@@ -242,7 +242,9 @@ int main ( int argc, char *argv[] ) {
   }
 
   // create all cat
-  category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL );
+  if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
+    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL );
+  }
 
   // set up category mappings
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_on", 0 ) ) {
@@ -402,9 +404,11 @@ void applications_scan ( void ) {
 
       // push to All category
       // we do this first, so first category is always All
-      if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter ) ) {
-	pnd_log ( pndn_warning, "  Couldn't categorize to All: '%s'\n", IFNULL(iter -> title_en, "No Name") );
-      }
+      if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
+	if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter ) ) {
+	  pnd_log ( pndn_warning, "  Couldn't categorize to All: '%s'\n", IFNULL(iter -> title_en, "No Name") );
+	}
+      } // all?
 
       // main categories
       if ( iter -> main_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) ) {
