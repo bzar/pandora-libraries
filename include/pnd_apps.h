@@ -10,6 +10,8 @@ extern "C" {
 #define PND_APPS_SEARCHPATH "/media/*/pandora/apps:/usr/pandora/apps"
 #define PND_APPS_KEY "autodiscovery.searchpath"
 
+#define PND_APPS_APPDATA_PREFIX "/pandora/appdata" /* /media/DEVNAME + PREFIX + unique-id */
+
 // default notify searchpath (and key to look it up in config)
 #define PND_APPS_NOTIFYPATH "/media:/media/*/pandora/apps:/usr/pandora/apps"
 #define PND_APPS_NOTIFY_KEY "autodiscovery.notifypath"

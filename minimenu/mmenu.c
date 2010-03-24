@@ -60,6 +60,7 @@ char *pnd_run_script = NULL;
 char *g_skinpath = NULL;
 unsigned char g_x11_present = 1; // >0 if X is present
 unsigned char g_catmap = 0; // if 1, we're doing category mapping
+unsigned char g_pvwcache = 0; // if 1, we're trying to do preview caching
 
 int main ( int argc, char *argv[] ) {
   int logall = -1; // -1 means normal logging rules; >=0 means log all!
@@ -234,6 +235,11 @@ int main ( int argc, char *argv[] ) {
 
   // show load screen
   ui_loadscreen();
+
+  // store flag if we're doing preview caching or not
+  if ( pnd_conf_get_as_int_d ( g_conf, "previewpic.do_cache", 0 ) ) {
+    g_pvwcache = 1;
+  }
 
   // set up static image cache
   if ( ! ui_imagecache ( g_skinpath ) ) {

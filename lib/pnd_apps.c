@@ -217,7 +217,7 @@ unsigned char pnd_get_appdata_path ( char *fullpath, char *unique_id, char *r_pa
   *ws = '\0';
 
   if ( r_path && path_len ) {
-    snprintf ( r_path, path_len, "%s/appdata/%s/", cmdbuf, unique_id );
+    snprintf ( r_path, path_len, "%s/pandora/appdata/%s/", cmdbuf, unique_id );
   }
 
   return ( 1 );

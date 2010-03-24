@@ -27,6 +27,7 @@ typedef enum {
   IMG_ARROW_UP,
   IMG_ARROW_DOWN,
   IMG_ARROW_SCROLLBAR,
+  IMG_HOURGLASS,
   IMG_MAX, // before this point is loaded; after is generated
   IMG_TRUEMAX
 } mm_imgcache_e;
@@ -67,6 +68,7 @@ void ui_render ( unsigned int render_mask );
 void ui_loadscreen ( void );        // show screen while loading the menu
 void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while scanning for apps
 void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while caching icons, categories and preview-pics-Now-mode
+void ui_show_hourglass ( unsigned char updaterect );
 void ui_post_scan ( void );
 
 /* internal functions follow

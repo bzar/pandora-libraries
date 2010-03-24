@@ -193,6 +193,7 @@ mm_imgcache_t g_imagecache [ IMG_TRUEMAX ] = {
   { IMG_ARROW_UP,             "graphics.IMG_ARROW_UP", },
   { IMG_ARROW_DOWN,           "graphics.IMG_ARROW_DOWN", },
   { IMG_ARROW_SCROLLBAR,      "graphics.IMG_ARROW_SCROLLBAR", },
+  { IMG_HOURGLASS,            "graphics.IMG_HOURGLASS", },
   { IMG_MAX,                  NULL },
 };
 
@@ -821,14 +822,13 @@ void ui_process_input ( unsigned char block_p ) {
 	// timer went off, time to load something
 	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
 
-	  pnd_log ( pndn_debug, "Deferred preview pic load ----------\n" );
-
 	  // load the preview pics now!
 	  pnd_disco_t *iter = ui_selected -> ref;
 
 	  if ( iter -> preview_pic1 ) {
 
 	    if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.threaded_preview", 0 ) ) {
+	      // load in bg thread, make user experience chuggy
 
 	      g_preview_thread = SDL_CreateThread ( (void*)ui_threaded_defered_preview, iter );
 
@@ -837,6 +837,7 @@ void ui_process_input ( unsigned char block_p ) {
 	      }
 
 	    } else {
+	      // load it now, make user wait
 
 	      if ( ! cache_preview ( iter, pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 200 ),
 				     pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_height", 180 ) )
@@ -849,8 +850,6 @@ void ui_process_input ( unsigned char block_p ) {
 	    } // threaded?
 
 	  } // got a preview at all?
-
-	  pnd_log ( pndn_debug, "Deferred preview pic load finish ---\n" );
 
 	  ui_event++;
 	}
@@ -1007,6 +1006,7 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Return to Minimenu",
 	  "Shutdown Pandora",
 	  "Rescan for Applications",
+	  "Cache previews to SD now",
 	  "Run xfce4 from Minimenu",
 	  "Run a terminal/console",
 	  "Exit and run xfce4",
@@ -1033,11 +1033,34 @@ void ui_process_input ( unsigned char block_p ) {
 	  ui_selected = NULL;
 	  ui_rows_scrolled_down = 0;
 	} else if ( sel == 3 ) {
+	  // cache preview to SD now
+	  extern pnd_box_handle g_active_apps;
+	  pnd_box_handle h = g_active_apps;
+
+	  unsigned char maxwidth, maxheight;
+	  maxwidth = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 200 );
+	  maxheight = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_height", 180 );
+
+	  pnd_disco_t *iter = pnd_box_get_head ( h );
+
+	  while ( iter ) {
+
+	    // cache it
+	    if ( ! cache_preview ( iter, maxwidth, maxheight ) ) {
+	      pnd_log ( pndn_debug, "Force cache: Couldn't load preview pic: '%s' -> '%s'\n",
+			IFNULL(iter->title_en,"No Name"), iter -> preview_pic1 );
+	    }
+
+	    // next
+	    iter = pnd_box_get_next ( iter );
+	  } // while
+
+	} else if ( sel == 4 ) {
 	  // run xfce
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/bin/startxfce4" );
 	  emit_and_quit ( buffer );
-	} else if ( sel == 4 ) {
+	} else if ( sel == 5 ) {
 	  // run terminal
 	  char *argv[5];
 	  argv [ 0 ] = pnd_conf_get_as_char ( g_conf, "utility.terminal" );
@@ -1047,23 +1070,23 @@ void ui_process_input ( unsigned char block_p ) {
 	    ui_forkexec ( argv );
 	  }
 
-	} else if ( sel == 5 ) {
+	} else if ( sel == 6 ) {
 	  // set env to xfce
 	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
 	  system ( buffer );
 	  //sprintf ( buffer, "sudo poweroff" );
 	  //system ( buffer );
 	  exit ( 0 );
-	} else if ( sel == 6 ) {
+	} else if ( sel == 7 ) {
 	  // set env to pmenu
 	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
 	  system ( buffer );
 	  //sprintf ( buffer, "sudo poweroff" );
 	  //system ( buffer );
 	  exit ( 0 );
-	} else if ( sel == 7 ) {
-	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 8 ) {
+	  emit_and_quit ( MM_QUIT );
+	} else if ( sel == 9 ) {
 	  // about
 	}
 
@@ -2023,4 +2046,21 @@ unsigned char ui_threaded_defered_icon ( void *p ) {
   } // while
 
   return ( 0 );
+}
+
+void ui_show_hourglass ( unsigned char updaterect ) {
+
+  SDL_Rect dest;
+  SDL_Surface *s = g_imagecache [ IMG_HOURGLASS ].i;
+
+  dest.x = ( 800 - s -> w ) / 2;
+  dest.y = ( 480 - s -> h ) / 2;
+
+  SDL_BlitSurface ( s, NULL /* whole image */, sdl_realscreen, &dest );
+
+  if ( updaterect ) {
+    SDL_UpdateRects ( sdl_realscreen, 1, &dest );
+  }
+
+  return;
 }

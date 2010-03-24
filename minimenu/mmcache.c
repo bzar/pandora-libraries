@@ -29,12 +29,17 @@
 #include "pnd_desktop.h"
 #include "pnd_pndfiles.h"
 #include "pnd_apps.h"
+#include "../lib/pnd_pathiter.h"
+#include "pnd_locate.h"
 
 #include "mmenu.h"
 #include "mmapps.h"
 #include "mmcache.h"
+#include "mmcat.h"
+#include "mmui.h"
 
 extern pnd_conf_handle g_conf;
+extern unsigned char g_pvwcache;
 
 mm_cache_t *g_icon_cache = NULL;
 mm_cache_t *g_preview_cache = NULL;
@@ -56,31 +61,89 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
   // not cached, load it up
   //
 
+  // show hourglass
+  ui_show_hourglass ( 1 /* updaterect*/ );
+
   // see if we can mount the pnd/dir
   // does preview file exist?
   //   if so, load it up, size it, cache it
   //   if not, warning and bail
   // unmount it
 
-  // can we mount?
-  char fullpath [ PATH_MAX ];
-  char filepath [ PATH_MAX ];
+  // can we mount? or can we find it in preview cache?
+  char fullpath [ PATH_MAX ] = "";
+  char filepath [ PATH_MAX ] = "";
 
-  sprintf ( fullpath, "%s/%s", app -> object_path, app -> object_filename );
-
-  if ( ! pnd_pnd_mount ( pnd_run_script, fullpath, app -> unique_id ) ) {
-    pnd_log ( pndn_debug, "Couldn't mount '%s' for preview\n", fullpath );
-    return ( 0 ); // couldn't mount?!
+  if ( g_pvwcache ) {
+    static char *cache_findpath = NULL;
+    if ( ! cache_findpath ) {
+      cache_findpath = pnd_conf_get_as_char ( g_conf, "previewpic.cache_findpath" );
+    }
+    char buffer [ FILENAME_MAX ];
+    sprintf ( buffer, "%s.png", app -> unique_id );
+    char *f = pnd_locate_filename ( cache_findpath, buffer );
+    if ( f ) {
+      strncpy ( filepath, f, PATH_MAX );
+    }
   }
 
-  sprintf ( filepath, "%s/%s/%s", PND_MOUNT_PATH, app -> unique_id, app -> preview_pic1 );
+  // if we don't have a file path sorted out yet, means we need to mount and figure it
+  if ( ! filepath [ 0 ] ) {
+    sprintf ( fullpath, "%s/%s", app -> object_path, app -> object_filename );
+
+    if ( ! pnd_pnd_mount ( pnd_run_script, fullpath, app -> unique_id ) ) {
+      pnd_log ( pndn_debug, "Couldn't mount '%s' for preview\n", fullpath );
+      return ( 0 ); // couldn't mount?!
+    }
+
+    sprintf ( filepath, "%s/%s/%s", PND_MOUNT_PATH, app -> unique_id, app -> preview_pic1 );
+  }
+
+  // load whatever path we've got
   s = IMG_Load ( filepath );
 
-  pnd_pnd_unmount ( pnd_run_script, fullpath, app -> unique_id );
-
   if ( ! s ) {
+    // unmount it, if mounted
+    if ( fullpath [ 0 ] ) {
+      pnd_pnd_unmount ( pnd_run_script, fullpath, app -> unique_id );
+    }
     pnd_log ( pndn_debug, "Couldn't open image '%s' for preview\n", filepath );
     return ( 0 );
+  }
+
+  // try to copy file to the cache, if we're doing that, and if mounted
+  if ( g_pvwcache && fullpath [ 0 ] ) {
+    char cacheoutpath [ PATH_MAX ] = "";
+
+    // figure out where we want to write the file to
+    if ( cache_find_writable ( cacheoutpath, PATH_MAX ) ) {
+      static char *cache_path = NULL;
+      char buffer [ PATH_MAX ];
+      if ( ! cache_path ) {
+	cache_path = pnd_conf_get_as_char ( g_conf, "previewpic.cache_path" );
+      }
+      // make the dir
+      snprintf ( buffer, PATH_MAX, "%s/%s", cacheoutpath, cache_path );
+      struct stat statbuf;
+      if ( stat ( buffer, &statbuf ) != 0 ) {
+	snprintf ( buffer, PATH_MAX, "/bin/mkdir -p %s/%s", cacheoutpath, cache_path );
+	system ( buffer );
+      }
+      // set up target filename to copy
+      snprintf ( buffer, PATH_MAX, "%s/%s/%s.png", cacheoutpath, cache_path, app -> unique_id );
+      pnd_log ( pndn_debug, "Found free space to cache preview to here: %s", buffer );   
+      if ( ! pnd_filecopy ( filepath, buffer ) ) {
+	pnd_log ( pndn_error, "ERROR: Copying preview from %s to %s", filepath, buffer );   
+      }
+    } else {
+      pnd_log ( pndn_warning, "WARN: Couldn't find a device to cache preview to.\n" );
+    }
+
+  } // preview file cache
+
+  // unmount it, if mounted
+  if ( fullpath [ 0 ] ) {
+    pnd_pnd_unmount ( pnd_run_script, fullpath, app -> unique_id );
   }
 
   //pnd_log ( pndn_debug, "Image size is %u x %u (max %u x %u)\n", s -> w, s -> h, maxwidth, maxheight );
@@ -244,4 +307,51 @@ mm_cache_t *cache_query_icon ( char *id ) {
 
 mm_cache_t *cache_query_preview ( char *id ) {
   return ( cache_query ( id, g_preview_cache ) );
+}
+
+unsigned char cache_find_writable ( char *r_writepath, unsigned int len ) {
+  static char *searchpath = NULL;
+  static unsigned int minfree = 0;
+  char cmdbuf [ PATH_MAX ];
+  FILE *f;
+  unsigned int freespace = 0;
+
+  // try to find a device, in order of searchpath, with enough space for this cache-out
+
+  if ( ! searchpath ) {
+    searchpath = pnd_conf_get_as_char ( g_conf, "previewpic.cache_searchpath" );
+    minfree = pnd_conf_get_as_int_d ( g_conf, "previewpic.cache_minfree", 500 );
+  }
+
+  if ( ! searchpath ) {
+    return ( 0 ); // fail!
+  }
+
+  SEARCHPATH_PRE
+  {
+
+    // since I didn't figure out which /sys/block I can pull remaining space from, I'll use df for now :/
+    sprintf ( cmdbuf, "/bin/df %s", buffer );
+
+    f = popen ( cmdbuf, "r" );
+
+    if ( f ) {
+      while ( fgets ( cmdbuf, PATH_MAX, f ) ) {
+	// just eat it up
+	// /dev/sdc2              7471392    725260   6366600  11% /media/IMAGE
+	if ( sscanf ( cmdbuf, "%*s %*u %*u %u %*u %*s\n", &freespace ) == 1 ) {
+	  strncpy ( r_writepath, buffer, len );
+	  if ( freespace > minfree ) {
+	    pclose ( f );
+	    return ( 1 );
+	  } // enough free?
+	} // df
+      } // while
+      pclose ( f );
+    }
+
+  }
+  SEARCHPATH_POST
+
+  return ( 0 );
 }

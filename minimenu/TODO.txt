@@ -5,6 +5,8 @@
 
 - libpnd: appdata-dir-name?
 
+- speed up render, use render mask?
+- evmapperd.. no force off, if charging on /sys/class/power_supply/bq27500-0/current_now is +ve
 - skinning .. mmenu.conf and then skin.conf in each skin dir?
 - preview pic override for davec :)
 - some ultra primtive frame draw, so the 'detail menu' and any 'sub menus' can draw

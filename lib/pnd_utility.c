@@ -303,3 +303,59 @@ unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, uns
 
   return ( 0 );
 }
+
+unsigned char pnd_filecopy ( char *sourcepath, char *targetpath ) {
+#define BITLEN (64*1024)
+  FILE *pnd, *target; // pnd == from, since I cribbed the code from pnd_desktop.c :/
+  unsigned char bits [ BITLEN ];
+  unsigned int bitlen;
+
+  pnd = fopen ( sourcepath, "rb" );
+
+  if ( ! pnd ) {
+    return ( 0 );
+  }
+
+  unsigned int len;
+
+  target = fopen ( targetpath, "wb" );
+
+  if ( ! target ) {
+    fclose ( pnd );
+    return ( 0 );
+  }
+
+  fseek ( pnd, 0, SEEK_END );
+  len = ftell ( pnd );
+  fseek ( pnd, 0, SEEK_SET );
+
+  while ( len ) {
+
+    if ( len > (BITLEN) ) {
+      bitlen = (BITLEN);
+    } else {
+      bitlen = len;
+    }
+
+    if ( fread ( bits, bitlen, 1, pnd ) != 1 ) {
+      fclose ( pnd );
+      fclose ( target );
+      unlink ( targetpath );
+      return ( 0 );
+    }
+
+    if ( fwrite ( bits, bitlen, 1, target ) != 1 ) {
+      fclose ( pnd );
+      fclose ( target );
+      unlink ( targetpath );
+      return ( 0 );
+    }
+
+    len -= bitlen;
+  } // while
+
+  fclose ( pnd );
+  fclose ( target );
+
+  return ( 1 );
+}

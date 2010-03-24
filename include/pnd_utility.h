@@ -27,6 +27,9 @@ pnd_pxml_handle *pnd_pxml_get_by_path ( char *fullpath );
 // consider for a similar effect: df /home -> look at "Mounted on"
 unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, unsigned char mountpoint_len );
 
+// filecopy will return >0 on success
+unsigned char pnd_filecopy ( char *sourcepath, char *targetpath );
+
 #ifdef __cplusplus
 } /* "C" */
 #endif
