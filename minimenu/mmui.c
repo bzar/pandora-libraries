@@ -216,7 +216,11 @@ unsigned char ui_imagecache ( char *basepath ) {
       return ( 0 );
     }
 
-    sprintf ( fullpath, "%s/%s", basepath, filename );
+    if ( filename [ 0 ] == '/' ) {
+      strncpy ( fullpath, filename, PATH_MAX );
+    } else {
+      sprintf ( fullpath, "%s/%s", basepath, filename );
+    }
 
     if ( ! ( g_imagecache [ i ].i = IMG_Load ( fullpath ) ) ) {
       pnd_log ( pndn_error, "ERROR: Couldn't load static cache image: %s\n", fullpath );

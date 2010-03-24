@@ -5,10 +5,16 @@
 
 - libpnd: appdata-dir-name?
 
+- skinning .. mmenu.conf and then skin.conf in each skin dir?
+- preview pic override for davec :)
+- some ultra primtive frame draw, so the 'detail menu' and any 'sub menus' can draw
+  their own frame rather than depand on skin frame to exist
 - About screen and shoutouts // konami code?
-
 - deploy..
   - .desktop for deployment, for running from xfce
+
+- maybe:
+  - directory browser; easy hack
 
 - future
   - honor render_mask to know what to update
