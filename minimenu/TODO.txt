@@ -5,13 +5,14 @@
 
 - libpnd: appdata-dir-name?
 
-- speed up render, use render mask?
+- note in .ovr, skip showing game category if got
+- upsize selection a little, so full-size icons are still hilighted
 - evmapperd.. no force off, if charging on /sys/class/power_supply/bq27500-0/current_now is +ve
+- About screen and shoutouts // konami code?
 - skinning .. mmenu.conf and then skin.conf in each skin dir?
-- preview pic override for davec :)
+
 - some ultra primtive frame draw, so the 'detail menu' and any 'sub menus' can draw
   their own frame rather than depand on skin frame to exist
-- About screen and shoutouts // konami code?
 - deploy..
   - .desktop for deployment, for running from xfce
 

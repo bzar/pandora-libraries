@@ -24,6 +24,6 @@ mm_cache_t *cache_query ( char *id, mm_cache_t *head );
 mm_cache_t *cache_query_icon ( char *id ); // specialized version
 mm_cache_t *cache_query_preview ( char *id ); // specialized version
 
-unsigned char cache_find_writable ( char *r_writepath, unsigned int len );
+unsigned char cache_find_writable ( char *originpath, char *r_writepath, unsigned int len );
 
 #endif

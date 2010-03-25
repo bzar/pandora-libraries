@@ -70,11 +70,27 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
   //   if not, warning and bail
   // unmount it
 
-  // can we mount? or can we find it in preview cache?
+  // can we mount? or can we find it in preview cache? or an override?
   char fullpath [ PATH_MAX ] = "";
   char filepath [ PATH_MAX ] = "";
 
-  if ( g_pvwcache ) {
+  // first, check for preview override
+  {
+    char ovrfile [ PATH_MAX ];
+    char *fooby;
+    sprintf ( ovrfile, "%s/%s", app -> object_path, app -> object_filename );
+    fooby = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
+    if ( fooby ) {
+      sprintf ( fooby, "_pvw#%u.png", app -> subapp_number );
+      struct stat statbuf;
+      if ( stat ( ovrfile, &statbuf ) == 0 ) {
+	strncpy ( filepath, ovrfile, PATH_MAX );
+      } // stat
+    } // ovr?
+  }
+
+  // if not yet found, try to find in cache
+  if ( filepath [ 0 ] == '\0' && g_pvwcache ) {
     static char *cache_findpath = NULL;
     if ( ! cache_findpath ) {
       cache_findpath = pnd_conf_get_as_char ( g_conf, "previewpic.cache_findpath" );
@@ -116,7 +132,7 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
     char cacheoutpath [ PATH_MAX ] = "";
 
     // figure out where we want to write the file to
-    if ( cache_find_writable ( cacheoutpath, PATH_MAX ) ) {
+    if ( cache_find_writable ( app -> object_path, cacheoutpath, PATH_MAX ) ) {
       static char *cache_path = NULL;
       char buffer [ PATH_MAX ];
       if ( ! cache_path ) {
@@ -309,23 +325,36 @@ mm_cache_t *cache_query_preview ( char *id ) {
   return ( cache_query ( id, g_preview_cache ) );
 }
 
-unsigned char cache_find_writable ( char *r_writepath, unsigned int len ) {
-  static char *searchpath = NULL;
+unsigned char cache_find_writable ( char *originpath, char *r_writepath, unsigned int len ) {
+  static char *searchpaths = NULL;
   static unsigned int minfree = 0;
+  char searchpath [ PATH_MAX ] = "";
   char cmdbuf [ PATH_MAX ];
   FILE *f;
   unsigned int freespace = 0;
 
-  // try to find a device, in order of searchpath, with enough space for this cache-out
+  // figure out the mountpoint for the file, and stick that in at front of searchpath
+  // so that it will get picked first, if possible.
+  char mountpath [ PATH_MAX ];
+  if ( pnd_determine_mountpoint ( originpath, mountpath, PATH_MAX ) ) {
+    sprintf ( searchpath, "%s:", mountpath );
+    //pnd_log ( pndn_debug, "Preferred cache target for %s: %s\n", originpath, mountpath );
+  }
 
-  if ( ! searchpath ) {
-    searchpath = pnd_conf_get_as_char ( g_conf, "previewpic.cache_searchpath" );
+  // try to find a device, in order of searchpath, with enough space for this cache-out
+  //
+
+  // populate the searchpath
+  if ( ! searchpaths ) {
+    searchpaths = pnd_conf_get_as_char ( g_conf, "previewpic.cache_searchpath" );
     minfree = pnd_conf_get_as_int_d ( g_conf, "previewpic.cache_minfree", 500 );
   }
 
-  if ( ! searchpath ) {
+  if ( ! searchpaths ) {
     return ( 0 ); // fail!
   }
+
+  strncat ( searchpath, searchpaths, PATH_MAX );
 
   SEARCHPATH_PRE
   {

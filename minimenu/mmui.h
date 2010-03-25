@@ -57,13 +57,7 @@ typedef enum {
 unsigned char ui_setup ( void );
 unsigned char ui_imagecache ( char *basepath );
 
-#define CHANGED_NOTHING     (0)
-#define CHANGED_CATEGORY    (1<<0)  /* changed to different category */
-#define CHANGED_SELECTION   (1<<1)  /* changed app selection */
-#define CHANGED_DATAUPDATE  (1<<2)  /* deferred preview pic or icon came in */
-#define CHANGED_APPRELOAD   (1<<3)  /* new set of applications entirely */
-#define CHANGED_EVERYTHING  (0xFFFF) /* redraw it all! */
-void ui_render ( unsigned int render_mask );
+void ui_render ( void );
 
 void ui_loadscreen ( void );        // show screen while loading the menu
 void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while scanning for apps

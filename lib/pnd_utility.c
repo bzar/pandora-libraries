@@ -226,7 +226,7 @@ pnd_pxml_handle *pnd_pxml_get_by_path ( char *fullpath ) {
   return ( pxmlapps );
 }
 
-unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, unsigned char mountpoint_len ) {
+unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, unsigned int mountpoint_len ) {
 
   // just cheap it, and call df like an idiot.
 
@@ -251,9 +251,8 @@ unsigned char pnd_determine_mountpoint ( char *fullpath, char *r_mountpoint, uns
     pclose ( p );
 
     // by now, good
-    char crap [ PATH_MAX ];
     char mount [ PATH_MAX ];
-    if ( sscanf ( inbuf, "%s %s %s %s %s %s", crap, crap, crap, crap, crap, mount ) != 6 ) {
+    if ( sscanf ( inbuf, "%*s %*s %*s %*s %*s %s", mount ) != 1 ) {
       return ( 0 );
     }
 

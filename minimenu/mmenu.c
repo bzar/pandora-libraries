@@ -267,7 +267,7 @@ int main ( int argc, char *argv[] ) {
   while ( 1 ) { // forever!
 
     // show the menu, or changes thereof
-    ui_render ( CHANGED_NOTHING );
+    ui_render();
 
     // wait for input or time-based events (like animations)
     // deal with inputs
