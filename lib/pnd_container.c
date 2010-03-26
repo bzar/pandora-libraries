@@ -193,3 +193,24 @@ unsigned char pnd_box_append ( pnd_box_handle box, pnd_box_handle append ) {
 
   return ( 1 );
 }
+
+void pnd_box_delete_node ( pnd_box_handle box, void *value ) {
+  pnd_box_t *pbox = (pnd_box_t*) box;
+  pnd_box_node_t *p = PAYLOAD2NODE(value);
+
+  if ( pbox -> head == p ) {
+    pbox -> head = p -> next;
+    free ( p );
+  } else {
+    pnd_box_node_t *i = pbox -> head;
+    while ( i && i -> next != p ) {
+      i = i -> next;
+    }
+    if ( i -> next == p ) {
+      i -> next = p -> next;
+      free ( p );
+    }
+  }
+
+  return;
+}

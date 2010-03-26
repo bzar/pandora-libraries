@@ -269,3 +269,86 @@ int pnd_conf_get_as_int_d ( pnd_conf_handle c, char *key, int def ) {
 
   return ( i );
 }
+
+int *pnd_conf_set_int ( pnd_conf_handle c, char *key, int v ) {
+
+  // key is already present? if so, delete it
+  void *kv = pnd_box_find_by_key ( c, key );
+
+  if ( kv ) {
+    pnd_box_delete_node ( c, kv );
+  }
+
+  // add the new node
+  int *nv = pnd_box_allocinsert ( c, key, sizeof(int) );
+
+  if ( nv ) {
+    *nv = v;
+    return ( nv );
+  }
+
+  return ( NULL );
+}
+
+char *pnd_conf_set_char ( pnd_conf_handle c, char *key, char *v ) {
+
+  // key is already present? if so, delete it
+  char *kv = pnd_box_find_by_key ( c, key );
+
+  if ( kv ) {
+    pnd_box_delete_node ( c, kv );
+  }
+
+  // add the new node
+  char *nv = pnd_box_allocinsert ( c, key, strlen ( v ) );
+
+  if ( nv ) {
+    strcpy ( nv, v );
+    return ( nv );
+  }
+
+  return ( NULL );
+}
+
+unsigned char pnd_conf_write ( pnd_conf_handle c, char *fullpath ) {
+  char *p = pnd_box_get_head ( c );
+  FILE *f;
+  char lastcategory [ 100 ] = "";
+
+  if ( ! p ) {
+    return ( 1 ); // nothing to save, so.. success?
+  }
+
+  f = fopen ( fullpath, "w" );
+
+  if ( ! f ) {
+    return ( 0 );
+  }
+
+  while ( p ) {
+    char *k = pnd_box_get_key ( p );
+    char *c = strchr ( k, '.' );
+
+    if ( c ) {
+      if ( strncmp ( k, lastcategory, c - k ) == 0 ) {
+	// same category
+      } else {
+	strncpy ( lastcategory, k, c - k );
+	fprintf ( f, "[%s]\n", lastcategory );
+      }
+      fprintf ( f, "%s\t%s\n", c + 1, p );
+    } else {
+      if ( lastcategory [ 0 ] ) {
+	fprintf ( f, "[]\n" );
+      }
+      lastcategory [ 0 ] = '\0';
+      fprintf ( f, "%s\t%s\n", k, p );
+    }
+
+    p = pnd_box_get_next ( p );
+  }
+
+  fclose ( f );
+
+  return ( 1 );
+}
