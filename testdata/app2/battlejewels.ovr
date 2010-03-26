@@ -5,3 +5,6 @@ maincategorysub1	Emulator
 [Application-1]
 title			HatariHack1
 clockspeed		200
+note-1			Note Line One; Hello DaveC!
+note-2			We here have another 2 note line
+note-3			We here have another 3 note line

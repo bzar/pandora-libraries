@@ -4,6 +4,7 @@
 
 typedef struct _mm_appref_t {
   pnd_disco_t *ref;
+  pnd_conf_handle ovrh;
   // anything else?
   struct _mm_appref_t *next;
 } mm_appref_t;
@@ -19,7 +20,7 @@ typedef struct {
 #define CATEGORY_ALL "All"
 
 // try to populate as many cats as necessary
-unsigned char category_push ( char *catname, pnd_disco_t *app ); // catname is not pulled from app, so we can make them up on the fly (ie: "All")
+unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh ); // catname is not pulled from app, so we can make them up on the fly (ie: "All")
 mm_category_t *category_query ( char *catname );
 void category_dump ( void ); // sort the apprefs
 void category_freeall ( void );
@@ -32,6 +33,6 @@ typedef struct {
 
 unsigned char category_map_setup ( void ); // set up the mappings
 mm_category_t *category_map_query ( char *cat );
-unsigned char category_meta_push ( char *catname, pnd_disco_t *app );
+unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh );
 
 #endif

@@ -22,7 +22,7 @@ unsigned char g_catmapcount = 0;
 
 extern pnd_conf_handle g_conf;
 
-unsigned char category_push ( char *catname, pnd_disco_t *app ) {
+unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh ) {
   mm_category_t *c;
 
   // check category list; if found, append app to the end of it.
@@ -59,6 +59,7 @@ unsigned char category_push ( char *catname, pnd_disco_t *app ) {
   bzero ( ar, sizeof(mm_appref_t) );
 
   ar -> ref = app;
+  ar -> ovrh = ovrh;
 
   // plug it into category
   //   and sort it on insert!
@@ -189,7 +190,7 @@ unsigned char category_map_setup ( void ) {
       {
 	//pnd_log ( pndn_debug, "target(%s) from(%s)\n", k, buffer );
 
-	category_push ( k, NULL );
+	category_push ( k, NULL, 0 );
 	g_catmaps [ g_catmapcount ].target = category_query ( k );
 	g_catmaps [ g_catmapcount ].from = strdup ( buffer );
 	g_catmapcount++;
@@ -217,7 +218,7 @@ mm_category_t *category_map_query ( char *cat ) {
   return ( NULL );
 }
 
-unsigned char category_meta_push ( char *catname, pnd_disco_t *app ) {
+unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh ) {
   mm_category_t *cat;
 
   // do we honour cat mapping at all?
@@ -227,19 +228,19 @@ unsigned char category_meta_push ( char *catname, pnd_disco_t *app ) {
     cat = category_map_query ( catname );
 
     if ( cat ) {
-      return ( category_push ( cat -> catname, app ) );
+      return ( category_push ( cat -> catname, app, ovrh ) );
     }
 
     // not mapped.. but default?
     if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_default_on", 0 ) ) {
       char *def = pnd_conf_get_as_char ( g_conf, "categories.map_default_cat" );
       if ( def ) {
-	return ( category_push ( def, app ) );
+	return ( category_push ( def, app, ovrh ) );
       }
     }
 
   } // cat map is desired?
 
   // not default, just do it
-  return ( category_push ( catname, app ) );
+  return ( category_push ( catname, app, ovrh ) );
 }

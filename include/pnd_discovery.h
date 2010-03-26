@@ -43,6 +43,7 @@ typedef enum {
 // fetch the full PXML and get all the details. But I think we got out of control here :)
 // NOTE: We really need to rework disco-t so it can include non-english titles/desc; perhaps more info as optional,
 //   or a name/value pairing system so it can have extra data in it, without a complex structure.
+#define PND_DISCO_FLAG_OVR 1   // An ovr file was found for this app (not per subapp, just per .pnd)
 typedef struct {
   // base
   unsigned char object_type;   // see enum above
@@ -50,6 +51,7 @@ typedef struct {
   char *object_filename;       // filename within object_path of the app: the PXML.xml or awesomeapp.pnd file itself
   unsigned int pnd_icon_pos;   // offset to the byte after end of PXML in a pnd file (should be icon if present)
   unsigned char subapp_number; // # of app within PXML (ie: 0, 1, 2, 3, up to the number of apps within the PXML)
+  unsigned int object_flags;
   // strdup'd from PXML -- hey, who was the idiot who thought it was a reat idea not to just re-use the pxml-struct?
   char *title_en;
   char *desc_en;

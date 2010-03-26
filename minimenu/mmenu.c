@@ -24,14 +24,16 @@
  *    c) user performsn some operation (set clock, copy files, whatever) -> probably stays within the menu
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
+#include <stdio.h> /* for FILE etc */
+#include <stdlib.h> /* for malloc */
+#include <unistd.h> /* for unlink */
+#include <limits.h> /* for PATH_MAX */
 #include <sys/types.h>
 #include <sys/stat.h>
+#define __USE_GNU /* for strcasestr */
+#include <string.h> /* for making ftw.h happy */
+#include <strings.h>
+#include <ctype.h>
 #include <sys/wait.h>
 
 #include "pnd_logger.h"
@@ -42,6 +44,7 @@
 #include "pnd_discovery.h"
 #include "pnd_locate.h"
 #include "pnd_device.h"
+#include "pnd_pndfiles.h"
 
 #include "mmenu.h"
 #include "mmwrapcmd.h"
@@ -249,7 +252,7 @@ int main ( int argc, char *argv[] ) {
 
   // create all cat
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL );
+    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL, 0 );
   }
 
   // set up category mappings
@@ -382,6 +385,26 @@ void applications_scan ( void ) {
       ui_cachescreen ( 0 /* clear screen */, IFNULL(iter->title_en,"No Name") );
     }
 
+    // if an ovr was flagged by libpnd, lets go inhale it just so we've got the
+    // notes handy, since notes are not handled by libpnd proper
+    pnd_conf_handle ovrh = 0;
+    if ( iter -> object_flags & PND_DISCO_FLAG_OVR ) {
+      char ovrfile [ PATH_MAX ];
+      char *fixpxml;
+      sprintf ( ovrfile, "%s/%s", iter -> object_path, iter -> object_filename );
+      fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
+      strcpy ( fixpxml, PXML_SAMEPATH_OVERRIDE_FILEEXT );
+
+      ovrh = pnd_conf_fetch_by_path ( ovrfile );
+
+#if 0
+      if ( ovrh ) {
+	pnd_log ( pndn_debug, "Found ovr file for %s # %u\n", iter -> object_filename, iter -> subapp_number );
+      }
+#endif
+
+    } // ovr
+
     // cache the icon, unless deferred
     if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_icons_later", 0 ) == 0 ) {
       if ( iter -> pnd_icon_pos &&
@@ -411,45 +434,45 @@ void applications_scan ( void ) {
       // push to All category
       // we do this first, so first category is always All
       if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-	if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter ) ) {
+	if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to All: '%s'\n", IFNULL(iter -> title_en, "No Name") );
 	}
       } // all?
 
       // main categories
       if ( iter -> main_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) ) {
-	if ( ! category_meta_push ( iter -> main_category, iter ) ) {
+	if ( ! category_meta_push ( iter -> main_category, iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category, IFNULL(iter -> title_en, "No Name") );
 	}
       }
 
       if ( iter -> main_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) ) {
-	if ( ! category_meta_push ( iter -> main_category1, iter ) ) {
+	if ( ! category_meta_push ( iter -> main_category1, iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category1, IFNULL(iter -> title_en, "No Name") );
 	}
       }
 
       if ( iter -> main_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) ) {
-	if ( ! category_meta_push ( iter -> main_category2, iter ) ) {
+	if ( ! category_meta_push ( iter -> main_category2, iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> main_category2, IFNULL(iter -> title_en, "No Name") );
 	}
       }
 
       // alt categories
       if ( iter -> alt_category && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) ) {
-	if ( ! category_meta_push ( iter -> alt_category, iter ) ) {
+	if ( ! category_meta_push ( iter -> alt_category, iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category, IFNULL(iter -> title_en, "No Name") );
 	}
       }
 
       if ( iter -> alt_category1 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) ) {
-	if ( ! category_meta_push ( iter -> alt_category1, iter ) ) {
+	if ( ! category_meta_push ( iter -> alt_category1, iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category1, IFNULL(iter -> title_en, "No Name") );
 	}
       }
 
       if ( iter -> alt_category2 && pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) ) {
-	if ( ! category_meta_push ( iter -> alt_category2, iter ) ) {
+	if ( ! category_meta_push ( iter -> alt_category2, iter, ovrh ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to %s: '%s'\n", iter -> alt_category2, IFNULL(iter -> title_en, "No Name") );
 	}
       }

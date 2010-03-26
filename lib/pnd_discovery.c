@@ -317,11 +317,12 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	char key [ 100 ];
 	char *v;
 
+	// set the flag regardless, so its for all subapps
+	p -> object_flags |= PND_DISCO_FLAG_OVR;
+
 	// title
 	snprintf ( key, 100, "Application-%u.title", p -> subapp_number );
-	pnd_log ( PND_LOG_DEFAULT, "find key %s\n", key );
 	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
-	  pnd_log ( PND_LOG_DEFAULT, "   find key %s\n", key );
 	  if ( p -> title_en ) {
 	    free ( p -> title_en );
 	  }

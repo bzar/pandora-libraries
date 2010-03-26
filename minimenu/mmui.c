@@ -246,7 +246,6 @@ unsigned char ui_imagecache ( char *basepath ) {
   //
 
   // scale icons
-  g_imagecache [ IMG_SELECTED_ALPHAMASK ].i = ui_scale_image ( g_imagecache [ IMG_SELECTED_ALPHAMASK ].i, pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 ), -1 );
   g_imagecache [ IMG_ICON_MISSING ].i = ui_scale_image ( g_imagecache [ IMG_ICON_MISSING ].i, pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 ), -1 );
   // scale text hilight
   g_imagecache [ IMG_SELECTED_HILITE ].i = ui_scale_image ( g_imagecache [ IMG_SELECTED_HILITE ].i, pnd_conf_get_as_int_d ( g_conf, "grid.text_width", 50 ), -1 );
@@ -324,6 +323,8 @@ void ui_render ( void ) {
   unsigned int icon_offset_y = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_y" );
   unsigned int icon_max_width = pnd_conf_get_as_int ( g_conf, "grid.icon_max_width" );
   unsigned int icon_max_height = pnd_conf_get_as_int ( g_conf, "grid.icon_max_height" );
+  unsigned int sel_icon_offset_x = pnd_conf_get_as_int_d ( g_conf, "grid.sel_offoffset_x", 0 );
+  unsigned int sel_icon_offset_y = pnd_conf_get_as_int_d ( g_conf, "grid.sel_offoffset_y", 0 );
 
   unsigned int text_width = pnd_conf_get_as_int ( g_conf, "grid.text_width" );
   unsigned int text_clip_x = pnd_conf_get_as_int ( g_conf, "grid.text_clip_x" );
@@ -577,12 +578,12 @@ void ui_render ( void ) {
     if ( ! ( render_jobs_b & R_BG ) ) {
       if ( g_imagecache [ IMG_BACKGROUND_800480 ].i ) {
 	src.x = grid_offset_x;
-	src.y = grid_offset_y;
+	src.y = grid_offset_y + sel_icon_offset_y;
 	src.w = col_max * cell_width;
 	src.h = row_max * cell_height;
 
 	dest -> x = grid_offset_x;
-	dest -> y = grid_offset_y;
+	dest -> y = grid_offset_y + sel_icon_offset_y;
 
 	SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_800480 ].i, &src, sdl_realscreen, dest );
 	dest++;
@@ -606,10 +607,13 @@ void ui_render ( void ) {
 
 	    // selected? show hilights
 	    if ( appiter == ui_selected ) {
+	      SDL_Surface *s = g_imagecache [ IMG_SELECTED_ALPHAMASK ].i;
 	      // icon
-	      dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x;
-	      dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y;
-	      SDL_BlitSurface ( g_imagecache [ IMG_SELECTED_ALPHAMASK ].i, NULL /* all */, sdl_realscreen, dest );
+	      //dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + ( ( icon_max_width - s -> w ) / 2 );
+	      dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + sel_icon_offset_x;
+	      //dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y + ( ( icon_max_height - s -> h ) / 2 );
+	      dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y + sel_icon_offset_y;
+	      SDL_BlitSurface ( s, NULL /* all */, sdl_realscreen, dest );
 	      dest++;
 	      // text
 	      dest -> x = grid_offset_x + ( col * cell_width ) + text_clip_x;
@@ -722,6 +726,7 @@ void ui_render ( void ) {
     }
 
     // category
+#if 0
     if ( ui_selected -> ref -> main_category ) {
 
       sprintf ( buffer, "Category: %s", ui_selected -> ref -> main_category );
@@ -740,6 +745,7 @@ void ui_render ( void ) {
       dest++;
       desty += src.h;
     }
+#endif
 
     // clock
     if ( ui_selected -> ref -> clockspeed ) {
@@ -777,7 +783,8 @@ void ui_render ( void ) {
     }
 
     // info hint
-    if ( ui_selected -> ref -> clockspeed && ui_selected -> ref -> info_filename ) {
+#if 0 // merged into hint-line
+    if ( ui_selected -> ref -> info_filename ) {
 
       sprintf ( buffer, "Documentation - hit Y" );
 
@@ -795,6 +802,38 @@ void ui_render ( void ) {
       dest++;
       desty += src.h;
     }
+#endif
+
+    // notes
+    if ( ui_selected -> ovrh ) {
+      char *n;
+      unsigned char i;
+      char buffer [ 50 ];
+
+      desty += 5; // a touch of spacing can't hurt
+
+      for ( i = 1; i < 4; i++ ) {
+	sprintf ( buffer, "Application-%u.note-%u", ui_selected -> ref -> subapp_number, i );
+	n = pnd_conf_get_as_char ( ui_selected -> ovrh, buffer );
+
+	if ( n ) {
+	  SDL_Surface *rtext;
+	  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	  rtext = TTF_RenderText_Blended ( g_detailtext_font, n, tmpfontcolor );
+	  src.x = 0;
+	  src.y = 0;
+	  src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+	  src.h = rtext -> h;
+	  dest -> x = cell_offset_x;
+	  dest -> y = desty;
+	  SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	  SDL_FreeSurface ( rtext );
+	  dest++;
+	  desty += rtext -> h;
+	}
+      } // for
+
+    } // r_detail -> notes
 
     // preview pic
     mm_cache_t *ic = cache_query_preview ( ui_selected -> ref -> unique_id );
@@ -814,13 +853,13 @@ void ui_render ( void ) {
       dest++;
     }
 
-  } // selected?
+  } // r_detail && selected?
 
   // extras
   //
 
   // battery
-  if ( 1 ) {
+  if ( render_jobs_b & R_BG ) {
     static int last_battlevel = 0;
     static unsigned char batterylevel = 0;
     char buffer [ 100 ];
@@ -844,19 +883,47 @@ void ui_render ( void ) {
 
   // hints
   if ( pnd_conf_get_as_char ( g_conf, "display.hintline" ) ) {
-    char *buffer = pnd_conf_get_as_char ( g_conf, "display.hintline" );
+    char *buffer;
+    unsigned int hintx, hinty;
+    hintx = pnd_conf_get_as_int_d ( g_conf, "display.hint_x", 40 );
+    hinty = pnd_conf_get_as_int_d ( g_conf, "display.hint_y", 450 );
+    static unsigned int lastwidth = 3000;
+
+    if ( ui_selected && ui_selected -> ref -> info_filename ) {
+      buffer = "Documentation - hit Y";
+    } else {
+      buffer = pnd_conf_get_as_char ( g_conf, "display.hintline" );
+    }
+
     SDL_Surface *rtext;
     SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
     rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
-    dest -> x = pnd_conf_get_as_int_d ( g_conf, "display.hint_x", 40 );
-    dest -> y = pnd_conf_get_as_int_d ( g_conf, "display.hint_y", 450 );
+
+    // clear bg
+    if ( ! ( render_jobs_b & R_BG ) ) {
+      src.x = hintx;
+      src.y = hinty;
+      src.w = lastwidth;
+      src.h = rtext -> h;
+      dest -> x = hintx;
+      dest -> y = hinty;
+      SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_TABMASK ].i, &src, sdl_realscreen, dest );
+      dest++;
+      lastwidth = rtext -> w;
+    }
+
+    // now render text
+    dest -> x = hintx;
+    dest -> y = hinty;
     SDL_BlitSurface ( rtext, NULL /* all */, sdl_realscreen, dest );
     SDL_FreeSurface ( rtext );
     dest++;
   }
 
-  // hints
-  if ( pnd_conf_get_as_int_d ( g_conf, "display.clock_x", -1 ) != -1 ) {
+  // clock time
+  if ( render_jobs_b & R_BG &&
+       pnd_conf_get_as_int_d ( g_conf, "display.clock_x", -1 ) != -1 )
+  {
     char buffer [ 50 ];
 
     time_t t = time ( NULL );
@@ -874,6 +941,8 @@ void ui_render ( void ) {
   }
 
   // update all the rects and send it all to sdl
+  // - at this point, we could probably just do 1 rect, of the
+  //   whole screen, and be faster :/
   SDL_UpdateRects ( sdl_realscreen, dest - rects, rects );
 
 } // ui_render
@@ -1152,6 +1221,7 @@ void ui_process_input ( unsigned char block_p ) {
 	  // set env to xfce
 	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
 	  system ( buffer );
+	  emit_and_quit ( buffer );
 	  //sprintf ( buffer, "sudo poweroff" );
 	  //system ( buffer );
 	  exit ( 0 );
@@ -1159,6 +1229,7 @@ void ui_process_input ( unsigned char block_p ) {
 	  // set env to pmenu
 	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
 	  system ( buffer );
+	  emit_and_quit ( buffer );
 	  //sprintf ( buffer, "sudo poweroff" );
 	  //system ( buffer );
 	  exit ( 0 );
