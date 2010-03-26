@@ -176,6 +176,9 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
   if ( p -> startdir ) {
     free ( p -> startdir );
   }
+  if ( p -> appdata_dirname ) {
+    free ( p -> appdata_dirname );
+  }
 
   free(p); /*very important!*/
 
@@ -336,6 +339,11 @@ char *pnd_pxml_get_app_name_fr ( pnd_pxml_handle h ) {
 char *pnd_pxml_get_unique_id ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> unique_id );
+}
+
+char *pnd_pxml_get_appdata_dirname ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> appdata_dirname );
 }
 
 char *pnd_pxml_get_standalone ( pnd_pxml_handle h ) {

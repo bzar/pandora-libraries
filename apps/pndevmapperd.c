@@ -776,20 +776,28 @@ void sigalrm_handler ( int n ) {
 
   // first -- are we critical yet? if so, shut down!
   if ( batlevel <= b_shutdown && b_shutdown_script ) {
-    int x;
+    int mamps = 0;
 
-    pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n", b_shutdown_script );
+    if ( pnd_device_get_charge_current ( &mamps ) && mamps > 100 ) {
+      // critical battery, but charging, so relax.
+    } else {
+      int x;
 
-    if ( ( x = fork() ) < 0 ) {
-      pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-      exit ( -3 );
-    }
+      pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n",
+		b_shutdown_script );
 
-    if ( x == 0 ) {
-      execl ( b_shutdown_script, b_shutdown_script, (char*)NULL );
-      pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
-      exit ( -4 );
-    }
+      if ( ( x = fork() ) < 0 ) {
+	pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+	exit ( -3 );
+      }
+
+      if ( x == 0 ) {
+	execl ( b_shutdown_script, b_shutdown_script, (char*)NULL );
+	pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
+	exit ( -4 );
+      }
+
+    } // charging
 
   }
 

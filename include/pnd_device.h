@@ -22,6 +22,7 @@ extern "C" {
 #define PND_DEVICE_NUB1 "/dev/input/js1"
 #define PND_DEVICE_NUB2 "/dev/input/js2"
 #define PND_DEVICE_BATTERY_GAUGE_PERC "/sys/class/power_supply/bq27500-0/capacity"
+#define PND_DEVICE_CHARGE_CURRENT "/sys/class/power_supply/bq27500-0/current_now"
 
 #define PND_DEVICE_LED_CHARGER "/sys/class/leds/pandora::charger"
 #define PND_DEVICE_LED_POWER   "/sys/class/leds/pandora::power"
@@ -55,6 +56,7 @@ unsigned int pnd_device_get_clock ( void );
  * On error, returns -1
  */
 int pnd_device_get_battery_gauge_perc ( void );
+unsigned char pnd_device_get_charge_current ( int *result ); // returns + - current; if charging, current is +ve.
 
 // LCD to set on/off
 

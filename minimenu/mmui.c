@@ -1462,16 +1462,8 @@ void ui_push_down ( void ) {
 void ui_push_exec ( void ) {
 
   if ( ui_selected ) {
+    pnd_apps_exec_disco ( pnd_run_script, ui_selected -> ref, PND_EXEC_OPTION_NORUN, NULL );
     char buffer [ PATH_MAX ];
-    sprintf ( buffer, "%s/%s", ui_selected -> ref -> object_path, ui_selected -> ref -> object_filename );
-    pnd_apps_exec ( pnd_run_script,
-		    buffer,
-		    ui_selected -> ref -> unique_id,
-		    ui_selected -> ref -> exec,
-		    ui_selected -> ref -> startdir,
-		    ui_selected -> ref -> execargs,
-		    ui_selected -> ref -> clockspeed ? atoi ( ui_selected -> ref -> clockspeed ) : 0,
-		    PND_EXEC_OPTION_NORUN );
     sprintf ( buffer, "%s %s\n", MM_RUN, pnd_apps_exec_runline() );
     emit_and_quit ( buffer );
   }

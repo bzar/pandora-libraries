@@ -158,6 +158,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     if ( appwrappermode ) {
       app->unique_id = pnd_pxml_get_attribute(appElem, PND_PXML_ATTRNAME_UID);
       //pnd_log ( PND_LOG_DEFAULT, (char*)"  Subapp #%u has unique_id %s\n", appcount, app -> unique_id );
+      app->appdata_dirname = pnd_pxml_get_attribute(appElem, PND_PXML_ATTRNAME_APPDATANAME);
     } else {
       app->unique_id = pnd_pxml_get_attribute(hRoot.Element(), PND_PXML_ATTRNAME_UID);
       //pnd_log ( PND_LOG_DEFAULT, (char*)"  Only-app #%u has unique_id %s\n", appcount, app -> unique_id );

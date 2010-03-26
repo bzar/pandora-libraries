@@ -6,7 +6,6 @@
 - libpnd: appdata-dir-name?
 
 - add font and fontcolour control to conf
-- evmapperd.. no force off, if charging on /sys/class/power_supply/bq27500-0/current_now is +ve
 - About screen and shoutouts // konami code?
 - skinning .. mmenu.conf and then skin.conf in each skin dir?
   - skin picker/saver

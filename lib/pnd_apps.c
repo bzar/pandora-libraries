@@ -3,6 +3,7 @@
 #include <stdlib.h> /* for malloc */
 #include <string.h> /* for memset */
 #include <unistd.h> /* for fork/exec */
+#include <limits.h>
 
 #include <sys/types.h> /* for wait */
 #include <sys/wait.h> /* for wait */
@@ -18,13 +19,11 @@ char *pnd_apps_exec_runline ( void ) {
   return ( apps_exec_runline );
 }
 
-unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
-			      char *rel_exec, char *rel_startdir,
-			      char *args,
-			      unsigned int clockspeed, unsigned int options )
+unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
+				    unsigned int options, void *reserved )
 {
   char *argv [ 60 ];
-  char s_clockspeed [ 100 ];
+  char fullpath [ PATH_MAX ] = "";
   int f;
 
   //printf ( "Entering pnd_apps_exec\n" );
@@ -33,27 +32,19 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
     return ( 0 );
   }
 
-  if ( ! fullpath ) {
+  if ( ! app -> unique_id ) {
     return ( 0 );
   }
 
-  if ( ! unique_id ) {
+  if ( ! app -> exec ) {
     return ( 0 );
   }
 
-  if ( ! rel_exec ) {
-    return ( 0 );
-  }
+  // determine path to pnd-file
+  sprintf ( fullpath, "%s/%s", app -> object_path, app -> object_filename );
 
-#if 0
-  printf ( "  runscript: %s\n", pndrun );
-  printf ( "  path: %s\n", fullpath );
-  printf ( "  id: %s\n", unique_id );
-  printf ( "  exec: %s\n", rel_exec );
-  printf ( "  cwd: %s\n", rel_startdir );
-  printf ( "  clock: %u\n", clockspeed );
-#endif
-
+  // nail down argv for the app
+  //
   memset ( argv, '\0', sizeof(char*) * 20 );
 
   f = 0;
@@ -61,21 +52,25 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   argv [ f++ ] = "-p";
   argv [ f++ ] = fullpath;
   argv [ f++ ] = "-e";
-  argv [ f++ ] = rel_exec;
-  if ( rel_startdir ) {
+  argv [ f++ ] = app -> exec;
+  if ( app -> startdir ) {
     argv [ f++ ] = "-s";
-    argv [ f++ ] = rel_startdir;
+    argv [ f++ ] = app -> startdir;
   }
-  if ( args ) {
+  if ( app -> execargs ) {
     argv [ f++ ] = "-a";
-    argv [ f++ ] = args;
+    argv [ f++ ] = app -> execargs;
   }
-  argv [ f++ ] = "-b";
-  argv [ f++ ] = unique_id;
-  if ( clockspeed ) {
+  if ( app -> appdata_dirname ) {
+    argv [ f++ ] = "-b";
+    argv [ f++ ] = app -> appdata_dirname;
+  } else {
+    argv [ f++ ] = "-b";
+    argv [ f++ ] = app -> unique_id;
+  }
+  if ( app -> clockspeed ) {
     argv [ f++ ] = "-c";
-    snprintf ( s_clockspeed, 100, "%u", clockspeed );
-    argv [ f++ ] = s_clockspeed;
+    argv [ f++ ] = app -> clockspeed;
   }
 
   // skip -a (arguments) for now
@@ -164,6 +159,41 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
   // printf ( "Exiting pnd_apps_exec\n" );
 
   return ( 1 );
+}
+
+unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
+			      char *rel_exec, char *rel_startdir,
+			      char *args,
+			      unsigned int clockspeed, unsigned int options )
+{
+  pnd_disco_t d;
+  bzero ( &d, sizeof(pnd_disco_t) );
+
+  char cpuspeed [ 10 ];
+  sprintf ( cpuspeed, "%u", clockspeed );
+
+  char hackpath [ PATH_MAX ];
+  strncpy ( hackpath, fullpath, PATH_MAX );
+  char *c = strrchr ( hackpath, '/' );
+  if ( c ) {
+    *c = '\0';
+    d.object_path = hackpath;
+    d.object_filename = c + 1;
+  } else {
+    d.object_path = fullpath;
+  }
+
+  d.unique_id = unique_id;
+  d.exec = rel_exec;
+  d.startdir = rel_startdir;
+  d.execargs = args;
+  if ( clockspeed ) {
+    d.clockspeed = cpuspeed;
+  } else {
+    d.clockspeed = NULL;
+  }
+
+  return ( pnd_apps_exec_disco ( pndrun, &d, options, NULL ) );
 }
 
 void pnd_get_ro_mountpoint ( char *fullpath, char *unique_id, char *r_mountpoint, unsigned int mountpoint_len ) {

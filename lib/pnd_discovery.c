@@ -30,6 +30,7 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
 
   if ( p -> title_en ) {       free ( p -> title_en );    }
   if ( p -> unique_id ) {      free ( p -> unique_id );   }
+  if ( p -> appdata_dirname ) { free ( p -> appdata_dirname );   }
   if ( p -> icon )     {       free ( p -> icon );        }
   if ( p -> exec )     {       free ( p -> exec );        }
   if ( p -> execargs ) {       free ( p -> execargs );    }
@@ -237,6 +238,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
 	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
       }
+      if ( pnd_pxml_get_appdata_dirname ( pxmlh ) ) {
+	p -> appdata_dirname = strdup ( pnd_pxml_get_appdata_dirname ( pxmlh ) );
+      }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
 	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 
       }
@@ -336,6 +340,15 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	    free ( p -> clockspeed );
 	  }
 	  p -> clockspeed = strdup ( v );
+	}
+
+	// appdata dirname
+	snprintf ( key, 100, "Application-%u.appdata", p -> subapp_number );
+	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+	  if ( p -> appdata_dirname ) {
+	    free ( p -> appdata_dirname );
+	  }
+	  p -> appdata_dirname = strdup ( v );
 	}
 
 	// categories

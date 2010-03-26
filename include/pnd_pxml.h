@@ -49,6 +49,7 @@ char *pnd_pxml_get_app_name_it ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_fr ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name ( pnd_pxml_handle h, char *iso_lang );
 char *pnd_pxml_get_unique_id ( pnd_pxml_handle h );
+char *pnd_pxml_get_appdata_dirname ( pnd_pxml_handle h );
 char *pnd_pxml_get_standalone ( pnd_pxml_handle h );
 char *pnd_pxml_get_icon ( pnd_pxml_handle h );
 char *pnd_pxml_get_description_en ( pnd_pxml_handle h );
@@ -122,6 +123,7 @@ typedef struct
 	int titles_c;
 	int titles_alloc_c;
 	char *unique_id;
+        char *appdata_dirname;       // preferred dir name for appdata; if missing, use unique-id
 	char *standalone;
 	char *icon;
 	pnd_localized_string_t *descriptions;

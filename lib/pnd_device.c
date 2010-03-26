@@ -92,6 +92,17 @@ int pnd_device_get_battery_gauge_perc ( void ) {
   return ( -1 );
 }
 
+unsigned char pnd_device_get_charge_current ( int *result ) {
+  char buffer [ 100 ];
+
+  if ( pnd_device_open_read_close ( PND_DEVICE_CHARGE_CURRENT, buffer, 100 ) ) {
+    *result = atoi ( buffer );
+    return ( 1 );
+  }
+
+  return ( 0 );
+}
+
 unsigned char pnd_device_set_led_power_brightness ( unsigned char v ) {
   char buffer [ 100 ];
 

@@ -104,10 +104,12 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
     // basics
     if ( p -> object_type == pnd_object_type_directory ) {
       snprintf ( buffer, 1020, "Exec=%s%s -p %s -e %s -b %s",
-		 nohup, pndrun, p -> object_path, p -> exec, p -> unique_id );
+		 nohup, pndrun, p -> object_path, p -> exec,
+		 p -> appdata_dirname ? p -> appdata_dirname : p -> unique_id );
     } else if ( p -> object_type == pnd_object_type_pnd ) {
       snprintf ( buffer, 1020, "Exec=%s%s -p %s/%s -e %s -b %s",
-		 nohup, pndrun, p -> object_path, p -> object_filename, p -> exec, p -> unique_id );
+		 nohup, pndrun, p -> object_path, p -> object_filename, p -> exec,
+		 p -> appdata_dirname ? p -> appdata_dirname : p -> unique_id );
     }
 
     // start dir

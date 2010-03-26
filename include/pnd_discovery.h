@@ -56,6 +56,7 @@ typedef struct {
   char *title_en;
   char *desc_en;
   char *unique_id;
+  char *appdata_dirname;       // preferred dir name for appdata; if missing, use unique-id
   char *icon;
   char *exec;
   char *execargs;
