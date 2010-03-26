@@ -11,6 +11,8 @@
 #include "SDL_gfxPrimitives.h"
 #include "SDL_rotozoom.h"
 #include "SDL_thread.h"
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "pnd_conf.h"
 #include "pnd_logger.h"
@@ -19,6 +21,8 @@
 #include "pnd_discovery.h"
 #include "pnd_apps.h"
 #include "pnd_device.h"
+#include "../lib/pnd_pathiter.h"
+#include "pnd_utility.h"
 
 #include "mmenu.h"
 #include "mmcat.h"
@@ -155,11 +159,11 @@ unsigned char ui_setup ( void ) {
   }
 
   // grid font
-  sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, MMENU_GRID_FONT ) );
-  g_grid_font = TTF_OpenFont ( fullpath, pnd_conf_get_as_int_d ( g_conf, MMENU_GRID_FONTSIZE, 10 ) );
+  sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, "grid.font" ) );
+  g_grid_font = TTF_OpenFont ( fullpath, pnd_conf_get_as_int_d ( g_conf, "grid.font_ptsize", 10 ) );
   if ( ! g_grid_font ) {
     pnd_log ( pndn_error, "ERROR: Couldn't load font '%s' for size %u\n",
-	      pnd_conf_get_as_char ( g_conf, MMENU_GRID_FONT ), pnd_conf_get_as_int_d ( g_conf, MMENU_GRID_FONTSIZE, 10 ) );
+	      pnd_conf_get_as_char ( g_conf, "grid.font" ), pnd_conf_get_as_int_d ( g_conf, "grid.font_ptsize", 10 ) );
     return ( 0 ); // couldn't set up SDL TTF
   }
 
@@ -308,8 +312,8 @@ void ui_render ( void ) {
 
   unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
 
-  unsigned char row_max = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ROWMAX, 4 );
-  unsigned char col_max = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_COLMAX, 5 );
+  unsigned char row_max = pnd_conf_get_as_int_d ( g_conf, "grid.row_max", 4 );
+  unsigned char col_max = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
 
   unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
   unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
@@ -1159,9 +1163,10 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Exit and run xfce4",
 	  "Exit and run pmenu",
 	  "Quit (<- beware)",
+	  "Select a Minimenu skin",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 9, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 11, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
@@ -1236,6 +1241,11 @@ void ui_process_input ( unsigned char block_p ) {
 	} else if ( sel == 8 ) {
 	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 9 ) {
+	  // select skin
+	  if ( ui_pick_skin() ) {
+	    emit_and_quit ( MM_RESTART );
+	  }
+	} else if ( sel == 10 ) {
 	  // about
 	}
 
@@ -1362,7 +1372,7 @@ void ui_push_right ( unsigned char forcecoil ) {
 }
 
 void ui_push_up ( void ) {
-  unsigned char col_max = pnd_conf_get_as_int ( g_conf, MMENU_DISP_COLMAX );
+  unsigned char col_max = pnd_conf_get_as_int ( g_conf, "grid.col_max" );
 
   if ( ! ui_selected ) {
     return;
@@ -1396,7 +1406,7 @@ void ui_push_up ( void ) {
 
     // scroll down to show it
     int r = ui_determine_row ( ui_selected ) - 1;
-    if ( r - pnd_conf_get_as_int ( g_conf, MMENU_DISP_ROWMAX ) > 0 ) {
+    if ( r - pnd_conf_get_as_int ( g_conf, "grid.row_max" ) > 0 ) {
       ui_rows_scrolled_down = (unsigned int) r;
     }
 
@@ -1414,7 +1424,7 @@ void ui_push_up ( void ) {
 }
 
 void ui_push_down ( void ) {
-  unsigned char col_max = pnd_conf_get_as_int ( g_conf, MMENU_DISP_COLMAX );
+  unsigned char col_max = pnd_conf_get_as_int ( g_conf, "grid.col_max" );
 
   if ( ui_selected ) {
 
@@ -2167,8 +2177,8 @@ unsigned char ui_threaded_defered_icon ( void *p ) {
   pnd_box_handle h = g_active_apps;
 
   unsigned char maxwidth, maxheight;
-  maxwidth = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_WIDTH, 50 );
-  maxheight = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_HEIGHT, 50 );
+  maxwidth = pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 );
+  maxheight = pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_height", 50 );
 
   pnd_disco_t *iter = pnd_box_get_head ( h );
 
@@ -2215,4 +2225,66 @@ void ui_show_hourglass ( unsigned char updaterect ) {
   }
 
   return;
+}
+
+unsigned char ui_pick_skin ( void ) {
+#define MAXSKINS 10
+  char *skins [ MAXSKINS ];
+  unsigned char iter;
+
+  char *searchpath = pnd_conf_get_as_char ( g_conf, "minimenu.skin_searchpath" );
+  char tempname [ 100 ];
+
+  iter = 0;
+
+  skins [ iter++ ] = "No skin change";
+
+  SEARCHPATH_PRE
+  {
+    DIR *d = opendir ( buffer );
+
+    if ( d ) {
+      struct dirent *dd;
+
+      while ( ( dd = readdir ( d ) ) ) {
+
+	if ( dd -> d_name [ 0 ] == '.' ) {
+	  // ignore
+	} else if ( ( dd -> d_type == DT_DIR || dd -> d_type == DT_UNKNOWN ) &&
+		    iter < MAXSKINS )
+	{
+	  snprintf ( tempname, 100, "Skin: %s", dd -> d_name );
+	  skins [ iter++ ] = strdup ( tempname );
+	}
+
+      }
+
+      closedir ( d );
+    }
+
+  }
+  SEARCHPATH_POST
+
+  int sel = ui_modal_single_menu ( skins, iter, "Skins", "Enter to select; other to return." );
+
+  // did they pick one?
+  if ( sel > 0 ) {
+    FILE *f;
+
+    char *s = strdup ( pnd_conf_get_as_char ( g_conf, "minimenu.skin_selected" ) );
+    s = pnd_expand_tilde ( s );
+
+    f = fopen ( s, "w" );
+
+    free ( s );
+
+    if ( f ) {
+      fprintf ( f, "%s\n", skins [ sel ] + 6 );
+      fclose ( f );
+    }
+
+    return ( 1 );
+  }
+
+  return ( 0 );
 }

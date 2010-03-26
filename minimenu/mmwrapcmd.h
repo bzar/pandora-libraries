@@ -8,5 +8,6 @@
 
 #define MM_QUIT "--->quit"
 #define MM_RUN "--->run"
+#define MM_RESTART "--->restart"
 
 #endif

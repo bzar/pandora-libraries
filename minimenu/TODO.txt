@@ -5,10 +5,9 @@
 
 - libpnd: appdata-dir-name?
 
+- BJ dpad for demo
 - add font and fontcolour control to conf
 - About screen and shoutouts // konami code?
-- skinning .. mmenu.conf and then skin.conf in each skin dir?
-  - skin picker/saver
 
 - some ultra primtive frame draw, so the 'detail menu' and any 'sub menus' can draw
   their own frame rather than depand on skin frame to exist

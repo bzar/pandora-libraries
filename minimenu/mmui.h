@@ -56,6 +56,7 @@ typedef enum {
 
 unsigned char ui_setup ( void );
 unsigned char ui_imagecache ( char *basepath );
+unsigned char ui_pick_skin ( void ); // return >0 if skin has changed
 
 void ui_render ( void );
 

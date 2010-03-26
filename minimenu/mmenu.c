@@ -60,10 +60,13 @@ pnd_conf_handle g_conf = 0;
 pnd_conf_handle g_desktopconf = 0;
 
 char *pnd_run_script = NULL;
-char *g_skinpath = NULL;
 unsigned char g_x11_present = 1; // >0 if X is present
 unsigned char g_catmap = 0; // if 1, we're doing category mapping
 unsigned char g_pvwcache = 0; // if 1, we're trying to do preview caching
+
+char g_skin_selected [ 100 ] = "default";
+char *g_skinpath = NULL; // where 'skin_selected' is located .. the fullpath including skin-dir-name
+pnd_conf_handle g_skinconf = NULL;
 
 int main ( int argc, char *argv[] ) {
   int logall = -1; // -1 means normal logging rules; >=0 means log all!
@@ -207,28 +210,61 @@ int main ( int argc, char *argv[] ) {
 
   pnd_log ( pndn_rem, "Found pnd_run.sh at '%s'\n", pnd_run_script );
 
-  // figure out skin path
-  if ( ! pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ) ||
-       ! pnd_conf_get_as_char ( g_conf, "minimenu.font" )
-     )
+  // figure out what skin is selected (or default)
+  FILE *f;
+  char *s = strdup ( pnd_conf_get_as_char ( g_conf, "minimenu.skin_selected" ) );
+  s = pnd_expand_tilde ( s );
+  if ( ( f = fopen ( s, "r" ) ) ) {
+    char buffer [ 100 ];
+    if ( fgets ( buffer, 100, f ) ) {
+      // see if that dir can be located
+      if ( strchr ( buffer, '\n' ) ) {
+	* strchr ( buffer, '\n' ) = '\0';
+      }
+      char *found = pnd_locate_filename ( pnd_conf_get_as_char ( g_conf, "minimenu.skin_searchpath" ), buffer );
+      if ( found ) {
+	strncpy ( g_skin_selected, buffer, 100 );
+	g_skinpath = strdup ( found );
+      } else {
+	pnd_log ( pndn_warning, "Couldn't locate skin named '%s' so falling back.\n", buffer );
+      }
+    }
+    fclose ( f );
+  }
+  free ( s );
+
+  if ( g_skinpath ) {
+    pnd_log ( pndn_rem, "Skin is selected: '%s'\n", g_skin_selected );
+  } else {
+    pnd_log ( pndn_rem, "Skin falling back to: '%s'\n", g_skin_selected );
+
+    char *found = pnd_locate_filename ( pnd_conf_get_as_char ( g_conf, "minimenu.skin_searchpath" ),
+					g_skin_selected );
+    if ( found ) {
+      g_skinpath = strdup ( found );
+    } else {
+      pnd_log ( pndn_error, "Couldn't locate skin named '%s'.\n", g_skin_selected );
+      emit_and_quit ( MM_QUIT );
+    }
+
+  }
+  pnd_log ( pndn_rem, "Skin path determined to be: '%s'\n", g_skinpath );
+
+  // lets see if this skin-path actually has a skin conf
   {
+    char fullpath [ PATH_MAX ];
+    sprintf ( fullpath, "%s/%s", g_skinpath, pnd_conf_get_as_char ( g_conf, "minimenu.skin_confname" ) );
+    g_skinconf = pnd_conf_fetch_by_path ( fullpath );
+  }
+
+  // figure out skin path if we didn't get it already
+  if ( ! g_skinconf ) {
     pnd_log ( pndn_error, "ERROR: Couldn't set up skin!\n" );
     emit_and_quit ( MM_QUIT );
   }
 
-  g_skinpath = pnd_locate_filename ( pnd_conf_get_as_char ( g_conf, MMENU_ARTPATH ),
-				     pnd_conf_get_as_char ( g_conf, "minimenu.font" ) );
-
-  if ( ! g_skinpath ) {
-    pnd_log ( pndn_error, "ERROR: Couldn't locate skin font!\n" );
-    emit_and_quit ( MM_QUIT );
-  }
-
-  g_skinpath = strdup ( g_skinpath ); // so we don't lose it next pnd_locate
-
-  * strstr ( g_skinpath, pnd_conf_get_as_char ( g_conf, "minimenu.font" ) ) = '\0';
-
-  pnd_log ( pndn_debug, "Looks like skin is at '%s'\n", g_skinpath );
+  // lets just merge the skin conf onto the regular conf, so it just magicly works
+  pnd_box_append ( g_conf, g_skinconf );
 
   // attempt to set up UI
   if ( ! ui_setup() ) {
@@ -367,8 +403,8 @@ void applications_scan ( void ) {
   g_active_appcount = pnd_box_get_size ( g_active_apps );
 
   unsigned char maxwidth, maxheight;
-  maxwidth = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_WIDTH, 50 );
-  maxheight = pnd_conf_get_as_int_d ( g_conf, MMENU_DISP_ICON_MAX_HEIGHT, 50 );
+  maxwidth = pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 );
+  maxheight = pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_height", 50 );
 
   // show cache screen
   ui_cachescreen ( 1 /* clear screen */, NULL );
