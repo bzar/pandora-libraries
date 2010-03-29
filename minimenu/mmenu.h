@@ -9,7 +9,7 @@ extern char *g_skinpath;
 
 // base searchpath to locate the conf
 #define MMENU_CONF "mmenu.conf"
-#define MMENU_CONF_SEARCHPATH "/etc/pandora/conf:./minimenu"
+#define MMENU_CONF_SEARCHPATH "/media/*/pandora/mmenu:/etc/pandora/conf:./minimenu"
 
 typedef enum {
   pndn_debug = 0,
