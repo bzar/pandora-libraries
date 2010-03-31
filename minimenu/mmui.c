@@ -432,12 +432,17 @@ void ui_render ( void ) {
       // draw tab
       src.x = 0;
       src.y = 0;
+#if 0
       src.w = tab_width;
       if ( col == ui_category ) {
 	src.h = tab_selheight;
       } else {
 	src.h = tab_height;
       }
+#else
+      src.w = s -> w;
+      src.h = s -> h;
+#endif
       dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
       dest -> y = tab_offset_y;
 
