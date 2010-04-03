@@ -195,7 +195,9 @@ mm_imgcache_t g_imagecache [ IMG_TRUEMAX ] = {
   { IMG_DETAIL_BG,            "graphics.IMG_DETAIL_BG" },
   { IMG_SELECTED_ALPHAMASK,   "graphics.IMG_SELECTED_ALPHAMASK" },
   { IMG_TAB_SEL,              "graphics.IMG_TAB_SEL" },
+  { IMG_TAB_SEL_L,            "graphics.IMG_TAB_SEL_L" },
   { IMG_TAB_UNSEL,            "graphics.IMG_TAB_UNSEL" },
+  { IMG_TAB_UNSEL_L,          "graphics.IMG_TAB_UNSEL_L" },
   { IMG_TAB_LINE,             "graphics.IMG_TAB_LINE" },
   { IMG_TAB_LINEL,            "graphics.IMG_TAB_LINEL" },
   { IMG_TAB_LINER,            "graphics.IMG_TAB_LINER" },
@@ -423,11 +425,28 @@ void ui_render ( void ) {
     {
 
       SDL_Surface *s;
-      if ( col == ui_category ) {
-	s = g_imagecache [ IMG_TAB_SEL ].i;
+
+      // if this is the first (leftmost) tab, we use different artwork
+      // than if the other tabs (so skinner can link lines up nicely.)
+      if ( col == ui_catshift ) {
+	// leftmost tab, special case
+
+	if ( col == ui_category ) {
+	  s = g_imagecache [ IMG_TAB_SEL_L ].i;
+	} else {
+	  s = g_imagecache [ IMG_TAB_UNSEL_L ].i;
+	}
+
       } else {
-	s = g_imagecache [ IMG_TAB_UNSEL ].i;
-      }
+	// normal (not leftmost) tab
+
+	if ( col == ui_category ) {
+	  s = g_imagecache [ IMG_TAB_SEL ].i;
+	} else {
+	  s = g_imagecache [ IMG_TAB_UNSEL ].i;
+	}
+
+      } // first col, or not first col?
 
       // draw tab
       src.x = 0;

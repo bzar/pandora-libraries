@@ -3,11 +3,10 @@
   - full-replacement PXML is one option, another is
   - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
 
-- libpnd: appdata-dir-name?
-
-- BJ dpad for demo
 - add font and fontcolour control to conf
 - About screen and shoutouts // konami code?
+
+- add check.. if bad skin reported by mmenu, have mmwrapper set it back to default? or mm itself do it?
 
 - some ultra primtive frame draw, so the 'detail menu' and any 'sub menus' can draw
   their own frame rather than depand on skin frame to exist
