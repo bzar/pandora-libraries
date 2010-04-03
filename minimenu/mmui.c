@@ -361,7 +361,7 @@ void ui_render ( void ) {
     int topleft = col_max * ui_rows_scrolled_down;
     int botright = ( col_max * ( ui_rows_scrolled_down + row_max ) - 1 );
 
-    //pnd_log ( PND_LOG_DEFAULT, "index %u tl %u br %u\n", index, topleft, botright );
+    pnd_log ( PND_LOG_DEFAULT, "index %u tl %u br %u\n", index, topleft, botright );
 
     if ( index < topleft ) {
       ui_rows_scrolled_down -= pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
@@ -1308,13 +1308,13 @@ void ui_push_left ( unsigned char forcecoil ) {
   // what column we in?
   unsigned int col = ui_determine_screen_col ( ui_selected );
 
-  // are we alreadt at first item?
+  // are we already at first item?
   if ( forcecoil == 0 &&
        pnd_conf_get_as_int_d ( g_conf, "grid.wrap_horiz_samerow", 0 ) &&
        col == 0 )
   {
     unsigned int i = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1;
-    while ( i ) {
+    while ( i && ui_selected -> next ) {
       ui_push_right ( 0 );
       i--;
     }
@@ -1349,13 +1349,16 @@ void ui_push_right ( unsigned char forcecoil ) {
     // wrap same or no?
     if ( forcecoil == 0 &&
 	 pnd_conf_get_as_int_d ( g_conf, "grid.wrap_horiz_samerow", 0 ) &&
-	 col == pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1 )
+	 // and selected is far-right, or last icon in category (might not be far right)
+	 ( ( col == pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1 ) ||
+	   ( ui_selected -> next == NULL ) )
+       )
     {
       // same wrap
-      unsigned int i = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1;
-      while ( i ) {
+      //unsigned int i = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1;
+      while ( col /*i*/ ) {
 	ui_push_left ( 0 );
-	i--;
+	col--; //i--;
       }
 
     } else {
@@ -1457,6 +1460,8 @@ void ui_push_down ( void ) {
       }
 
       ui_rows_scrolled_down = 0;
+
+      render_mask |= CHANGED_EVERYTHING;
 
     } else {
 
