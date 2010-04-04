@@ -196,8 +196,10 @@ mm_imgcache_t g_imagecache [ IMG_TRUEMAX ] = {
   { IMG_SELECTED_ALPHAMASK,   "graphics.IMG_SELECTED_ALPHAMASK" },
   { IMG_TAB_SEL,              "graphics.IMG_TAB_SEL" },
   { IMG_TAB_SEL_L,            "graphics.IMG_TAB_SEL_L" },
+  { IMG_TAB_SEL_R,            "graphics.IMG_TAB_SEL_R" },
   { IMG_TAB_UNSEL,            "graphics.IMG_TAB_UNSEL" },
   { IMG_TAB_UNSEL_L,          "graphics.IMG_TAB_UNSEL_L" },
+  { IMG_TAB_UNSEL_R,          "graphics.IMG_TAB_UNSEL_R" },
   { IMG_TAB_LINE,             "graphics.IMG_TAB_LINE" },
   { IMG_TAB_LINEL,            "graphics.IMG_TAB_LINEL" },
   { IMG_TAB_LINER,            "graphics.IMG_TAB_LINER" },
@@ -435,6 +437,15 @@ void ui_render ( void ) {
 	  s = g_imagecache [ IMG_TAB_SEL_L ].i;
 	} else {
 	  s = g_imagecache [ IMG_TAB_UNSEL_L ].i;
+	}
+
+      } else if ( col == maxtab - 1 ) {
+	// rightmost tab, special case
+
+	if ( col == ui_category ) {
+	  s = g_imagecache [ IMG_TAB_SEL_R ].i;
+	} else {
+	  s = g_imagecache [ IMG_TAB_UNSEL_R ].i;
 	}
 
       } else {
