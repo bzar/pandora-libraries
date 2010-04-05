@@ -11,8 +11,12 @@ typedef struct _mm_appref_t {
 
 typedef struct {
   char *catname;          // name of the category
+  // current applications
   mm_appref_t *refs;      // apps (from g_active_apps) that are in this category
   unsigned int refcount;  // how many apps in this category
+  // if a directory browser category, additional info is needed
+  char *fspath;           // NULL if a pnd-category (not a filesystem category)
+  pnd_box_handle disco;   // faux-applications generated from filesystem
 } mm_category_t;
 
 #define MAX_CATS 100
@@ -20,10 +24,11 @@ typedef struct {
 #define CATEGORY_ALL "All"
 
 // try to populate as many cats as necessary
-unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh ); // catname is not pulled from app, so we can make them up on the fly (ie: "All")
+unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath ); // catname is not pulled from app, so we can make them up on the fly (ie: "All");
 mm_category_t *category_query ( char *catname );
 void category_dump ( void ); // sort the apprefs
 void category_freeall ( void );
+int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ); // like strcmp, but used to sort apps by title
 
 // category mapping hack
 typedef struct {
@@ -34,5 +39,8 @@ typedef struct {
 unsigned char category_map_setup ( void ); // set up the mappings
 mm_category_t *category_map_query ( char *cat );
 unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh );
+
+// filesystem browser
+unsigned char category_fs_restock ( mm_category_t *cat );
 
 #endif

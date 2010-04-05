@@ -16,6 +16,7 @@ extern "C" {
  * overridespath may be NULL if you do not wish to search for pxml overrides
  */
 pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath );
+pnd_box_handle pnd_disco_file ( char *path, char *filename ); // should you wish to 'discover' one .pnd-file
 
 /* pnd_disco_t describes a given entry found by the discovery code; ie: the containers key is the path to
  * the PXML file (since this is relatively unique), with the fields below detailing the executable path,
@@ -44,6 +45,7 @@ typedef enum {
 // NOTE: We really need to rework disco-t so it can include non-english titles/desc; perhaps more info as optional,
 //   or a name/value pairing system so it can have extra data in it, without a complex structure.
 #define PND_DISCO_FLAG_OVR 1   // An ovr file was found for this app (not per subapp, just per .pnd)
+#define PND_DISCO_GENERATED 2  // This disco is 'faux', made up and not reflecting a real 'pnd file'
 typedef struct {
   // base
   unsigned char object_type;   // see enum above

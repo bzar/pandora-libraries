@@ -32,6 +32,8 @@ typedef enum {
   IMG_ARROW_DOWN,
   IMG_ARROW_SCROLLBAR,
   IMG_HOURGLASS,
+  IMG_FOLDER,
+  IMG_EXECBIN,
   IMG_MAX, // before this point is loaded; after is generated
   IMG_TRUEMAX
 } mm_imgcache_e;

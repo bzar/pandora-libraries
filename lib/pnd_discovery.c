@@ -420,3 +420,34 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath ) {
 
   return ( disco_box );
 }
+
+pnd_box_handle pnd_disco_file ( char *path, char *filename ) {
+  struct stat statbuf;
+
+  // set up container
+  disco_overrides = NULL;
+  disco_box = pnd_box_new ( "discovery" );
+
+  // path
+  char fullpath [ PATH_MAX ];
+  sprintf ( fullpath, "%s/%s", path, filename );
+
+  // fake it
+  if ( stat ( fullpath, &statbuf ) < 0 ) {
+    return ( 0 );
+  }
+
+  struct FTW ftw;
+  ftw.base = strlen ( path );
+  ftw.level = 0;
+
+  pnd_disco_callback ( fullpath, &statbuf, FTW_F, &ftw );
+
+  // return whatever we found, or NULL if nada
+  if ( ! pnd_box_get_head ( disco_box ) ) {
+    pnd_box_delete ( disco_box );
+    disco_box = NULL;
+  }
+
+  return ( disco_box );
+}

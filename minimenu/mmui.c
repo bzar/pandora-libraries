@@ -1,9 +1,14 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
+#include <stdio.h> /* for FILE etc */
+#include <stdlib.h> /* for malloc */
+#include <unistd.h> /* for unlink */
+#include <limits.h> /* for PATH_MAX */
+#include <sys/types.h>
+#include <sys/stat.h>
+#define __USE_GNU /* for strcasestr */
+#include <string.h> /* for making ftw.h happy */
 #include <time.h>
-#include <unistd.h>
+#include <ftw.h>
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_image.h"
@@ -11,7 +16,6 @@
 #include "SDL_gfxPrimitives.h"
 #include "SDL_rotozoom.h"
 #include "SDL_thread.h"
-#include <sys/types.h>
 #include <dirent.h>
 
 #include "pnd_conf.h"
@@ -23,6 +27,7 @@
 #include "pnd_device.h"
 #include "../lib/pnd_pathiter.h"
 #include "pnd_utility.h"
+#include "pnd_pndfiles.h"
 
 #include "mmenu.h"
 #include "mmcat.h"
@@ -210,6 +215,8 @@ mm_imgcache_t g_imagecache [ IMG_TRUEMAX ] = {
   { IMG_ARROW_DOWN,           "graphics.IMG_ARROW_DOWN", },
   { IMG_ARROW_SCROLLBAR,      "graphics.IMG_ARROW_SCROLLBAR", },
   { IMG_HOURGLASS,            "graphics.IMG_HOURGLASS", },
+  { IMG_FOLDER,               "graphics.IMG_FOLDER", },
+  { IMG_EXECBIN,              "graphics.IMG_EXECBIN", },
   { IMG_MAX,                  NULL },
 };
 
@@ -365,8 +372,6 @@ void ui_render ( void ) {
     int topleft = col_max * ui_rows_scrolled_down;
     int botright = ( col_max * ( ui_rows_scrolled_down + row_max ) - 1 );
 
-    pnd_log ( PND_LOG_DEFAULT, "index %u tl %u br %u\n", index, topleft, botright );
-
     if ( index < topleft ) {
       ui_rows_scrolled_down -= pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
       render_jobs_b |= R_ALL;
@@ -411,7 +416,7 @@ void ui_render ( void ) {
   if ( g_imagecache [ IMG_TAB_SEL ].i && g_imagecache [ IMG_TAB_UNSEL ].i ) {
     unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
     unsigned int tab_height = pnd_conf_get_as_int ( g_conf, "tabs.tab_height" );
-    unsigned int tab_selheight = pnd_conf_get_as_int ( g_conf, "tabs.tab_selheight" );
+    //unsigned int tab_selheight = pnd_conf_get_as_int ( g_conf, "tabs.tab_selheight" );
     unsigned int tab_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_x" );
     unsigned int tab_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_y" );
     unsigned int text_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_x" );
@@ -668,8 +673,22 @@ void ui_render ( void ) {
 	      iconsurface = ic -> i;
 	    } else {
 	      //pnd_log ( pndn_warning, "WARNING: TBD: Need Missin-icon icon for '%s'\n", IFNULL(appiter -> ref -> title_en,"No Name") );
-	      iconsurface = g_imagecache [ IMG_ICON_MISSING ].i;
+
+	      // no icon override; was this a pnd-file (show the unknown icon then), or was this generated from
+	      // filesystem (file or directory icon)
+	      if ( appiter -> ref -> object_flags & PND_DISCO_GENERATED ) {
+		if ( appiter -> ref -> object_type == pnd_object_type_directory ) {
+		  iconsurface = g_imagecache [ IMG_FOLDER ].i;
+		} else {
+		  iconsurface = g_imagecache [ IMG_EXECBIN ].i;
+		}
+	      } else {
+		iconsurface = g_imagecache [ IMG_ICON_MISSING ].i;
+	      }
+
 	    }
+
+	    // got an icon I hope?
 	    if ( iconsurface ) {
 	      //pnd_log ( pndn_debug, "Got an icon for '%s'\n", IFNULL(appiter -> ref -> title_en,"No Name") );
 
@@ -1511,7 +1530,88 @@ void ui_push_down ( void ) {
 
 void ui_push_exec ( void ) {
 
-  if ( ui_selected ) {
+  if ( ! ui_selected ) {
+    return;
+  }
+
+  // was this icon generated from filesystem, or from pnd-file?
+  if ( ui_selected -> ref -> object_flags & PND_DISCO_GENERATED ) {
+
+    if ( ! ui_selected -> ref -> title_en ) {
+      return; // no filename
+    }
+
+    if ( ui_selected -> ref -> object_type == pnd_object_type_directory ) {
+      // delve up/down the dir tree
+
+      if ( strcmp ( ui_selected -> ref -> title_en, ".." ) == 0 ) {
+	// go up
+	char *c;
+
+	// lop off last word; if the thing ends with /, lop that one, then the next word.
+	while ( ( c = strrchr ( g_categories [ ui_category].fspath, '/' ) ) ) {
+	  *c = '\0'; // lop off the last hunk
+	  if ( *(c+1) != '\0' ) {
+	    break;
+	  }
+	} // while
+
+	// nothing left?
+	if ( g_categories [ ui_category].fspath [ 0 ] == '\0' ) {
+	  strcpy ( g_categories [ ui_category].fspath, "/" );
+	}
+
+      } else {
+	// go down
+	strcat ( g_categories [ ui_category].fspath, "/" );
+	strcat ( g_categories [ ui_category].fspath, ui_selected -> ref -> title_en );
+      }
+
+      pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ].catname, g_categories [ ui_category ].fspath );
+
+      // rescan the dir
+      category_fs_restock ( &(g_categories [ ui_category]) );
+      // forget the selection, nolonger applies
+      ui_selected = NULL;
+      ui_set_selected ( ui_selected );
+      // redraw the grid
+      render_mask |= CHANGED_SELECTION;
+
+    } else {
+      // just run it arbitrarily?
+
+      // if this a pnd-file, or just some executable?
+      if ( strcasestr ( ui_selected -> ref -> object_filename, PND_PACKAGE_FILEEXT ) ) {
+	// looks like a pnd, now what do we do..
+	pnd_box_handle h = pnd_disco_file ( ui_selected -> ref -> object_path, ui_selected -> ref -> object_filename );
+
+	if ( h ) {
+	  pnd_disco_t *d = pnd_box_get_head ( h );
+	  pnd_apps_exec_disco ( pnd_run_script, d, PND_EXEC_OPTION_NORUN, NULL );
+	  char buffer [ PATH_MAX ];
+	  sprintf ( buffer, "%s %s\n", MM_RUN, pnd_apps_exec_runline() );
+	  emit_and_quit ( buffer );
+	}
+
+      } else {
+	// random bin file
+#if 1
+	char cwd [ PATH_MAX ];
+	getcwd ( cwd, PATH_MAX );
+
+	chdir ( g_categories [ ui_category ].fspath );
+	pnd_exec_no_wait_1 ( ui_selected -> ref -> title_en, NULL );
+	chdir ( cwd );
+#else
+	char buffer [ PATH_MAX ];
+	sprintf ( buffer, "%s %s/%s\n", MM_RUN, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
+	emit_and_quit ( buffer );
+#endif
+      } // pnd or bin?
+
+    } // dir or file?
+
+  } else {
     pnd_apps_exec_disco ( pnd_run_script, ui_selected -> ref, PND_EXEC_OPTION_NORUN, NULL );
     char buffer [ PATH_MAX ];
     sprintf ( buffer, "%s %s\n", MM_RUN, pnd_apps_exec_runline() );
@@ -1526,9 +1626,11 @@ void ui_push_ltrigger ( void ) {
 
   if ( ui_category > 0 ) {
     ui_category--;
+    category_fs_restock ( &(g_categories [ ui_category ]) );
   } else {
     if ( pnd_conf_get_as_int_d ( g_conf, "tabs.wraparound", 0 ) > 0 ) {
       ui_category = g_categorycount - 1;
+      category_fs_restock ( &(g_categories [ ui_category ]) );
     }
   }
 
@@ -1558,9 +1660,11 @@ void ui_push_rtrigger ( void ) {
 
   if ( ui_category < ( g_categorycount - 1 ) ) {
     ui_category++;
+    category_fs_restock ( &(g_categories [ ui_category ]) );
   } else {
     if ( pnd_conf_get_as_int_d ( g_conf, "tabs.wraparound", 0 ) > 0 ) {
       ui_category = 0;
+      category_fs_restock ( &(g_categories [ ui_category ]) );
     }
   }
 

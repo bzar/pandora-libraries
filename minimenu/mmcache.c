@@ -239,10 +239,15 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
     } // stat
   } // ovr?
 
-  // pull icon into buffer from .pnd
-  if ( ! iconbuf ) {
-    iconbuf = pnd_emit_icon_to_buffer ( app, &buflen );
-  }
+  // if this is a real pnd file (dir-app or pnd-file-app), then try to pull icon from there
+  if ( ! ( app -> object_flags & PND_DISCO_GENERATED ) ) {
+
+    // pull icon into buffer from .pnd if not already found an icon
+    if ( ! iconbuf ) {
+      iconbuf = pnd_emit_icon_to_buffer ( app, &buflen );
+    }
+
+  } // generated?
 
   if ( ! iconbuf ) {
     return ( 0 );

@@ -35,6 +35,7 @@
 #include <strings.h>
 #include <ctype.h>
 #include <sys/wait.h>
+#include <dirent.h>
 
 #include "pnd_logger.h"
 #include "pnd_pxml.h"
@@ -45,6 +46,7 @@
 #include "pnd_locate.h"
 #include "pnd_device.h"
 #include "pnd_pndfiles.h"
+#include "../lib/pnd_pathiter.h"
 
 #include "mmenu.h"
 #include "mmwrapcmd.h"
@@ -171,6 +173,25 @@ int main ( int argc, char *argv[] ) {
     emit_and_quit ( MM_QUIT );
   }
 
+  /* category conf file
+   */
+  {
+    char *locater = pnd_locate_filename ( pnd_conf_get_as_char ( g_conf, "categories.catmap_searchpath" ),
+					  pnd_conf_get_as_char ( g_conf, "categories.catmap_confname" ) );
+
+    if ( locater ) {
+      pnd_log ( pndn_rem, "Found category conf at '%s'\n", locater );
+      pnd_conf_handle h = pnd_conf_fetch_by_path ( locater );
+      if ( h ) {
+	// lets just merge the skin conf onto the regular conf, so it just magicly works
+	pnd_box_append ( g_conf, h );
+      }
+    } else {
+      pnd_log ( pndn_debug, "No additional category conf file found.\n" );
+    }
+
+  } // cat conf
+
   // redo log filter
   pnd_log_set_filter ( pnd_conf_get_as_int_d ( g_conf, "minimenu.loglevel", pndn_error ) );
 
@@ -288,7 +309,7 @@ int main ( int argc, char *argv[] ) {
 
   // create all cat
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL, 0 );
+    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL /*app*/, 0, NULL /* fspath */ );
   }
 
   // set up category mappings
@@ -323,6 +344,34 @@ int main ( int argc, char *argv[] ) {
 void emit_and_quit ( char *s ) {
   printf ( "%s\n", s );
   exit ( 0 );
+}
+
+static unsigned int is_dir_empty ( char *fullpath ) {
+  DIR *d = opendir ( fullpath );
+
+  if ( ! d ) {
+    return ( 0 ); // not empty, since we don't know
+  }
+
+  struct dirent *de = readdir ( d );
+
+  while ( de ) {
+
+    if ( strcmp ( de -> d_name, "." ) == 0 ) {
+      // irrelevent
+    } else if ( strcmp ( de -> d_name, ".." ) == 0 ) {
+      // irrelevent
+    } else {
+      // something else came in, so dir must not be empty
+      return ( 0 ); 
+    }
+
+    de = readdir ( d );
+  }
+
+  closedir ( d );
+
+  return ( 1 ); // dir is empty
 }
 
 void applications_free ( void ) {
@@ -470,7 +519,7 @@ void applications_scan ( void ) {
       // push to All category
       // we do this first, so first category is always All
       if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-	if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh ) ) {
+	if ( ! category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */ ) ) {
 	  pnd_log ( pndn_warning, "  Couldn't categorize to All: '%s'\n", IFNULL(iter -> title_en, "No Name") );
 	}
       } // all?
@@ -519,6 +568,30 @@ void applications_scan ( void ) {
     iter = pnd_box_get_next ( iter );
     itercount++;
   } // while
+
+  // set up filesystem browser tabs
+  if ( pnd_conf_get_as_int_d ( g_conf, "filesystem.do_browser", 0 ) ) {
+    char *searchpath = pnd_conf_get_as_char ( g_conf, "filesystem.tab_searchpaths" );
+
+    SEARCHPATH_PRE
+    {
+      char *c, *tabname;
+      c = strrchr ( buffer, '/' );
+      if ( c && (*(c+1)!='\0') ) {
+	tabname = c;
+      } else {
+	tabname = buffer;
+      }
+
+      // check if dir is empty; if so, skip it.
+      if ( ! is_dir_empty ( buffer ) ) {
+	category_push ( tabname /* tab name */, NULL /* app */, 0 /* override */, buffer /* fspath */ );
+      }
+
+    }
+    SEARCHPATH_POST
+
+  } // set up fs browser tabs
 
   // dump categories
   //category_dump();

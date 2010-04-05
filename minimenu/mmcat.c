@@ -2,6 +2,10 @@
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "pnd_conf.h"
 #include "pnd_logger.h"
@@ -22,7 +26,7 @@ unsigned char g_catmapcount = 0;
 
 extern pnd_conf_handle g_conf;
 
-unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh ) {
+unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath ) {
   mm_category_t *c;
 
   // check category list; if found, append app to the end of it.
@@ -42,6 +46,11 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
     g_categories [ g_categorycount ].catname = strdup ( catname );
     g_categories [ g_categorycount ].refs = NULL;
     c = &(g_categories [ g_categorycount ]);
+
+    if ( fspath ) {
+      g_categories [ g_categorycount ].fspath = strdup ( fspath );;
+    }
+
     g_categorycount++;
   }
 
@@ -75,7 +84,7 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
     while ( iter ) {
 
       if ( iter -> ref -> title_en ) {
-	if ( strcmp ( ar -> ref -> title_en, iter -> ref -> title_en ) < 0 ) {
+	if ( cat_sort_score ( ar, iter ) < 0 ) {
 	  // new guy is smaller than the current guy!
 	  break;
 	}
@@ -124,6 +133,41 @@ mm_category_t *category_query ( char *catname ) {
   }
 
   return ( NULL );
+}
+
+int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ) {
+
+  extern mm_category_t g_categories [ MAX_CATS ];
+  extern unsigned char g_categorycount;
+  extern unsigned char ui_category;
+
+  // are we in a directory browser, or looking at pnd-files?
+  if ( g_categories [ ui_category ].fspath ) {
+
+    if ( s1 == s2 ) {
+      return ( 0 ); // equal
+
+    } else if ( s1 -> ref -> object_type == pnd_object_type_directory &&
+		s2 -> ref -> object_type == pnd_object_type_directory )
+    {
+      // both are directories, be nice
+      return ( strcmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
+    } else if ( s1 -> ref -> object_type == pnd_object_type_directory &&
+		s2 -> ref -> object_type != pnd_object_type_directory )
+    {
+      return ( -1 ); // dir on the left is earlier than file on the right
+    } else if ( s1 -> ref -> object_type != pnd_object_type_directory &&
+		s2 -> ref -> object_type == pnd_object_type_directory )
+    {
+      return ( 1 ); // dir on the right is earlier than file on the left
+    } else {
+      // file on file
+      return ( strcmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
+    }
+
+  }
+
+  return ( strcmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
 }
 
 void category_dump ( void ) {
@@ -190,7 +234,7 @@ unsigned char category_map_setup ( void ) {
       {
 	//pnd_log ( pndn_debug, "target(%s) from(%s)\n", k, buffer );
 
-	category_push ( k, NULL, 0 );
+	category_push ( k, NULL, 0, NULL /* fspath */ );
 	g_catmaps [ g_catmapcount ].target = category_query ( k );
 	g_catmaps [ g_catmapcount ].from = strdup ( buffer );
 	g_catmapcount++;
@@ -228,19 +272,123 @@ unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_han
     cat = category_map_query ( catname );
 
     if ( cat ) {
-      return ( category_push ( cat -> catname, app, ovrh ) );
+      return ( category_push ( cat -> catname, app, ovrh, NULL /* fspath */ ) );
     }
 
     // not mapped.. but default?
     if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_default_on", 0 ) ) {
       char *def = pnd_conf_get_as_char ( g_conf, "categories.map_default_cat" );
       if ( def ) {
-	return ( category_push ( def, app, ovrh ) );
+	return ( category_push ( def, app, ovrh, NULL /* fspath */ ) );
       }
     }
 
   } // cat map is desired?
 
   // not default, just do it
-  return ( category_push ( catname, app, ovrh ) );
+  return ( category_push ( catname, app, ovrh, NULL /* fspath */ ) );
+}
+
+unsigned char category_fs_restock ( mm_category_t *cat ) {
+
+  if ( ! cat -> fspath ) {
+    return ( 1 ); // not a filesystem browser tab
+  }
+
+  // clear any existing baggage
+  //
+
+  // apprefs
+  mm_appref_t *iter = cat -> refs, *next;
+  while ( iter ) {
+    next = iter -> next;
+    free ( iter );
+    iter = next;
+  }
+  cat -> refs = NULL;
+
+  // discos
+  if ( cat -> disco ) {
+    pnd_disco_t *p = pnd_box_get_head ( cat -> disco );
+    pnd_disco_t *n;
+    while ( p ) {
+      n = pnd_box_get_next ( p );
+      pnd_disco_destroy ( p );
+      p = n;
+    }
+    pnd_box_delete ( cat -> disco );
+  }
+
+  // rescan the filesystem
+  //
+
+  //pnd_log ( pndn_debug, "Restocking cat %s with path %s\n", cat -> catname, cat -> fspath );
+  DIR *d;
+
+  if ( ( d = opendir ( cat -> fspath ) ) ) {
+    struct dirent *de = readdir ( d );
+
+    pnd_disco_t *disco;
+    char uid [ 100 ];
+
+    cat -> disco = pnd_box_new ( cat -> catname );
+
+    while ( de ) {
+
+      struct stat buffy;
+      char fullpath [ PATH_MAX ];
+      sprintf ( fullpath, "%s/%s", cat -> fspath, de -> d_name );
+      int statret = stat ( fullpath, &buffy );
+
+      // if file is executable somehow or another
+      if ( statret == 0 &&
+	   buffy.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)
+	 )
+      {
+	// determine unique-id
+	sprintf ( uid, "%d", (int) de -> d_ino );
+	disco = NULL;
+
+	switch ( de -> d_type ) {
+
+	case DT_DIR:
+	  if ( strcmp ( de -> d_name, "." ) == 0 ) {
+	    // ignore ".", but ".." is fine
+	  } else {
+	    disco = pnd_box_allocinsert ( cat -> disco, uid, sizeof(pnd_disco_t) );
+	    disco -> object_type = pnd_object_type_directory; // suggest to Grid that its a dir
+	  }
+	  break;
+	case DT_UNKNOWN:
+	case DT_REG:
+	  disco = pnd_box_allocinsert ( cat -> disco, uid, sizeof(pnd_disco_t) );
+	  disco -> object_type = pnd_object_type_unknown; // suggest to Grid that its a file
+	  break;
+
+	} // switch
+
+	// found a directory or executable?
+	if ( disco ) {
+	  // register with this category
+	  disco -> unique_id = strdup ( uid );
+	  disco -> title_en = strdup ( de -> d_name );
+	  disco -> object_flags = PND_DISCO_GENERATED;
+	  disco -> object_path = strdup ( cat -> fspath );
+	  disco -> object_filename = strdup ( de -> d_name );
+	  category_push ( cat -> catname, disco, 0, NULL /* fspath already set */ );
+	  // if a override icon exists, cache it up
+	  cache_icon ( disco, pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 ),
+		       pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_height", 50 ) );
+	}
+
+      } // stat
+
+      // next
+      de = readdir ( d );
+    }
+
+    closedir ( d );
+  }
+
+  return ( 1 );
 }
