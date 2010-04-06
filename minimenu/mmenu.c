@@ -36,6 +36,7 @@
 #include <ctype.h>
 #include <sys/wait.h>
 #include <dirent.h>
+#include <signal.h> // for sigaction
 
 #include "pnd_logger.h"
 #include "pnd_pxml.h"
@@ -69,6 +70,8 @@ unsigned char g_pvwcache = 0; // if 1, we're trying to do preview caching
 char g_skin_selected [ 100 ] = "default";
 char *g_skinpath = NULL; // where 'skin_selected' is located .. the fullpath including skin-dir-name
 pnd_conf_handle g_skinconf = NULL;
+
+void sigquit_handler ( int n );
 
 int main ( int argc, char *argv[] ) {
   int logall = -1; // -1 means normal logging rules; >=0 means log all!
@@ -172,6 +175,17 @@ int main ( int argc, char *argv[] ) {
     pnd_log ( pndn_error, "ERROR: Couldn't fetch desktop conf file\n" );
     emit_and_quit ( MM_QUIT );
   }
+
+  /* set up quit signal handler
+   */
+  sigset_t ss;
+  sigemptyset ( &ss );
+
+  struct sigaction siggy;
+  siggy.sa_handler = sigquit_handler;
+  siggy.sa_mask = ss; /* implicitly blocks the origin signal */
+  siggy.sa_flags = SA_RESTART; /* don't need anything */
+  sigaction ( SIGQUIT, &siggy, NULL );
 
   /* category conf file
    */
@@ -600,4 +614,9 @@ void applications_scan ( void ) {
   ui_post_scan();
 
   return;
+}
+
+void sigquit_handler ( int n ) {
+  pnd_log ( pndn_rem, "SIGQUIT received; graceful exit.\n" );
+  emit_and_quit ( MM_QUIT );
 }

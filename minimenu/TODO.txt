@@ -3,8 +3,17 @@
   - full-replacement PXML is one option, another is
   - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
 
+- switch default skin to davec
+- kill -3 .. request quit
+
 - add font and fontcolour control to conf
 - About screen and shoutouts // konami code?
+- Perhaps a seriesof conf sections for per-file-extension or per-mimetype or both
+  [Section-FILEEXT] and [Section-MIMETYPE]
+  icon		    /some/path
+  invoke	    /path/to/proggy/to/run/it
+  -- this would thus let us do things like invoke a video player
+  -- alternative: parse the MIME handlers for xfce (say), to poach the info. Could be really slow.
 
 - add check.. if bad skin reported by mmenu, have mmwrapper set it back to default? or mm itself do it?
 
@@ -13,11 +22,6 @@
 - deploy..
   - .desktop for deployment, for running from xfce
 
-- maybe:
-  - directory browser; easy hack
-
 - future
-  - honor render_mask to know what to update
   - handle SD eject/insert? or leave on manual
   - add callback to pnd_disco_Search (maybe new func to not break cpas code), so can show number apps found so far
-  - note taking field
