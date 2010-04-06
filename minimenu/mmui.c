@@ -1238,6 +1238,9 @@ void ui_process_input ( unsigned char block_p ) {
 	  // reset view
 	  ui_selected = NULL;
 	  ui_rows_scrolled_down = 0;
+	  // set back to first tab, to be safe
+	  ui_category = 0;
+	  ui_catshift = 0;
 	} else if ( sel == 3 ) {
 	  // cache preview to SD now
 	  extern pnd_box_handle g_active_apps;
@@ -1623,6 +1626,8 @@ void ui_push_exec ( void ) {
 
 void ui_push_ltrigger ( void ) {
   unsigned char oldcat = ui_category;
+  unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+  unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
 
   if ( ui_category > 0 ) {
     ui_category--;
@@ -1630,6 +1635,10 @@ void ui_push_ltrigger ( void ) {
   } else {
     if ( pnd_conf_get_as_int_d ( g_conf, "tabs.wraparound", 0 ) > 0 ) {
       ui_category = g_categorycount - 1;
+      ui_catshift = 0;
+      if ( ui_category >= ( screen_width / tab_width ) ) {
+	ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
+      }
       category_fs_restock ( &(g_categories [ ui_category ]) );
     }
   }
@@ -1664,6 +1673,7 @@ void ui_push_rtrigger ( void ) {
   } else {
     if ( pnd_conf_get_as_int_d ( g_conf, "tabs.wraparound", 0 ) > 0 ) {
       ui_category = 0;
+      ui_catshift = 0;
       category_fs_restock ( &(g_categories [ ui_category ]) );
     }
   }
