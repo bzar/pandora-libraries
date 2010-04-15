@@ -1291,6 +1291,9 @@ void ui_process_input ( unsigned char block_p ) {
 	  }
 	} else if ( sel == 9 ) {
 	  // about
+	  char buffer [ PATH_MAX ];
+	  sprintf ( buffer, "%s/about.txt", g_skinpath );
+	  ui_aboutscreen ( buffer );
 	}
 
 	ui_event++;
@@ -2428,4 +2431,230 @@ unsigned char ui_pick_skin ( void ) {
   }
 
   return ( 0 );
+}
+
+void ui_aboutscreen ( char *textpath ) {
+#define PIXELW 7
+#define PIXELH 7
+#define MARGINW 3
+#define MARGINH 3
+#define SCRW 800
+#define SCRH 480
+#define ROWS SCRH / ( PIXELH + MARGINH )
+#define COLS SCRW / ( PIXELW + MARGINW )
+
+  unsigned char pixelboard [ ROWS * COLS ]; // pixel heat
+  bzero ( pixelboard, ROWS * COLS );
+
+  SDL_Surface *rtext;
+  SDL_Rect r;
+
+  SDL_Color rtextc = { 200, 200, 200, 100 };
+
+  // pixel scroller
+  char *textloop [ 500 ];
+  unsigned int textmax = 0;
+  bzero ( textloop, 500 * sizeof(char*) );
+
+  // cursor scroller
+  char cbuffer [ 50000 ];
+  bzero ( cbuffer, 50000 );
+  unsigned int crevealed = 0;
+
+  FILE *f = fopen ( textpath, "r" );
+
+  if ( ! f ) {
+    pnd_log ( pndn_error, "ERROR: Couldn't open about text: %s\n", textpath );
+    return;
+  }
+
+  char textbuf [ 100 ];
+  while ( fgets ( textbuf, 100, f ) ) {
+
+    // add to full buffer
+    strncat ( cbuffer, textbuf, 50000 );
+
+    // chomp
+    if ( strchr ( textbuf, '\n' ) ) {
+      * strchr ( textbuf, '\n' ) = '\0';
+    }
+
+    // add to pixel loop
+    if ( 1||textbuf [ 0 ] ) {
+      textloop [ textmax ] = strdup ( textbuf );
+      textmax++;
+    }
+
+  } // while fgets
+
+  fclose ( f );
+
+  unsigned int textiter = 0;
+  while ( textiter < textmax ) {
+    char *text = textloop [ textiter ];
+
+    rtext = NULL;
+    if ( text [ 0 ] ) {
+      // render to surface
+      rtext = TTF_RenderText_Blended ( g_grid_font, text, rtextc );
+
+      // render font to pixelboard
+      unsigned int px, py;
+      unsigned char *ph;
+      unsigned int *pixels = rtext -> pixels;
+      unsigned char cr, cg, cb, ca;
+      for ( py = 0; py < rtext -> h; py ++ ) {
+	for ( px = 0; px < ( rtext -> w > COLS ? COLS : rtext -> w ); px++ ) {
+
+	  SDL_GetRGBA ( pixels [ ( py * rtext -> pitch / 4 ) + px ],
+			rtext -> format, &cr, &cg, &cb, &ca );
+
+	  if ( ca != 0 ) {
+
+	    ph = pixelboard + ( /*y offset */ 30 * COLS ) + ( py * COLS ) + px /* / 2 */;
+
+	    if ( *ph < 100 ) {
+	      *ph = 100;
+	    }
+
+	    ca /= 5;
+	    if ( *ph + ca < 250 ) {
+	      *ph += ca;
+	    }
+
+	  } // got a pixel?
+
+	} // x
+      } // y
+
+    } // got text?
+
+    unsigned int runcount = 10;
+    while ( runcount-- ) {
+
+      // clear display
+      SDL_FillRect( sdl_realscreen, NULL /* whole */, 0 );
+
+      // render pixelboard
+      unsigned int x, y;
+      unsigned int c;
+      for ( y = 0; y < ROWS; y++ ) {
+	for ( x = 0; x < COLS; x++ ) {
+
+	  if ( 1||pixelboard [ ( y * COLS ) + x ] ) {
+
+	    // position
+	    r.x = x * ( PIXELW + MARGINW );
+	    r.y = y * ( PIXELH + MARGINH );
+	    r.w = PIXELW;
+	    r.h = PIXELH;
+	    // heat -> colour
+	    c = SDL_MapRGB ( sdl_realscreen -> format, 100 /* r */, 0 /* g */, pixelboard [ ( y * COLS ) + x ] );
+	    // render
+	    SDL_FillRect( sdl_realscreen, &r /* whole */, c );
+
+	  }
+
+	} // x
+      } // y
+
+      // cool pixels
+      unsigned char *pc = pixelboard;
+      for ( y = 0; y < ROWS; y++ ) {
+	for ( x = 0; x < COLS; x++ ) {
+
+	  if ( *pc > 10 ) {
+	    (*pc) -= 3;
+	  }
+
+	  pc++;
+	} // x
+      } // y
+
+      // slide pixels upwards
+      memmove ( pixelboard, pixelboard + COLS, ( COLS * ROWS ) - COLS );
+
+      // render actual readable text
+      {
+
+	// display up to cursor
+	SDL_Rect dest;
+	unsigned int cdraw = 0;
+	SDL_Surface *cs;
+	char ctb [ 2 ];
+
+	if ( crevealed > 200 ) {
+	  cdraw = crevealed - 200;
+	}
+
+	dest.x = 400;
+	dest.y = 20;
+
+	for ( ; cdraw < crevealed; cdraw++ ) {
+	  ctb [ 0 ] = cbuffer [ cdraw ];
+	  ctb [ 1 ] = '\0';
+	  // move over or down
+	  if ( cbuffer [ cdraw ] == '\n' ) {
+	    // EOL
+	    dest.x = 400;
+	    dest.y += 14;
+
+	    if ( dest.y > 450 ) {
+	      dest.y = 450;
+	    }
+
+	  } else {
+	    // draw the char
+	    cs = TTF_RenderText_Blended ( g_tab_font, ctb, rtextc );
+	    if ( cs ) {
+	      SDL_BlitSurface ( cs, NULL /* all */, sdl_realscreen, &dest );
+	      SDL_FreeSurface ( cs );
+	      // over
+	      dest.x += cs -> w;
+	    }
+	  }
+
+	}
+
+	dest.w = 10;
+	dest.h = 20;
+	SDL_FillRect ( sdl_realscreen, &dest /* whole */, 220 );
+
+	// increment cursor to next character
+	if ( cbuffer [ crevealed ] != '\0' ) {
+	  crevealed++;
+	}
+
+      } // draw cursor text
+
+      // reveal
+      //
+      SDL_UpdateRect ( sdl_realscreen, 0, 0, 0, 0 ); // whole screen
+
+      usleep ( 50000 );
+
+      // any button? if so, about
+      {
+	SDL_PumpEvents();
+
+	SDL_Event e;
+
+	if ( SDL_PeepEvents ( &e, 1, SDL_GETEVENT, SDL_EVENTMASK(SDL_KEYUP) ) > 0 ) {
+	  return;
+	}
+
+      }
+
+    } // while cooling
+
+    if ( rtext ) {
+      SDL_FreeSurface ( rtext );
+    }
+
+    textiter++;
+  } // while more text
+
+  // free up
+
+  return;
 }

@@ -71,6 +71,8 @@ void ui_discoverscreen ( unsigned char clearscreen ); // screen to show while sc
 void ui_cachescreen ( unsigned char clearscreen, char *filename ); // while caching icons, categories and preview-pics-Now-mode
 void ui_show_hourglass ( unsigned char updaterect );
 void ui_post_scan ( void );
+unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p );
+void ui_aboutscreen ( char *textpath );
 
 /* internal functions follow
  */
@@ -97,7 +99,6 @@ void ui_push_rtrigger ( void );
 unsigned char ui_determine_row ( mm_appref_t *a );
 unsigned char ui_determine_screen_row ( mm_appref_t *a );
 unsigned char ui_determine_screen_col ( mm_appref_t *a );
-unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p );
 
 // ui_render() can register tappable-areas which touchscreen code can then figure out if we made a hit
 void ui_register_reset ( void );

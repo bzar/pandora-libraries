@@ -240,7 +240,22 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
   } // ovr?
 
   // if this is a real pnd file (dir-app or pnd-file-app), then try to pull icon from there
-  if ( ! ( app -> object_flags & PND_DISCO_GENERATED ) ) {
+  if (  app -> object_flags & PND_DISCO_GENERATED ) {
+
+    // maybe we can discover this single-file and find an icon?
+    if ( strcasestr ( app -> object_filename, PND_PACKAGE_FILEEXT ) ) {
+
+      // looks like a pnd, now what do we do..
+      pnd_box_handle h = pnd_disco_file ( app -> object_path, app -> object_filename );
+
+      if ( h ) {
+	pnd_disco_t *d = pnd_box_get_head ( h );
+	iconbuf = pnd_emit_icon_to_buffer ( d, &buflen );
+      }
+
+    } // filename has .pnd?
+
+  } else {
 
     // pull icon into buffer from .pnd if not already found an icon
     if ( ! iconbuf ) {
