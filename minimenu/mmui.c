@@ -1214,13 +1214,12 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Cache previews to SD now",
 	  "Run xfce4 from Minimenu",
 	  "Run a terminal/console",
-	  "Exit and run xfce4",
-	  "Exit and run pmenu",
+	  "Switch preferred GUI",
 	  "Quit (<- beware)",
 	  "Select a Minimenu skin",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 11, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 10, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
@@ -1280,29 +1279,17 @@ void ui_process_input ( unsigned char block_p ) {
 	  }
 
 	} else if ( sel == 6 ) {
-	  // set env to xfce
-	  sprintf ( buffer, "echo startxfce4 > /tmp/gui.load" );
-	  system ( buffer );
+	  char buffer [ PATH_MAX ];
+	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/pandora/scripts/op_switchgui.sh" );
 	  emit_and_quit ( buffer );
-	  //sprintf ( buffer, "sudo poweroff" );
-	  //system ( buffer );
-	  exit ( 0 );
 	} else if ( sel == 7 ) {
-	  // set env to pmenu
-	  sprintf ( buffer, "echo pmenu > /tmp/gui.load" );
-	  system ( buffer );
-	  emit_and_quit ( buffer );
-	  //sprintf ( buffer, "sudo poweroff" );
-	  //system ( buffer );
-	  exit ( 0 );
-	} else if ( sel == 8 ) {
 	  emit_and_quit ( MM_QUIT );
-	} else if ( sel == 9 ) {
+	} else if ( sel == 8 ) {
 	  // select skin
 	  if ( ui_pick_skin() ) {
 	    emit_and_quit ( MM_RESTART );
 	  }
-	} else if ( sel == 10 ) {
+	} else if ( sel == 9 ) {
 	  // about
 	}
 
