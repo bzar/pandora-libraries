@@ -284,7 +284,7 @@ unsigned char pnd_evdev_catchup ( unsigned char blockp ) {
   return ( 1 );
 }
 
-int pnd_evdev_dpad_state ( pnd_evdev_e device ) {
+unsigned int pnd_evdev_dpad_state ( pnd_evdev_e device ) {
   if ( evmap [ device ].fd < 0 ) {
     return ( -1 );
   }

@@ -58,7 +58,7 @@ unsigned char pnd_evdev_catchup ( unsigned char blockp ); // will do all open de
 
 // fetch dpad state -- a mask of what buttons are pressed currently
 // return -1 if device not open
-int pnd_evdev_dpad_state ( pnd_evdev_e device ); // returns bitmask of pnd_evdev_dpad_e
+unsigned int pnd_evdev_dpad_state ( pnd_evdev_e device ); // returns bitmask of pnd_evdev_dpad_e
 
 // try to obtain X/Y axis for the requested nub
 // r_nubstate best not be null or the behaviour is undefined. (Well, it is defined .. *catch fire*)

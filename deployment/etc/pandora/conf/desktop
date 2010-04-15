@@ -3,12 +3,12 @@
 # Desktop configuration
 
 [desktop]
-searchpath	/media/*/pandora/desktop:/media/*/pandora/apps:/usr/pandora/apps	# path to depth-search for PXMLs and pnd-files
+searchpath	/media/*/pandora/desktop:/media/*/pandora/apps	# path to depth-search for PXMLs and pnd-files
 dotdesktoppath	~/Desktop/	# path for pndnotifyd to spit .desktop files into (run as root)
 iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as dotdesktoppath if WM permits)
 
 [menu]
-searchpath	/media/*/pandora/menu:/media/*/pandora/apps	# path to depth-search for PXMLs and pnd-files
+searchpath	/media/*/pandora/menu:/media/*/pandora/apps:/usr/pandora/apps	# path to depth-search for PXMLs and pnd-files
 dotdesktoppath	/usr/share/applications		# path for pndnotifyd to spit .desktop files into
 iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as dotdesktoppath if WM permits)
 
@@ -21,6 +21,6 @@ iconpath	/tmp	# path for pndnotifyd to drop icons into (can be same as dotdeskto
 [info]
 emit_info	1			# 0->no info .desktop; !0->yes to info .desktop
 dotdesktoppath	/usr/share/applications	# path for pndnotifyd to spit .desktop files into
-viewer		../../../usr/bin/midori	# sh-script or prog to run. Use wrapper sh if needed.
-viewer_args	-a			# args. <- plus filename will be passed. ie: "-a filename.html"
+viewer		../../../usr/bin/arora	# sh-script or prog to run. Use wrapper sh if needed.
+viewer_args				# args. <- plus filename will be passed. ie: "-a filename.html"
 category	Documentation		# freedesktop standard category to use
