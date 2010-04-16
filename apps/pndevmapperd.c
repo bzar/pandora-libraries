@@ -114,6 +114,7 @@ typedef struct {
 #define MAXEVENTS 255
 evmap_t g_evmap [ MAXEVENTS ];
 unsigned int g_evmap_max = 0;
+unsigned int g_queued_keyups = 0;
 
 // battery
 unsigned char b_threshold = 5;    // %battery
@@ -518,6 +519,7 @@ int main ( int argc, char *argv[] ) {
     int fd = -1, rd, ret;
     fd_set fdset;
 
+    // set up fd list
     FD_ZERO ( &fdset );
 
     imaxfd = 0;
@@ -532,11 +534,43 @@ int main ( int argc, char *argv[] ) {
       }
     }
 
-    ret = select ( imaxfd + 1, &fdset, NULL, NULL, NULL /* no timeout */ );
+    // figure out if we can block forever, or not
+    unsigned char do_block = 1;
+    struct timeval tv;
+    tv.tv_usec = 0;
+    tv.tv_sec = 1;
+
+    for ( i = i; i < g_evmap_max; i++ ) {
+      if ( g_evmap [ i ].keydown_time && g_evmap [ i ].maxhold ) {
+	do_block = 0;
+	break;
+      }
+    }
+
+    // wait for fd's or timeout
+    ret = select ( imaxfd + 1, &fdset, NULL, NULL, do_block ? NULL /* no timeout */ : &tv );
 
     if ( ret == -1 ) {
       pnd_log ( pndn_error, "ERROR! select(2) failed with: %s\n", strerror ( errno ) );
       continue; // retry!
+
+    } else if ( ret == 0 ) { // select returned with timeout (no fd)
+
+      // timeout occurred; should only happen when 1 or more keys are being held down and
+      // they're "maxhold" keys, so we have to see if their timer has passed
+      unsigned int now = time ( NULL );
+
+      for ( i = i; i < g_evmap_max; i++ ) {
+
+	if ( g_evmap [ i ].keydown_time &&
+	     g_evmap [ i ].maxhold &&
+	     now - g_evmap [ i ].keydown_time >= g_evmap [ i ].maxhold )
+	{
+	  keycode_t *k = (keycode_t*) g_evmap [ i ].reqs;
+	  dispatch_key ( k -> keycode, 0 /* key up */ );
+	}
+
+      } // for
 
     } else { // an fd was fiddled with
 
