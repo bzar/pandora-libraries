@@ -4,6 +4,7 @@
 
 [keys]
 a /usr/pandora/scripts/op_menu.sh
+b /usr/pandora/scripts/op_menu.sh 3
 
 [events]
 lid-toggle	/usr/pandora/scripts/op_lidtoggle.sh

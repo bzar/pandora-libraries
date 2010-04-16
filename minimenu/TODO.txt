@@ -3,11 +3,7 @@
   - full-replacement PXML is one option, another is
   - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
 
-- switch default skin to davec
-- kill -3 .. request quit
-
 - add font and fontcolour control to conf
-- About screen and shoutouts // konami code?
 - Perhaps a seriesof conf sections for per-file-extension or per-mimetype or both
   [Section-FILEEXT] and [Section-MIMETYPE]
   icon		    /some/path

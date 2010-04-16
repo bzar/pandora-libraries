@@ -2655,6 +2655,13 @@ void ui_aboutscreen ( char *textpath ) {
   } // while more text
 
   // free up
+  unsigned int i;
+  for ( i = 0; i < textmax; i++ ) {
+    if ( textloop [ i ] ) {
+      free ( textloop [ i ] );
+      textloop [ i ] = 0;
+    }
+  }
 
   return;
 }

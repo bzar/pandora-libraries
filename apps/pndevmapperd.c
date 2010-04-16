@@ -6,7 +6,8 @@
 // woot for writing code while sick.
 
 // this code begs a rewrite, but should work fine; its just arranged goofily
-// -> I mean, why the racial divide between keys and other events
+// -> I mean, why the racial divide between keys and other events?
+// -> now that I've put together pnd_io_evdev, should leverage that; be much cleaner.
 
 #include <stdio.h> /* for printf, NULL */
 #include <stdlib.h> /* for free */
@@ -59,6 +60,7 @@ typedef struct {
 
 keycode_t keycodes[] = {
   { KEY_A, "a" },
+  { KEY_B, "b" },
   { KEY_MENU, "pandora" },
   { KEY_POWER, "power" },
   { KEY_DELETE, "del" },
@@ -100,7 +102,7 @@ typedef struct {
   void *reqs;          // scancode/etc for the event in question
 
   char *script;        // script to invoke
-  //unsigned int hold_min; // minimum hold-time to trigger
+  unsigned int maxhold;   // maximum hold-time before forcing script invocation
 
   /* state
    */
@@ -306,8 +308,22 @@ int main ( int argc, char *argv[] ) {
       if ( p -> keycode != -1 ) {
 	g_evmap [ g_evmap_max ].key_p = 1;    // its a key, not an event
 	g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
-	g_evmap [ g_evmap_max ].script = n;   // note the script to activate in response
-	pnd_log ( pndn_rem, "Registered key %s [%d] to script %s\n", p -> keyname, p -> keycode, (char*) n );
+
+	// note the script to activate in response
+	if ( strchr ( n, ' ' ) ) {
+	  char *foo = strdup ( n );
+	  char *t = strchr ( foo, ' ' );
+	  *t = '\0';
+	  g_evmap [ g_evmap_max ].script = foo;
+	  g_evmap [ g_evmap_max ].maxhold = atoi ( t + 1 );
+	} else {
+	  g_evmap [ g_evmap_max ].script = n;
+	  g_evmap [ g_evmap_max ].maxhold = 0;
+	}
+
+	pnd_log ( pndn_rem, "Registered key %s [%d] to script %s with maxhold %d\n",
+		  p -> keyname, p -> keycode, (char*) n, g_evmap [ g_evmap_max ].maxhold );
+
 	g_evmap_max++;
       } else {
 	pnd_log ( pndn_warning, "WARNING! Key '%s' is not handled by pndevmapperd yet! Skipping.", k );
@@ -516,82 +532,85 @@ int main ( int argc, char *argv[] ) {
       }
     }
 
-    ret = select ( imaxfd + 1, &fdset, NULL, NULL, NULL );
+    ret = select ( imaxfd + 1, &fdset, NULL, NULL, NULL /* no timeout */ );
 
     if ( ret == -1 ) {
       pnd_log ( pndn_error, "ERROR! select(2) failed with: %s\n", strerror ( errno ) );
       continue; // retry!
-    }
 
-    for ( i = 0; i < max_fd; i++ ) {
-      if ( fds [ i ] != -1 && FD_ISSET ( fds [ i ], &fdset ) ) {
-	fd = fds [ i ];
-      } // fd is set?
-    } // for
+    } else { // an fd was fiddled with
 
-    /* buttons or keypad */
-    rd = read ( fd, ev, sizeof(struct input_event) * 64 );
-    if ( rd < (int) sizeof(struct input_event) ) {
-      pnd_log ( pndn_error, "ERROR! read(2) input_event failed with: %s\n", strerror ( errno ) );
-      break;
-    }
+      for ( i = 0; i < max_fd; i++ ) {
+	if ( fds [ i ] != -1 && FD_ISSET ( fds [ i ], &fdset ) ) {
+	  fd = fds [ i ];
+	} // fd is set?
+      } // for
 
-    for (i = 0; i < rd / sizeof(struct input_event); i++ ) {
+      /* buttons or keypad */
+      rd = read ( fd, ev, sizeof(struct input_event) * 64 );
+      if ( rd < (int) sizeof(struct input_event) ) {
+	pnd_log ( pndn_error, "ERROR! read(2) input_event failed with: %s\n", strerror ( errno ) );
+	break;
+      }
 
-      if ( ev[i].type == EV_SYN ) {
-	continue;
-      } else if ( ev[i].type == EV_KEY ) {
+      for (i = 0; i < rd / sizeof(struct input_event); i++ ) {
 
-	// do we even know about this key at all?
-	keycode_t *p = keycodes;
-	while ( p -> keycode != -1 ) {
-	  if ( p -> keycode == ev [ i ].code ) {
-	    break;
+	if ( ev[i].type == EV_SYN ) {
+	  continue;
+	} else if ( ev[i].type == EV_KEY ) {
+
+	  // do we even know about this key at all?
+	  keycode_t *p = keycodes;
+	  while ( p -> keycode != -1 ) {
+	    if ( p -> keycode == ev [ i ].code ) {
+	      break;
+	    }
+	    p++;
 	  }
-	  p++;
-	}
 
-	// if we do, hand it off to dispatcher to look up if we actually do something with it
-	if ( p -> keycode != -1 ) {
-	  if ( logall >= 0 ) {
-	    pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
+	  // if we do, hand it off to dispatcher to look up if we actually do something with it
+	  if ( p -> keycode != -1 ) {
+	    if ( logall >= 0 ) {
+	      pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
+	    }
+	    dispatch_key ( p -> keycode, ev [ i ].value );
+	  } else {
+	    if ( logall >= 0 ) {
+	      pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	    }
 	  }
-	  dispatch_key ( p -> keycode, ev [ i ].value );
+
+	} else if ( ev[i].type == EV_SW ) {
+
+	  // do we even know about this event at all?
+	  generic_event_t *p = generics;
+	  while ( p -> code != -1 ) {
+	    if ( p -> code == ev [ i ].code ) {
+	      break;
+	    }
+	    p++;
+	  }
+
+	  // if we do, hand it off to dispatcher to look up if we actually do something with it
+	  if ( p -> code != -1 ) {
+	    if ( logall >= 0 ) {
+	      pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
+	    }
+	    dispatch_event ( p -> code, ev [ i ].value );
+	  } else {
+	    if ( logall >= 0 ) {
+	      pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
+	    }
+	  }
+
 	} else {
-	  if ( logall >= 0 ) {
-	    pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
-	  }
-	}
+	  pnd_log ( pndn_debug, "DEBUG: Unexpected event type %i received\n", ev[i].type );
+	  continue;
+	} // type?
 
-      } else if ( ev[i].type == EV_SW ) {
+      } // for
 
-	// do we even know about this event at all?
-	generic_event_t *p = generics;
-	while ( p -> code != -1 ) {
-	  if ( p -> code == ev [ i ].code ) {
-	    break;
-	  }
-	  p++;
-	}
-
-	// if we do, hand it off to dispatcher to look up if we actually do something with it
-	if ( p -> code != -1 ) {
-	  if ( logall >= 0 ) {
-	    pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
-	  }
-	  dispatch_event ( p -> code, ev [ i ].value );
-	} else {
-	  if ( logall >= 0 ) {
-	    pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
-	  }
-	}
-
-      } else {
-	pnd_log ( pndn_debug, "DEBUG: Unexpected event type %i received\n", ev[i].type );
-	continue;
-      } // type?
-
-    } // for
+    } // an fd was touched
 
   } // while
 
@@ -614,49 +633,64 @@ void dispatch_key ( int keycode, int val ) {
   // 2 - down again (hold)
   // 0 - up (released)
 
-  pnd_log ( pndn_rem, "Dispatching Key..\n" );
-
   for ( i = 0; i < g_evmap_max; i++ ) {
 
     if ( ( g_evmap [ i ].key_p ) &&
 	 ( ((keycode_t*) (g_evmap [ i ].reqs)) -> keycode == keycode ) &&
 	 ( g_evmap [ i ].script ) )
     {
+      unsigned char invoke_it = 0;
 
       // is this a keydown or a keyup?
       if ( val == 1 ) {
 	// keydown
 	g_evmap [ i ].keydown_time = time ( NULL );
 
-      } else if ( val == 0 ) {
-	// keyup
+      } else if ( val == 2 && g_evmap [ i ].keydown_time ) {
+	// key is being held; we should check if max-hold is set
 
-	char holdtime [ 128 ];
-	sprintf ( holdtime, "%d", (int)( time(NULL) - g_evmap [ i ].keydown_time ) );
+	if ( g_evmap [ i ].maxhold &&
+	     time ( NULL ) - g_evmap [ i ].keydown_time >= g_evmap [ i ].maxhold )
+	{
+	  invoke_it = 1;
+	}
+
+      } else if ( val == 0 && g_evmap [ i ].keydown_time ) {
+	// keyup (while key is down)
 
 	if ( time ( NULL ) - g_evmap [ i ].last_trigger_time >= g_minimum_separation ) {
-	  int x;
-
-	  g_evmap [ i ].last_trigger_time = time ( NULL );
-
-	  pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, holdtime );
-
-	  if ( ( x = fork() ) < 0 ) {
-	    pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-	    exit ( -3 );
-	  }
-
-	  if ( x == 0 ) {
-	    execl ( g_evmap [ i ].script, g_evmap [ i ].script, holdtime, (char*)NULL );
-	    pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
-	    exit ( -4 );
-	  }
-
+	  invoke_it = 1;
 	} else {
 	  pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
 	}
 
       } // key up or down?
+
+      if ( invoke_it ) {
+
+	char holdtime [ 128 ];
+	sprintf ( holdtime, "%d", (int)( time(NULL) - g_evmap [ i ].keydown_time ) );
+	pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, holdtime );
+
+	// state
+	g_evmap [ i ].keydown_time = 0; // clear the keydown-ness
+	g_evmap [ i ].last_trigger_time = time ( NULL );
+
+	// invocation
+	int x;
+
+	if ( ( x = fork() ) < 0 ) {
+	  pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+	  exit ( -3 );
+	}
+
+	if ( x == 0 ) {
+	  execl ( g_evmap [ i ].script, g_evmap [ i ].script, holdtime, (char*)NULL );
+	  pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
+	  exit ( -4 );
+	}
+
+      } // invoke the script!
 
       return;
     } // found matching event for keycode
@@ -770,8 +804,13 @@ void sigalrm_handler ( int n ) {
   int batlevel = pnd_device_get_battery_gauge_perc();
 
   if ( batlevel < 0 ) {
+#if 0
     // couldn't read the battery level, so just assume low and make blinks?
     batlevel = 4; // low, but not cause a shutdown
+#else
+    // couldn't read the battery level, so just assume ok!
+    batlevel = 50;
+#endif
   }
 
   // first -- are we critical yet? if so, shut down!
