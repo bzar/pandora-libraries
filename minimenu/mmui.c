@@ -1937,6 +1937,8 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
   SDL_Rect *dest = rects;
   SDL_Rect src;
   SDL_Surface *rtext;
+  unsigned char max_visible = pnd_conf_get_as_int_d ( g_conf, "detailtext.max_visible" , 11 );
+  unsigned char first_visible = 0;
 
   bzero ( rects, sizeof(SDL_Rect) * 40 );
 
@@ -2011,7 +2013,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
     }
 
     // show options
-    for ( i = 0; i < argc; i++ ) {
+    for ( i = first_visible; i < first_visible + max_visible && i < argc; i++ ) {
 
       // show options
       if ( sel == i ) {
@@ -2020,7 +2022,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 	rtext = TTF_RenderText_Blended ( g_tab_font, argv [ i ], tmpfontcolor );
       }
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
-      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 40 + ( 20 * ( i + 1 ) );
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 40 + ( 20 * ( i + 1 - first_visible ) );
       SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
       SDL_FreeSurface ( rtext );
       dest++;
@@ -2041,10 +2043,22 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 	if ( event.key.keysym.sym == SDLK_UP ) {
 	  if ( sel ) {
 	    sel--;
+
+	    if ( sel < first_visible ) {
+	      first_visible--;
+	    }
+
 	  }
 	} else if ( event.key.keysym.sym == SDLK_DOWN ) {
+
 	  if ( sel < argc - 1 ) {
 	    sel++;
+
+	    // ensure visibility
+	    if ( sel >= first_visible + max_visible ) {
+	      first_visible++;
+	    }
+
 	  }
 
 	} else if ( event.key.keysym.sym == SDLK_RETURN ) {
