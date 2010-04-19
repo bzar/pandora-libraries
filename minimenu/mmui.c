@@ -425,104 +425,108 @@ void ui_render ( void ) {
     unsigned int maxtab = ( screen_width / tab_width ) < g_categorycount ? ( screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift;
     unsigned int maxtabspot = ( screen_width / tab_width );
 
-    // draw tabs with categories
-    for ( col = ui_catshift;
-	  col < maxtab;
-	  col++ )
-    {
+    if ( g_categorycount > 0 ) {
 
-      SDL_Surface *s;
+      // draw tabs with categories
+      for ( col = ui_catshift;
+	    col < maxtab;
+	    col++ )
+      {
 
-      // if this is the first (leftmost) tab, we use different artwork
-      // than if the other tabs (so skinner can link lines up nicely.)
-      if ( col == ui_catshift ) {
-	// leftmost tab, special case
+	SDL_Surface *s;
 
-	if ( col == ui_category ) {
-	  s = g_imagecache [ IMG_TAB_SEL_L ].i;
-	} else {
-	  s = g_imagecache [ IMG_TAB_UNSEL_L ].i;
-	}
+	// if this is the first (leftmost) tab, we use different artwork
+	// than if the other tabs (so skinner can link lines up nicely.)
+	if ( col == ui_catshift ) {
+	  // leftmost tab, special case
 
-      } else if ( col == maxtab - 1 ) {
-	// rightmost tab, special case
-
-	if ( col == ui_category ) {
-	  s = g_imagecache [ IMG_TAB_SEL_R ].i;
-	} else {
-	  s = g_imagecache [ IMG_TAB_UNSEL_R ].i;
-	}
-
-      } else {
-	// normal (not leftmost) tab
-
-	if ( col == ui_category ) {
-	  s = g_imagecache [ IMG_TAB_SEL ].i;
-	} else {
-	  s = g_imagecache [ IMG_TAB_UNSEL ].i;
-	}
-
-      } // first col, or not first col?
-
-      // draw tab
-      src.x = 0;
-      src.y = 0;
-#if 0
-      src.w = tab_width;
-      if ( col == ui_category ) {
-	src.h = tab_selheight;
-      } else {
-	src.h = tab_height;
-      }
-#else
-      src.w = s -> w;
-      src.h = s -> h;
-#endif
-      dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
-      dest -> y = tab_offset_y;
-
-      // store touch info
-      ui_register_tab ( col, dest -> x, dest -> y, tab_width, tab_height );
-
-      if ( render_jobs_b & R_TABS ) {
-	//pnd_log ( pndn_debug, "tab %u at %ux%u\n", col, dest.x, dest.y );
-	SDL_BlitSurface ( s, &src, sdl_realscreen, dest );
-	dest++;
-
-	// draw tab line
-	if ( col == ui_category ) {
-	  // no line for selected tab
-	} else {
-	  if ( col - ui_catshift == 0 ) {
-	    s = g_imagecache [ IMG_TAB_LINEL ].i;
-	  } else if ( col - ui_catshift == maxtabspot - 1 ) {
-	    s = g_imagecache [ IMG_TAB_LINER ].i;
+	  if ( col == ui_category ) {
+	    s = g_imagecache [ IMG_TAB_SEL_L ].i;
 	  } else {
-	    s = g_imagecache [ IMG_TAB_LINE ].i;
+	    s = g_imagecache [ IMG_TAB_UNSEL_L ].i;
 	  }
-	  dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
-	  dest -> y = tab_offset_y + tab_height;
-	  SDL_BlitSurface ( s, NULL /* whole image */, sdl_realscreen, dest );
-	  dest++;
-	}
 
-	// draw text
-	SDL_Surface *rtext;
-	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	rtext = TTF_RenderText_Blended ( g_tab_font, g_categories [ col ].catname, tmpfontcolor );
+	} else if ( col == maxtab - 1 ) {
+	  // rightmost tab, special case
+
+	  if ( col == ui_category ) {
+	    s = g_imagecache [ IMG_TAB_SEL_R ].i;
+	  } else {
+	    s = g_imagecache [ IMG_TAB_UNSEL_R ].i;
+	  }
+
+	} else {
+	  // normal (not leftmost) tab
+
+	  if ( col == ui_category ) {
+	    s = g_imagecache [ IMG_TAB_SEL ].i;
+	  } else {
+	    s = g_imagecache [ IMG_TAB_UNSEL ].i;
+	  }
+
+	} // first col, or not first col?
+
+	// draw tab
 	src.x = 0;
 	src.y = 0;
-	src.w = rtext -> w < text_width ? rtext -> w : text_width;
-	src.h = rtext -> h;
-	dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width ) + text_offset_x;
-	dest -> y = tab_offset_y + text_offset_y;
-	SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-	SDL_FreeSurface ( rtext );
-	dest++;
+#if 0
+	src.w = tab_width;
+	if ( col == ui_category ) {
+	  src.h = tab_selheight;
+	} else {
+	  src.h = tab_height;
+	}
+#else
+	src.w = s -> w;
+	src.h = s -> h;
+#endif
+	dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
+	dest -> y = tab_offset_y;
 
-      } // r_tabs
+	// store touch info
+	ui_register_tab ( col, dest -> x, dest -> y, tab_width, tab_height );
 
-    } // for
+	if ( render_jobs_b & R_TABS ) {
+	  //pnd_log ( pndn_debug, "tab %u at %ux%u\n", col, dest.x, dest.y );
+	  SDL_BlitSurface ( s, &src, sdl_realscreen, dest );
+	  dest++;
+
+	  // draw tab line
+	  if ( col == ui_category ) {
+	    // no line for selected tab
+	  } else {
+	    if ( col - ui_catshift == 0 ) {
+	      s = g_imagecache [ IMG_TAB_LINEL ].i;
+	    } else if ( col - ui_catshift == maxtabspot - 1 ) {
+	      s = g_imagecache [ IMG_TAB_LINER ].i;
+	    } else {
+	      s = g_imagecache [ IMG_TAB_LINE ].i;
+	    }
+	    dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width );
+	    dest -> y = tab_offset_y + tab_height;
+	    SDL_BlitSurface ( s, NULL /* whole image */, sdl_realscreen, dest );
+	    dest++;
+	  }
+
+	  // draw text
+	  SDL_Surface *rtext;
+	  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	  rtext = TTF_RenderText_Blended ( g_tab_font, g_categories [ col ].catname, tmpfontcolor );
+	  src.x = 0;
+	  src.y = 0;
+	  src.w = rtext -> w < text_width ? rtext -> w : text_width;
+	  src.h = rtext -> h;
+	  dest -> x = tab_offset_x + ( (col-ui_catshift) * tab_width ) + text_offset_x;
+	  dest -> y = tab_offset_y + text_offset_y;
+	  SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	  SDL_FreeSurface ( rtext );
+	  dest++;
+
+	} // r_tabs
+
+      } // for
+
+    } // if we got categories
 
     if ( render_jobs_b & R_TABS ) {
 
@@ -1619,6 +1623,10 @@ void ui_push_ltrigger ( void ) {
   unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
   unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
 
+  if ( g_categorycount == 0 ) {
+    return;
+  }
+
   if ( ui_category > 0 ) {
     ui_category--;
     category_fs_restock ( &(g_categories [ ui_category ]) );
@@ -1653,6 +1661,10 @@ void ui_push_ltrigger ( void ) {
 
 void ui_push_rtrigger ( void ) {
   unsigned char oldcat = ui_category;
+
+  if ( g_categorycount == 0 ) {
+    return;
+  }
 
   unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
   unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
