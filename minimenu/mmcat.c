@@ -18,8 +18,12 @@
 #include "mmcache.h"
 #include "mmcat.h"
 
-mm_category_t g_categories [ MAX_CATS ];
+mm_category_t _categories [ MAX_CATS ];
+mm_category_t *g_categories = _categories;
 unsigned char g_categorycount = 0;
+
+mm_category_t _categories_invis [ MAX_CATS ];
+unsigned char _categories_inviscount = 0;
 
 mm_catmap_t g_catmaps [ MAX_CATS ];
 unsigned char g_catmapcount = 0;
@@ -137,8 +141,6 @@ mm_category_t *category_query ( char *catname ) {
 
 int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ) {
 
-  extern mm_category_t g_categories [ MAX_CATS ];
-  extern unsigned char g_categorycount;
   extern unsigned char ui_category;
 
   // are we in a directory browser, or looking at pnd-files?
@@ -262,8 +264,22 @@ mm_category_t *category_map_query ( char *cat ) {
   return ( NULL );
 }
 
-unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh ) {
+unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep ) {
   mm_category_t *cat;
+  unsigned char catcount = g_categorycount;
+
+  if ( ! catname ) {
+    return ( 1 ); // fine, just nada
+  }
+
+  if ( ! visiblep ) {
+    //return ( 1 ); // fine, suppress it
+
+    // serious evidence this was a rushed program
+    g_categories = _categories_invis;
+    g_categorycount = _categories_inviscount;
+
+  }
 
   // do we honour cat mapping at all?
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_on", 0 ) ) {
@@ -272,21 +288,31 @@ unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_han
     cat = category_map_query ( catname );
 
     if ( cat ) {
-      return ( category_push ( cat -> catname, app, ovrh, NULL /* fspath */ ) );
+      category_push ( cat -> catname, app, ovrh, NULL /* fspath */ );
+      goto visibility_hack_cleanup;
     }
 
     // not mapped.. but default?
     if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_default_on", 0 ) ) {
       char *def = pnd_conf_get_as_char ( g_conf, "categories.map_default_cat" );
       if ( def ) {
-	return ( category_push ( def, app, ovrh, NULL /* fspath */ ) );
+	category_push ( def, app, ovrh, NULL /* fspath */ );
+	goto visibility_hack_cleanup;
       }
     }
 
   } // cat map is desired?
 
   // not default, just do it
-  return ( category_push ( catname, app, ovrh, NULL /* fspath */ ) );
+  category_push ( catname, app, ovrh, NULL /* fspath */ );
+  // hack :(
+ visibility_hack_cleanup:
+  if ( ! visiblep ) {
+    _categories_inviscount = g_categorycount;
+    g_categories = _categories;
+    g_categorycount = catcount;
+  }
+  return ( 1 );
 }
 
 unsigned char category_fs_restock ( mm_category_t *cat ) {

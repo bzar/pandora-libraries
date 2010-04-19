@@ -73,6 +73,7 @@ void ui_show_hourglass ( unsigned char updaterect );
 void ui_post_scan ( void );
 unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p );
 void ui_aboutscreen ( char *textpath );
+void ui_revealscreen ( void );
 
 /* internal functions follow
  */

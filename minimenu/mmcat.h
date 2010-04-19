@@ -19,7 +19,7 @@ typedef struct {
   pnd_box_handle disco;   // faux-applications generated from filesystem
 } mm_category_t;
 
-#define MAX_CATS 100
+#define MAX_CATS 200
 
 #define CATEGORY_ALL "All"
 
@@ -38,7 +38,7 @@ typedef struct {
 
 unsigned char category_map_setup ( void ); // set up the mappings
 mm_category_t *category_map_query ( char *cat );
-unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh );
+unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep );
 
 // filesystem browser
 unsigned char category_fs_restock ( mm_category_t *cat );

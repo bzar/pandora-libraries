@@ -74,8 +74,10 @@ mm_appref_t *ui_selected = NULL;
 unsigned char ui_category = 0;          // current category
 unsigned char ui_catshift = 0;          // how many cats are offscreen to the left
 
-extern mm_category_t g_categories [ MAX_CATS ];
+extern mm_category_t *g_categories;
 extern unsigned char g_categorycount;
+extern mm_category_t _categories_invis [ MAX_CATS ];
+extern unsigned char _categories_inviscount;
 
 static SDL_Surface *ui_scale_image ( SDL_Surface *s, unsigned int maxwidth, int maxheight ); // height -1 means ignore
 static int ui_selected_index ( void );
@@ -1212,9 +1214,9 @@ void ui_process_input ( unsigned char block_p ) {
 
       } else if ( event.key.keysym.sym == SDLK_LCTRL /*LALT*/ ) { // select button
 	char *opts [ 20 ] = {
-	  "Return to Minimenu",
+	  "Reveal hidden category",
 	  "Shutdown Pandora",
-	  "Rescan for Applications",
+	  "Rescan for applications",
 	  "Cache previews to SD now",
 	  "Run xfce4 from Minimenu",
 	  "Run a terminal/console",
@@ -1228,6 +1230,7 @@ void ui_process_input ( unsigned char block_p ) {
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
 	  // do nothing
+	  ui_revealscreen();
 	} else if ( sel == 1 ) {
 	  // shutdown
 	  sprintf ( buffer, "sudo poweroff" );
@@ -2687,6 +2690,43 @@ void ui_aboutscreen ( char *textpath ) {
       free ( textloop [ i ] );
       textloop [ i ] = 0;
     }
+  }
+
+  return;
+}
+
+void ui_revealscreen ( void ) {
+  char *labels [ 500 ];
+  unsigned int labelmax = 0;
+  unsigned int i;
+
+  for ( i = 0; i < _categories_inviscount; i++ ) {
+    labels [ labelmax++ ] = _categories_invis [ i ].catname;
+  }
+
+  int sel = ui_modal_single_menu ( labels, labelmax, "Temporary Category Reveal",
+				   "Enter to select; other to return." );
+
+  if ( sel >= 0 ) {
+
+    if ( category_query ( _categories_invis [ sel ].catname ) ) {
+      // already present
+      return;
+    }
+
+    memmove ( &(g_categories [ g_categorycount ]), &(_categories_invis [ sel ]), sizeof(mm_category_t) );
+    g_categorycount++;
+
+    ui_category = g_categorycount - 1;
+
+    unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+    unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
+    if ( ui_category > ui_catshift + ( screen_width / tab_width ) - 1 ) {
+      //ui_catshift++;
+      ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
+    }
+
+    render_mask |= CHANGED_CATEGORY;
   }
 
   return;
