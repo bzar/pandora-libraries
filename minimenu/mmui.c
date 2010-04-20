@@ -2700,6 +2700,10 @@ void ui_revealscreen ( void ) {
   unsigned int labelmax = 0;
   unsigned int i;
 
+  if ( ! _categories_inviscount ) {
+    return; // nothing to do
+  }
+
   for ( i = 0; i < _categories_inviscount; i++ ) {
     labels [ labelmax++ ] = _categories_invis [ i ].catname;
   }
@@ -2714,18 +2718,31 @@ void ui_revealscreen ( void ) {
       return;
     }
 
+    // fix up category name, if its been hacked
+    if ( strchr ( _categories_invis [ sel ].catname, '.' ) ) {
+      char *t = _categories_invis [ sel ].catname;
+      _categories_invis [ sel ].catname = strdup ( strchr ( _categories_invis [ sel ].catname, '.' ) + 1 );
+      free ( t );
+    }
+    // copy invisi-cat into live-cat
     memmove ( &(g_categories [ g_categorycount ]), &(_categories_invis [ sel ]), sizeof(mm_category_t) );
     g_categorycount++;
+    // move subsequent invisi-cats up, so the selected invisi-cat is nolonger existing in invisi-list at
+    // all (avoid double-free() later)
+    memmove ( &(_categories_invis [ sel ]), &(_categories_invis [ sel + 1 ]), sizeof(mm_category_t) * ( _categories_inviscount - sel - 1 ) );
+    _categories_inviscount--;
 
+    // switch to the new category
     ui_category = g_categorycount - 1;
 
+    // ensure visibility
     unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
     unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
     if ( ui_category > ui_catshift + ( screen_width / tab_width ) - 1 ) {
-      //ui_catshift++;
       ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
     }
 
+    // redraw tabs
     render_mask |= CHANGED_CATEGORY;
   }
 

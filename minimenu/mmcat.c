@@ -46,7 +46,7 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
     // category was found..
   } else {
     // category wasn't found..
-    pnd_log ( PND_LOG_DEFAULT, "New category '%s'\n", catname );
+    //pnd_log ( PND_LOG_DEFAULT, "New category '%s'\n", catname );
     g_categories [ g_categorycount ].catname = strdup ( catname );
     g_categories [ g_categorycount ].refs = NULL;
     c = &(g_categories [ g_categorycount ]);
@@ -192,13 +192,13 @@ void category_dump ( void ) {
   return;
 }
 
-void category_freeall ( void ) {
+static void _category_freeall ( mm_category_t *p, unsigned int c ) {
   unsigned int i;
   mm_appref_t *iter, *next;
 
-  for ( i = 0; i < g_categorycount; i++ ) {
+  for ( i = 0; i < c; i++ ) {
 
-    iter = g_categories [ i ].refs;
+    iter = p [ i ].refs;
 
     while ( iter ) {
       next = iter -> next;
@@ -206,11 +206,30 @@ void category_freeall ( void ) {
       iter = next;
     }
 
-    g_categories [ i ].refs = NULL;
+    p [ i ].refs = NULL;
+
+    if ( p [ i ].catname ) {
+      free ( p [ i ].catname );
+      p [ i ].catname = NULL;
+    }
+
+    if ( p [ i ].fspath ) {
+      free ( p [ i ].fspath );
+      p [ i ].fspath = NULL;
+    }
 
   } // for
 
+  return;
+}
+
+void category_freeall ( void ) {
+
+  _category_freeall ( g_categories, g_categorycount );
+  _category_freeall ( _categories_invis, _categories_inviscount );
+
   g_categorycount = 0;
+  _categories_inviscount = 0;
 
   return;
 }
@@ -264,9 +283,10 @@ mm_category_t *category_map_query ( char *cat ) {
   return ( NULL );
 }
 
-unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep ) {
+unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep ) {
   mm_category_t *cat;
   unsigned char catcount = g_categorycount;
+  char catnamebuffer [ 512 ] = "";
 
   if ( ! catname ) {
     return ( 1 ); // fine, just nada
@@ -278,6 +298,12 @@ unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_han
     // serious evidence this was a rushed program
     g_categories = _categories_invis;
     g_categorycount = _categories_inviscount;
+
+    // if invisible, and a parent category name is known, prepend it for ease of use
+    if ( parentcatname ) {
+      snprintf ( catnamebuffer, 500, "%s.%s", parentcatname, catname );
+      catname = catnamebuffer;
+    }
 
   }
 
@@ -417,4 +443,19 @@ unsigned char category_fs_restock ( mm_category_t *cat ) {
   }
 
   return ( 1 );
+}
+
+static int catname_cmp ( const void *p1, const void *p2 ) {
+  mm_category_t *c1 = (mm_category_t*) p1;
+  mm_category_t *c2 = (mm_category_t*) p2;
+  return ( strcasecmp ( c1 -> catname, c2 -> catname ) );
+}
+
+void category_sort ( void ) {
+  // we probably don't want to sort tab categories, since the user may have specified an ordering
+  // But we can sort invisi-cats, to make them easier to find, and ordered by parent category
+
+  qsort ( _categories_invis, _categories_inviscount, sizeof(mm_category_t), catname_cmp );
+
+  return;
 }

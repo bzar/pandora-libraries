@@ -29,6 +29,7 @@ mm_category_t *category_query ( char *catname );
 void category_dump ( void ); // sort the apprefs
 void category_freeall ( void );
 int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ); // like strcmp, but used to sort apps by title
+void category_sort ( void ); // for sorting categories
 
 // category mapping hack
 typedef struct {
@@ -38,7 +39,7 @@ typedef struct {
 
 unsigned char category_map_setup ( void ); // set up the mappings
 mm_category_t *category_map_query ( char *cat );
-unsigned char category_meta_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep );
+unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep );
 
 // filesystem browser
 unsigned char category_fs_restock ( mm_category_t *cat );

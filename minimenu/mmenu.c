@@ -537,13 +537,13 @@ void applications_scan ( void ) {
       } // all?
 
       // main categories
-      category_meta_push ( iter -> main_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
-      category_meta_push ( iter -> main_category1, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
-      category_meta_push ( iter -> main_category2, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
+      category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
+      category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
+      category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
       // alt categories
-      category_meta_push ( iter -> alt_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
-      category_meta_push ( iter -> alt_category1, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
-      category_meta_push ( iter -> alt_category2, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
+      category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
+      category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
+      category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
 
     } // register with categories or filter out
 
@@ -551,6 +551,9 @@ void applications_scan ( void ) {
     iter = pnd_box_get_next ( iter );
     itercount++;
   } // while
+
+  // sort (some) categories
+  category_sort();
 
   // set up filesystem browser tabs
   if ( pnd_conf_get_as_int_d ( g_conf, "filesystem.do_browser", 0 ) ) {
