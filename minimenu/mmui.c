@@ -1218,14 +1218,13 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Shutdown Pandora",
 	  "Rescan for applications",
 	  "Cache previews to SD now",
-	  "Run xfce4 from Minimenu",
 	  "Run a terminal/console",
-	  "Switch preferred GUI",
+	  "Run another GUI (xfce, etc)",
 	  "Quit (<- beware)",
 	  "Select a Minimenu skin",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 10, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 9, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
@@ -1271,11 +1270,6 @@ void ui_process_input ( unsigned char block_p ) {
 	  } // while
 
 	} else if ( sel == 4 ) {
-	  // run xfce
-	  char buffer [ PATH_MAX ];
-	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/bin/startxfce4" );
-	  emit_and_quit ( buffer );
-	} else if ( sel == 5 ) {
 	  // run terminal
 	  char *argv[5];
 	  argv [ 0 ] = pnd_conf_get_as_char ( g_conf, "utility.terminal" );
@@ -1285,18 +1279,18 @@ void ui_process_input ( unsigned char block_p ) {
 	    ui_forkexec ( argv );
 	  }
 
-	} else if ( sel == 6 ) {
+	} else if ( sel == 5 ) {
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/pandora/scripts/op_switchgui.sh" );
 	  emit_and_quit ( buffer );
-	} else if ( sel == 7 ) {
+	} else if ( sel == 6 ) {
 	  emit_and_quit ( MM_QUIT );
-	} else if ( sel == 8 ) {
+	} else if ( sel == 7 ) {
 	  // select skin
 	  if ( ui_pick_skin() ) {
 	    emit_and_quit ( MM_RESTART );
 	  }
-	} else if ( sel == 9 ) {
+	} else if ( sel == 8 ) {
 	  // about
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s/about.txt", g_skinpath );
