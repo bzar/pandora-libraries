@@ -17,6 +17,7 @@
 
 #include "pnd_io_gpio.h"
 //#include "pnd_keytype.h"
+#include "pnd_device.h"
 
 unsigned char GLES2D_Pad [ pke_pad_max ];
 
@@ -29,9 +30,9 @@ unsigned long bit[EV_MAX][NBITS(KEY_MAX)];
 char dev_name[256] = "Unknown";
 int absolute[5];
 
-char pnd_nub1[9]  = "vsense66";
-char pnd_nub2[9]  = "vsense67";
-char pnd_key[19]  = "omap_twl4030keypad";
+char pnd_nub1[9]  = PND_EVDEV_NUB1; //"vsense66";
+char pnd_nub2[9]  = PND_EVDEV_NUB2; //"vsense67";
+char pnd_key[19]  = PND_EVDEV_KEYPAD; //"omap_twl4030keypad";
 char pnd_gpio[10] = "gpio-keys";
 
 #define DEV_NUB1 0

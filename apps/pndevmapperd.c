@@ -470,7 +470,7 @@ int main ( int argc, char *argv[] ) {
 
     pnd_log ( pndn_rem, "%s maps to %s\n", fname, name );
 
-    if ( strcmp ( name, "omap_twl4030keypad" ) == 0 ) {
+    if ( strcmp ( name, PND_EVDEV_KEYPAD/*"omap_twl4030keypad"*/ ) == 0 ) {
       fds [ 0 ] = fd;
     } else if ( strcmp ( name, "gpio-keys" ) == 0) {
       fds [ 1 ] = fd;
@@ -480,9 +480,9 @@ int main ( int argc, char *argv[] ) {
       fds [ 2 ] = fd;
     } else if ( strcmp ( name, "ADS784x Touchscreen" ) == 0) {
       fds [ 3 ] = fd;
-    } else if ( strcmp ( name, "vsense66" ) == 0) {
+    } else if ( strcmp ( name, PND_EVDEV_NUB1/*"vsense66"*/ ) == 0) {
       fds [ 4 ] = fd;
-    } else if ( strcmp ( name, "vsense67" ) == 0) {
+    } else if ( strcmp ( name, PND_EVDEV_NUB1/*"vsense67"*/ ) == 0) {
       fds [ 5 ] = fd;
     } else {
       pnd_log ( pndn_rem, "Ignoring unknown device '%s'\n", name );
