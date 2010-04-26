@@ -3,6 +3,8 @@
   - full-replacement PXML is one option, another is
   - apply override to all sections that match -- by unique-id, so apply override to all sub-apps that apply?
 
+- add check .. if fail to load, during skin load, and also using non-default skin, delete skin-pref file
+  and restart in hopes default is not borked
 - add font and fontcolour control to conf
 - Perhaps a seriesof conf sections for per-file-extension or per-mimetype or both
   [Section-FILEEXT] and [Section-MIMETYPE]
@@ -11,10 +13,9 @@
   -- this would thus let us do things like invoke a video player
   -- alternative: parse the MIME handlers for xfce (say), to poach the info. Could be really slow.
 
-- add check.. if bad skin reported by mmenu, have mmwrapper set it back to default? or mm itself do it?
-
 - some ultra primtive frame draw, so the 'detail menu' and any 'sub menus' can draw
   their own frame rather than depand on skin frame to exist
+  	- ie: some system for handling basic UI for setting changes, without conf hacking
 - deploy..
   - .desktop for deployment, for running from xfce
 
