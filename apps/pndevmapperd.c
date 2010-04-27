@@ -476,9 +476,9 @@ int main ( int argc, char *argv[] ) {
       fds [ 1 ] = fd;
     } else if ( strcmp ( name, "AT Translated Set 2 keyboard" ) == 0) { // for vmware, my dev environment
       fds [ 0 ] = fd;
-    } else if ( strcmp ( name, "triton2-pwrbutton" ) == 0) {
+    } else if ( strcmp ( name, PND_EVDEV_POWER/*"triton2-pwrbutton"*/ ) == 0) {
       fds [ 2 ] = fd;
-    } else if ( strcmp ( name, "ADS784x Touchscreen" ) == 0) {
+    } else if ( strcmp ( name, PND_EVDEV_TS/*"ADS784x Touchscreen"*/ ) == 0) {
       fds [ 3 ] = fd;
     } else if ( strcmp ( name, PND_EVDEV_NUB1/*"vsense66"*/ ) == 0) {
       fds [ 4 ] = fd;

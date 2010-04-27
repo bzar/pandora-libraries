@@ -37,8 +37,8 @@ extern "C" {
 #define PND_EVDEV_NUB2    "nub1" /*"vsense67"*/
 #define PND_EVDEV_KEYPAD  "keypad" /*"omap_twl4030keypad"*/
 #define PND_EVDEV_GPIO    "gpio-keys"
-#define PND_EVDEV_TS      "ADS784x Touchscreen"
-#define PND_EVDEV_POWER   "triton2-pwrbutton"
+#define PND_EVDEV_TS      "touchscreen" /*"ADS784x Touchscreen"*/
+#define PND_EVDEV_POWER   "power-button" /*"triton2-pwrbutton"*/
 
 /* utility
  */
