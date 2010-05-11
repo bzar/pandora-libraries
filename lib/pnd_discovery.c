@@ -134,8 +134,12 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       pngbuffer [ 0 ] = 137;      pngbuffer [ 1 ] = 80;      pngbuffer [ 2 ] = 78;      pngbuffer [ 3 ] = 71;
       pngbuffer [ 4 ] = 13;       pngbuffer [ 5 ] = 10;       pngbuffer [ 6 ] = 26;      pngbuffer [ 7 ] = 10;
 
-      unsigned char padtests = 10;
+      unsigned char padtests = 20;
       unsigned int padstart = ftell ( f );
+
+      // seek back 10 (should be back into the /PXML> part) to catch any appending-icon-no-line-endings funny business
+      fseek ( f, -10, SEEK_CUR );
+
       while ( padtests ) {
 
 	if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
