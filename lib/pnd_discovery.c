@@ -144,7 +144,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
 	if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
 	  if ( memcmp ( pngbuffer, pngbuffer + 8, 8 ) == 0 ) {
-	    pxml_close_pos = pos;
+	    pxml_close_pos = ftell ( f ) - 8;
 	    break;
 	  } // if
 	  fseek ( f, -7, SEEK_CUR ); // seek back 7 (so we're 1 further than we started, since PNG header is 8b)
