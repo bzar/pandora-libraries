@@ -2,6 +2,7 @@
 #include <stdio.h> /* for printf, NULL */
 #include <stdlib.h> /* for free */
 #include <string.h> /* for strdup */
+#include <ctype.h> /* for isdigit */
 
 #include "pnd_conf.h"
 #include "pnd_container.h"
@@ -12,9 +13,9 @@
 #include "pnd_pxml.h"
 
 static void usage ( char *argv[] ) {
-  printf ( "%s [-r runscript] [-n] path-to-pndfile\n", argv [ 0 ] );
+  printf ( "%s [-r runscript] [-n] [-X] path-to-pndfile\n", argv [ 0 ] );
   printf ( "-r\tOptional. If not specified, will attempt to suss from configs.\n" );
-  printf ( "-n\tOptional. If present, instruct runscript to kill/restart X11 around app.\n" );
+  printf ( "-X\tOptional. If present, run sub-app number 'X'; ex: -0 for first, -1 for second, etc.\n" );
   printf ( "pndfile\tRequired. Full path to the pnd-file to execute.\n" );
   return;
 }
@@ -22,8 +23,8 @@ static void usage ( char *argv[] ) {
 int main ( int argc, char *argv[] ) {
   char *pnd_run = NULL;
   char *pndfile = NULL;
-  unsigned char no_x11 = 0;
   unsigned char i;
+  unsigned char subapp = 0;
 
   for ( i = 1; i < argc; i++ ) {
 
@@ -34,8 +35,8 @@ int main ( int argc, char *argv[] ) {
 	printf ( "-r specified, but no argument provided.\n" );
 	exit ( 0 );
       }
-    } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'n' ) {
-      no_x11 = 1;
+    } else if ( argv [ i ][ 0 ] == '-' && isdigit(argv [ i ][ 1 ]) ) {
+      subapp = atoi (argv[i] + 1);
     } else {
 
       if ( argv [ i ][ 0 ] == '-' ) {
@@ -120,69 +121,44 @@ int main ( int argc, char *argv[] ) {
 
   // summary
   printf ( "Runscript\t%s\n", pnd_run );
-  printf ( "Pndfile\t%s\n", pndfile );
-  printf ( "Kill X11\t%s\n", no_x11 ? "true" : "false" );
+  printf ( "Pndfile\t\t%s\n", pndfile );
+  printf ( "Subapp Number\t%u\n", subapp );
 
-  // sadly, to launch a pnd-file we need to know what the executable is in there
-  unsigned int pxmlbuflen = 96 * 1024; // lame, need to calculate it
-  char *pxmlbuf = malloc ( pxmlbuflen );
-  if ( ! pxmlbuf ) {
-    printf ( "ERROR: RAM exhausted!\n" );
-    exit ( 0 );
-  }
-  memset ( pxmlbuf, '\0', pxmlbuflen );
+  // figure out path and filename
+  char *path, *filename;
 
-  FILE *f = fopen ( pndfile, "r" );
-  if ( ! f ) {
-    printf ( "ERROR: Couldn't open pndfile %s!\n", pndfile );
-    exit ( 0 );
+  if ( strchr ( pndfile, '/' ) ) {
+    char *foo = rindex ( pndfile, '/' );
+    *foo = '\0';
+    path = pndfile;
+    filename = foo + 1;
+  } else {
+    path = "./";
+    filename = pndfile;
   }
 
-  pnd_pxml_handle h = NULL;
-  pnd_pxml_handle *apps = NULL;
-  if ( pnd_pnd_seek_pxml ( f ) ) {
-    if ( pnd_pnd_accrue_pxml ( f, pxmlbuf, pxmlbuflen ) ) {
-      apps = pnd_pxml_fetch_buffer ( "pnd_run", pxmlbuf );
+  // run it
+  pnd_box_handle h = pnd_disco_file ( path, filename );
+
+  if ( h ) {
+    pnd_disco_t *d = pnd_box_get_head ( h );
+    while ( subapp && d ) {
+      if ( d -> title_en ) {
+	printf ( "Skipping: '%s'\n", d -> title_en );
+      }
+      d = pnd_box_get_next ( d );
+      subapp--;
     }
+    if ( ! d ) {
+      printf ( "No more applications in pnd-file.\n" );
+      exit ( 0 );
+    }
+    if ( d -> title_en ) {
+      printf ( "Invoking: '%s'\n", d -> title_en );
+    }
+    printf ( "--\n" );
+    pnd_apps_exec_disco ( pnd_run, d, PND_EXEC_OPTION_BLOCK, NULL );
   }
-
-  fclose ( f );
-
-  if ( ! apps ) {
-    printf ( "ERROR: Couldn't pull PXML.xml from the pndfile.\n" );
-    exit ( 0 );
-  }
-
-  // attempt to invoke.. all of the subapps? just first one?
-
-  while ( *apps ) {
-    h = *apps;
-
-    unsigned int options = 0;
-    if ( no_x11 ) {
-      options |= PND_EXEC_OPTION_NOX11;
-    }
-
-    unsigned int clock = 200;
-    if ( pnd_pxml_get_clockspeed ( h ) ) {
-      clock = atoi ( pnd_pxml_get_clockspeed ( h ) );
-    }
-
-    if ( ! pnd_apps_exec ( pnd_run, pndfile,
-			   pnd_pxml_get_unique_id ( h ),
-			   pnd_pxml_get_exec ( h ),
-			   pnd_pxml_get_startdir ( h ),
-			   NULL /* args */,
-			   clock,
-			   options )
-	 )
-    {
-      printf ( "ERROR: PXML.xml data is bad\n" );
-    }
-
-    // next
-    apps++;
-  } // while
 
   return ( 0 );
 } // main
