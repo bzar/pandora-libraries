@@ -6,9 +6,9 @@ if [ "$1" -ge "1" ]; then #button was pressed 3 sec or longer, show list of apps
   killist=y
 fi
 
-xpid=$(pidof X)
+xpid=$(pidof xfce4-session)
 if [ $xpid ]; then
-  echo "x is running"
+  echo "xfce4 is running"
   xfceuser=$(ps u -C xfce4-session | tail -n1 | awk '{print $1}')
   if [ $killist ]; then
     echo "displaying kill list"
@@ -19,10 +19,18 @@ if [ $xpid ]; then
     done
   else
     echo "starting appfinder"
-    su -c 'DISPLAY=:0.0 xfce4-appfinder' - $xfceuser
+    # invoke the appfinder; nice app, but it takes a few seconds to come up
+    #su -c 'DISPLAY=:0.0 xfce4-appfinder' - $xfceuser
+    # invoke the bottom-left popup menu, for launching new apps, instead.
+    popuppid=$(pidof xfce4-popup-menu)
+    if [ $popuppid ]; then
+	echo "popup menu is already running"
+    else
+	su -c 'DISPLAY=:0.0 xfce4-popup-menu' - $xfceuser
+    fi
   fi
 else
-  echo "no x, killing all pnd aps so x gets restarted"
+  echo "no x, killing all pnd aps so x or DE gets restarted"
   pidlist=$(pstree -lpA | grep pnd_run.sh | sed -ne 's/.*(\([0-9]\+\))/\1/p')
   for PID in $pidlist
   do
