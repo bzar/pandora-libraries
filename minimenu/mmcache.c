@@ -103,16 +103,23 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
     }
   }
 
+  // unique-id to use for the cache mount
+  char *uid = app -> unique_id;
+
+  if ( app -> appdata_dirname ) {
+    uid = app -> appdata_dirname;
+  }
+
   // if we don't have a file path sorted out yet, means we need to mount and figure it
   if ( ! filepath [ 0 ] ) {
     sprintf ( fullpath, "%s/%s", app -> object_path, app -> object_filename );
 
-    if ( ! pnd_pnd_mount ( pnd_run_script, fullpath, app -> unique_id ) ) {
+    if ( ! pnd_pnd_mount ( pnd_run_script, fullpath, uid ) ) {
       pnd_log ( pndn_debug, "Couldn't mount '%s' for preview\n", fullpath );
       return ( 0 ); // couldn't mount?!
     }
 
-    sprintf ( filepath, "%s/%s/%s", PND_MOUNT_PATH, app -> unique_id, app -> preview_pic1 );
+    sprintf ( filepath, "%s/%s/%s", PND_MOUNT_PATH, uid, app -> preview_pic1 );
   }
 
   // load whatever path we've got
@@ -121,7 +128,7 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
   if ( ! s ) {
     // unmount it, if mounted
     if ( fullpath [ 0 ] ) {
-      pnd_pnd_unmount ( pnd_run_script, fullpath, app -> unique_id );
+      pnd_pnd_unmount ( pnd_run_script, fullpath, uid );
     }
     pnd_log ( pndn_debug, "Couldn't open image '%s' for preview\n", filepath );
     return ( 0 );
