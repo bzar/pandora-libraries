@@ -1240,12 +1240,6 @@ void ui_process_input ( unsigned char block_p ) {
 	  applications_free();
 	  pnd_log ( pndn_debug, "Rescanning applications\n" );
 	  applications_scan();
-	  // reset view
-	  ui_selected = NULL;
-	  ui_rows_scrolled_down = 0;
-	  // set back to first tab, to be safe
-	  ui_category = 0;
-	  ui_catshift = 0;
 	} else if ( sel == 3 ) {
 	  // cache preview to SD now
 	  extern pnd_box_handle g_active_apps;
@@ -2335,6 +2329,39 @@ void ui_post_scan ( void ) {
     }
 
   } // deferred icon load
+
+  // reset view
+  ui_selected = NULL;
+  ui_rows_scrolled_down = 0;
+  // set back to first tab, to be safe
+  ui_category = 0;
+  ui_catshift = 0;
+
+  // do we have a preferred category to jump to?
+  char *dc = pnd_conf_get_as_char ( g_conf, "categories.default_cat" );
+  if ( dc ) {
+
+    // attempt to find default cat; if we do find it, select it; otherwise
+    // default behaviour will pick first cat (ie: usually All)
+    unsigned int i;
+    for ( i = 0; i < g_categorycount; i++ ) {
+      if ( strcasecmp ( g_categories [ i ].catname, dc ) == 0 ) {
+	ui_category = i;
+	// ensure visibility
+	unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+	unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
+	if ( ui_category > ui_catshift + ( screen_width / tab_width ) - 1 ) {
+	  ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
+	}
+	break;
+      }
+    }
+
+    if ( i == g_categorycount ) {
+      pnd_log ( pndn_warning, "  User defined default category '%s' but not found, so using default behaviour\n", dc );
+    }
+
+  } // default cat
 
   return;
 }
