@@ -377,6 +377,7 @@ static unsigned int is_dir_empty ( char *fullpath ) {
       // irrelevent
     } else {
       // something else came in, so dir must not be empty
+      closedir ( d );
       return ( 0 ); 
     }
 
