@@ -2,6 +2,9 @@ Thanks to our patient wives and kids!
 
 minimenu is for DaveC!
 
+Artwork/UI design : DaveC
+Minimenu/bugs : Skeezix
+
 Greets out to..
 EvilDragon
 Craigix
@@ -17,6 +20,7 @@ skeezix
 cpasjuste
 pickle
 squidge
+DaveC
 
 mr spiv
 rlyeh
