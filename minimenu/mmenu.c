@@ -48,6 +48,9 @@
 #include "pnd_device.h"
 #include "pnd_pndfiles.h"
 #include "../lib/pnd_pathiter.h"
+#include "pnd_notify.h"
+#include "pnd_dbusnotify.h"
+#include "pnd_apps.h"
 
 #include "mmenu.h"
 #include "mmwrapcmd.h"
@@ -66,6 +69,10 @@ char *pnd_run_script = NULL;
 unsigned char g_x11_present = 1; // >0 if X is present
 unsigned char g_catmap = 0; // if 1, we're doing category mapping
 unsigned char g_pvwcache = 0; // if 1, we're trying to do preview caching
+unsigned char g_autorescan = 1; // default to auto rescan
+
+pnd_dbusnotify_handle dbh = 0; // if >0, dbusnotify is active
+pnd_notify_handle nh = 0; // if >0, inotify is active
 
 char g_skin_selected [ 100 ] = "default";
 char *g_skinpath = NULL; // where 'skin_selected' is located .. the fullpath including skin-dir-name
@@ -245,6 +252,12 @@ int main ( int argc, char *argv[] ) {
 
   pnd_log ( pndn_rem, "Found pnd_run.sh at '%s'\n", pnd_run_script );
 
+  // auto rescan?
+  if ( pnd_conf_get_as_int ( g_conf, "minimenu.auto_rescan" ) != PND_CONF_BADNUM ) {
+    g_autorescan = pnd_conf_get_as_int ( g_conf, "minimenu.auto_rescan" );
+  }
+  pnd_log ( pndn_debug, "application rescan is set to: %s\n", g_autorescan ? "auto" : "manual" );
+
   // figure out what skin is selected (or default)
   FILE *f;
   char *s = strdup ( pnd_conf_get_as_char ( g_conf, "minimenu.skin_selected" ) );
@@ -337,6 +350,17 @@ int main ( int argc, char *argv[] ) {
 
   /* actual work now
    */
+  unsigned char block = 1;
+
+  if ( g_autorescan ) {
+    block = 0;
+
+    // set up notifications
+    dbh = pnd_dbusnotify_init();
+    pnd_log ( pndn_debug, "Setting up dbusnotify\n" );
+    //setup_notifications();
+
+  } // set up rescan
 
   while ( 1 ) { // forever!
 
@@ -345,7 +369,28 @@ int main ( int argc, char *argv[] ) {
 
     // wait for input or time-based events (like animations)
     // deal with inputs
-    ui_process_input ( 1 /* block */ );
+    ui_process_input ( block /* block */ );
+
+    // did a rescan event trigger?
+    if ( g_autorescan ) {
+      unsigned char watch_dbus = 0;
+      unsigned char watch_inotify = 0;
+
+      if ( dbh ) {
+	watch_dbus = pnd_dbusnotify_rediscover_p ( dbh );
+      }
+
+      if ( nh ) {
+	watch_inotify = pnd_notify_rediscover_p ( nh );
+      }
+
+      if ( watch_dbus || watch_inotify ) {
+	pnd_log ( pndn_debug, "dbusnotify detected SD event\n" );
+	applications_free();
+	applications_scan();
+      }
+
+    } // rescan?
 
     // sleep? block?
     usleep ( 5000 );
@@ -357,6 +402,10 @@ int main ( int argc, char *argv[] ) {
 
 void emit_and_quit ( char *s ) {
   printf ( "%s\n", s );
+  pnd_dbusnotify_shutdown ( dbh );
+  if ( nh ) {
+    pnd_notify_shutdown ( nh );
+  }
   exit ( 0 );
 }
 
@@ -592,4 +641,65 @@ void applications_scan ( void ) {
 void sigquit_handler ( int n ) {
   pnd_log ( pndn_rem, "SIGQUIT received; graceful exit.\n" );
   emit_and_quit ( MM_QUIT );
+}
+
+void setup_notifications ( void ) {
+
+  // figure out notify path
+  char *configpath;
+  char *notifypath = NULL;
+
+  configpath = pnd_conf_query_searchpath();
+
+  pnd_conf_handle apph;
+
+  apph = pnd_conf_fetch_by_id ( pnd_conf_apps, configpath );
+
+  if ( apph ) {
+
+    notifypath = pnd_conf_get_as_char ( apph, PND_APPS_NOTIFY_KEY );
+
+    if ( ! notifypath ) {
+      notifypath = PND_APPS_NOTIFYPATH;
+    }
+
+  }
+
+  // given notify path.. ripped from pndnotifyd :(
+  char *searchpath = notifypath;
+
+  // if this is first time through, we can just set it up; for subsequent times
+  // through, we need to close existing fd and re-open it, since we're too lame
+  // to store the list of watches and 'rm' them
+#if 1
+  if ( nh ) {
+    pnd_notify_shutdown ( nh );
+    nh = 0;
+  }
+#endif
+
+  // set up a new set of notifies
+  if ( ! nh ) {
+    nh = pnd_notify_init();
+  }
+
+  if ( ! nh ) {
+    pnd_log ( pndn_rem, "INOTIFY failed to init.\n" );
+    exit ( -1 );
+  }
+
+#if 0
+  pnd_log ( pndn_rem, "INOTIFY is up.\n" );
+#endif
+
+  SEARCHPATH_PRE
+  {
+
+    pnd_log ( pndn_rem, "Watching path '%s' and its descendents.\n", buffer );
+    pnd_notify_watch_path ( nh, buffer, PND_NOTIFY_RECURSE );
+
+  }
+  SEARCHPATH_POST
+
+  return;
 }

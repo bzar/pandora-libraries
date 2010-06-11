@@ -2363,6 +2363,9 @@ void ui_post_scan ( void ) {
 
   } // default cat
 
+  // redraw all
+  render_mask |= CHANGED_EVERYTHING;
+
   return;
 }
 

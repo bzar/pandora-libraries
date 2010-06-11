@@ -2,7 +2,7 @@
 #actions done when the menu button is pressed
 #only argument is the time the button was pressed in  seconds
 
-if [ "$1" -ge "1" ]; then #button was pressed 3 sec or longer, show list of apps to kill instead of launcher
+if [ "$1" -ge "2" ]; then #button was pressed 3 sec or longer, show list of apps to kill instead of launcher
   killist=y
 fi
 
