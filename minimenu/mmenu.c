@@ -402,10 +402,18 @@ int main ( int argc, char *argv[] ) {
 
 void emit_and_quit ( char *s ) {
   printf ( "%s\n", s );
-  pnd_dbusnotify_shutdown ( dbh );
-  if ( nh ) {
-    pnd_notify_shutdown ( nh );
+  // shutdown notifications
+  if ( g_autorescan ) {
+
+    if ( dbh ) {
+      pnd_dbusnotify_shutdown ( dbh );
+    }
+    if ( nh ) {
+      pnd_notify_shutdown ( nh );
+    }
+
   }
+
   exit ( 0 );
 }
 
