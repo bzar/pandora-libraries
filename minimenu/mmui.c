@@ -1195,13 +1195,13 @@ void ui_process_input ( unsigned char block_p ) {
       } else if ( event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_END ) {
 	ui_push_exec();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_z || event.key.keysym.sym == SDLK_RSHIFT ) {
+      } else if ( event.key.keysym.sym == SDLK_RSHIFT ) {
 	ui_push_ltrigger();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_x || event.key.keysym.sym == SDLK_RCTRL ) {
+      } else if ( event.key.keysym.sym == SDLK_RCTRL ) {
 	ui_push_rtrigger();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_y || event.key.keysym.sym == SDLK_PAGEUP ) {
+      } else if ( event.key.keysym.sym == SDLK_PAGEUP ) {
 	// info
 	if ( ui_selected ) {
 	  ui_show_info ( pnd_run_script, ui_selected -> ref );
@@ -1293,12 +1293,41 @@ void ui_process_input ( unsigned char block_p ) {
 
 	ui_event++;
 	render_mask |= CHANGED_EVERYTHING;
-      }
+
+      } else {
+	// unknown SDLK_ keycode?
+
+	// many SDLK_keycodes map to ASCII ("a" is ascii(a)), so try to jump to a filename of that name, in this category?
+	// and if already there, try to jump to next, maybe?
+	// future: look for sequence typing? ie: user types 'm' then 'a', look for 'ma*' instead of 'm' then 'a' matching
+	if ( isalpha ( event.key.keysym.sym ) && g_categories [ ui_category ].refcount > 0 ) {
+	  mm_appref_t *app = g_categories [ ui_category ].refs;
+
+	  // walk the category, looking for a first-char match
+	  while ( app ) {
+	    if ( app -> ref -> title_en && toupper ( app -> ref -> title_en [ 0 ] ) == toupper ( event.key.keysym.sym ) ) {
+	      break;
+	    }
+	    app = app -> next;
+	  }
+
+	  // found something, or no?
+	  if ( app ) {
+	    // looks like we found a potential match; try switching it to visible selection
+	    ui_selected = app;
+	    ui_set_selected ( ui_selected );
+	  }
+
+	} // SDLK_alphanumeric?
+
+      } // SDLK_....
 
       // extras
+#if 0
       if ( event.key.keysym.sym == SDLK_q ) {
 	emit_and_quit ( MM_QUIT );
       }
+#endif
 
       break;
 #endif
@@ -2064,11 +2093,13 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
 	  }
 
-	} else if ( event.key.keysym.sym == SDLK_RETURN ) {
+	} else if ( event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_END ) { // return, or "B"
 	  return ( sel );
 
+#if 0
 	} else if ( event.key.keysym.sym == SDLK_q ) {
 	  exit ( 0 );
+#endif
 
 	} else {
 	  return ( -1 ); // nada
