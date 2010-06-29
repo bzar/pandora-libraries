@@ -91,7 +91,7 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 fi
  
 #vars
-DFS=$(file -b $PND | awk '{ print $1 }') #is -p a zip/iso or folder?
+DFS=$(file -b "$PND" | awk '{ print $1 }') #is -p a zip/iso or folder?
 MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
 if [ ! -d "$MOUNTPOINT" ]; then MOUNTPOINT="/"; fi #make sure folder exists, if it doesnt assume rootfs
 
@@ -112,10 +112,10 @@ if [ ! $umount ]; then
 
 	oCWD=$(pwd)
 	#create mountpoints, check if they exist already first to avoid annoying error messages
-	if [ ! -d /mnt/pnd/$BASENAME ]; then sudo mkdir -p /mnt/pnd/$BASENAME ; fi #mountpoint for iso, ro
+	if [ ! -d "/mnt/pnd/$BASENAME" ]; then sudo mkdir -p "/mnt/pnd/$BASENAME" ; fi #mountpoint for iso, ro
 	#writeable dir for union
-	if [ ! -d $MOUNTPOINT/pandora/appdata/$BASENAME ]; then sudo mkdir -p $MOUNTPOINT/pandora/appdata/$BASENAME; sudo chmod -R a+xrw $MOUNTPOINT/pandora/appdata/$BASENAME; fi
-	if [ ! -d /mnt/utmp/$BASENAME ]; then sudo mkdir -p /mnt/utmp/$BASENAME; fi #union over the two
+	if [ ! -d "$MOUNTPOINT/pandora/appdata/$BASENAME" ]; then sudo mkdir -p "$MOUNTPOINT/pandora/appdata/$BASENAME"; sudo chmod -R a+xrw "$MOUNTPOINT/pandora/appdata/$BASENAME"; fi
+	if [ ! -d "/mnt/utmp/$BASENAME" ]; then sudo mkdir -p "/mnt/utmp/$BASENAME"; fi #union over the two
 
 	if [ ! $cpuspeed -eq $(cat /proc/pandora/cpu_mhz_max) ]; then 
 	  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
@@ -149,16 +149,16 @@ if [ ! $umount ]; then
 			
 			if [ $DFS = ISO ]; then
 				sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-				mntline="sudo mount $FREELOOP /mnt/pnd/$BASENAME/" #setup the mountline for later
+				mntline="sudo mount $FREELOOP '/mnt/pnd/$BASENAME/'" #setup the mountline for later
 				#mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
 				echo "Filetype is $DFS"
 			elif [ $DFS = directory ]; then
-				  mntline="sudo mount --bind -o ro $PND /mnt/pnd/$BASENAME"
-			  #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
+				  mntline="sudo mount --bind -o ro '$PND' '/mnt/pnd/$BASENAME'"
+			  #we bind the folder, now it can be treated in a unified way ATTENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
 				  echo "Filetype is $DFS"
 			elif [ $DFS = Squashfs ]; then
 				  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-				  mntline="sudo mount -t squashfs  $FREELOOP /mnt/pnd/$BASENAME"
+				  mntline="sudo mount -t squashfs  $FREELOOP '/mnt/pnd/$BASENAME'"
 				  echo "Filetype is $DFS"
 			else
 				  echo "error determining fs, output was $DFS"
@@ -172,15 +172,15 @@ if [ ! $umount ]; then
 			echo "Filesystem is $FILESYSTEM"
 			if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
 				#append is fucking dirty, need to clean that up
-				sudo mount -t aufs -o exec,noplink,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
+				sudo mount -t aufs -o exec,noplink,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME"=rw+nolwh:"/mnt/pnd/$BASENAME"=rr$append none "/mnt/utmp/$BASENAME" # put union on top
 				else
-				sudo mount -t aufs -o exec,dirs=$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh:/mnt/pnd/$BASENAME=rr$append none /mnt/utmp/$BASENAME # put union on top
+				sudo mount -t aufs -o exec,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME"=rw+nolwh:"/mnt/pnd/$BASENAME"=rr$append none "/mnt/utmp/$BASENAME" # put union on top
 			fi
 		else #the pnd is already mounted but a mount was requested with a different basename/uid, just link it there
 			      echo $LOOP already mounted on $loopmountedon skipping losetup - putting link to old mount
 			      #this is bullshit
-			      sudo rmdir /mnt/utmp/$BASENAME
-			      sudo ln -s $loopmountedon /mnt/utmp/$BASENAME 
+			      sudo rmdir "/mnt/utmp/$BASENAME"
+			      sudo ln -s $loopmountedon "/mnt/utmp/$BASENAME" 
 		fi
 	
 	else
@@ -189,7 +189,7 @@ if [ ! $umount ]; then
  
 	if [ $mount ]; then echo "mounted /mnt/utmp/$BASENAME"; exit 1; fi; #mount only, die here
 	
-	cd /mnt/utmp/$BASENAME # cd to union mount
+	cd "/mnt/utmp/$BASENAME" # cd to union mount
 	if [ $STARTDIR ]; then cd $STARTDIR; fi #cd to folder specified by the optional arg -s
 	LD_LIBRARY_PATH=/mnt/utmp/$BASENAME ./$EXENAME $ARGUMENTS # execute app with ld_lib_path set to the union mount, a bit evil but i think its a good solution
 	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
@@ -209,25 +209,25 @@ fi
  
  
 #clean up
-sudo rmdir /mnt/utmp/$BASENAME
-sudo rm /mnt/utmp/$BASENAME
-sudo umount /mnt/utmp/$BASENAME #umount union
+sudo rmdir "/mnt/utmp/$BASENAME"
+sudo rm "/mnt/utmp/$BASENAME"
+sudo umount "/mnt/utmp/$BASENAME" #umount union
 if [ $? -eq 0 ]; then # check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, this WILL lead to clutter if it happens, so we should make damn sure it never happens
 	#umount the actual pnd
-	sudo umount /mnt/pnd/$BASENAME
+	sudo umount "/mnt/pnd/$BASENAME"
 	#delete folders created by aufs if empty
-	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk
-	sudo rmdir $MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp
+	sudo rmdir "$MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh.plnk"
+	sudo rmdir "$MOUNTPOINT/pandora/appdata/$BASENAME/.wh..wh..tmp"
 	#delete appdata folder and ancestors if empty
-	sudo rmdir -p $MOUNTPOINT/pandora/appdata/$BASENAME/
+	sudo rmdir -p "$MOUNTPOINT/pandora/appdata/$BASENAME/"
 	#delete tmp mountpoint
-	sudo rmdir /mnt/utmp/$BASENAME
+	sudo rmdir "/mnt/utmp/$BASENAME"
 	if [ $DFS = ISO ] || [ $DFS = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
 		LOOP=$(sudo losetup -a | grep $(basename $PND) | tail -n1 | awk -F: '{print $1}')
 		sudo /sbin/losetup -d $LOOP
 		sudo rm $LOOP
 	fi
-	sudo rmdir /mnt/pnd/$BASENAME #delete pnd mountpoint
+	sudo rmdir "/mnt/pnd/$BASENAME" #delete pnd mountpoint
 	echo cleanup done
 else
 	echo umount failed, didnt clean up
