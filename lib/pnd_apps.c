@@ -52,14 +52,25 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
   argv [ f++ ] = "-p";
   argv [ f++ ] = fullpath;
   argv [ f++ ] = "-e";
-  argv [ f++ ] = app -> exec;
+  if ( options & PND_EXEC_OPTION_INFO ) {
+    argv [ f++ ] = ((pnd_apps_exec_info_t*)reserved) -> viewer;
+  } else {
+    argv [ f++ ] = app -> exec;
+  }
   if ( app -> startdir ) {
     argv [ f++ ] = "-s";
     argv [ f++ ] = app -> startdir;
   }
-  if ( app -> execargs ) {
-    argv [ f++ ] = "-a";
-    argv [ f++ ] = app -> execargs;
+  if ( options & PND_EXEC_OPTION_INFO ) {
+    if ( ((pnd_apps_exec_info_t*)reserved) -> args ) {
+      argv [ f++ ] = "-a";
+      argv [ f++ ] = ((pnd_apps_exec_info_t*)reserved) -> args;
+    }
+  } else {
+    if ( app -> execargs ) {
+      argv [ f++ ] = "-a";
+      argv [ f++ ] = app -> execargs;
+    }
   }
   if ( app -> appdata_dirname ) {
     argv [ f++ ] = "-b";
@@ -117,10 +128,27 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
       if ( quotenext ) {
 	quotenext = 0;
       } else {
+	// deprecated; need to handle spaces in some additional args
+	//   if ( strcmp ( argv [ i ], "-a" ) == 0 ) {
 	// if this is for -a, we need to wrap with quotes
-	if ( strcmp ( argv [ i ], "-a" ) == 0 ) {
+	// ivanovic:
+	// to allow spaces in filenames we have to add quotes around most terms!
+	// terms with quotes:
+	// -a additional arguments
+	// -p fullpath to pnd
+	// -e name of execuatable inside the pnd
+	// -s startdir
+	// -b name for the appdir
+
+	if ( ( strcmp ( argv [ i ], "-a" ) == 0 ) || 
+	     ( strcmp ( argv [ i ], "-p" ) == 0 ) ||
+	     ( strcmp ( argv [ i ], "-e" ) == 0 ) ||
+	     ( strcmp ( argv [ i ], "-s" ) == 0 ) ||
+	     ( strcmp ( argv [ i ], "-b" ) == 0 ) )
+	{
 	  quotenext = 1;
 	}
+
       }
 
     } // for

@@ -64,7 +64,8 @@ extern "C" {
 #define PND_EXEC_OPTION_NOUNION    2 /* request pnd_run not use a union, just do the mount/run */
 #define PND_EXEC_OPTION_NOX11      4 /* request pnd_run to kill x11 and restart it after */
 #define PND_EXEC_OPTION_NORUN      8 /* don't try to run; just form the pnd_run.sh line and cache it */
-#define PND_EXEC_OPTION_FUTURE2   16
+#define PND_EXEC_OPTION_INFO      16 /* for apps_exec_disco() only; implies that 'reserved' points to pnd_apps_exec_info_t struct */
+#define PND_EXEC_OPTION_FUTURE2   32
 
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 			      char *rel_exec, char *rel_startdir,
@@ -79,6 +80,12 @@ char *pnd_apps_exec_runline ( void ); // returns the cached pnd_run.sh line from
 // - 'app' should be a return from discovery, or a populated disco-t struct
 // - 'pndrun' is a reference to a pnd_run.sh script, to avoid seeking it out every time
 unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app, unsigned int options, void *reserved );
+
+// for pnd_apps_exec_disco(), when option PND_EXEC_OPTION_INFO is used
+typedef struct {
+  char *viewer; // required; viewer's executable
+  char *args;   // optional; arg to viewer; ie: the file to view
+} pnd_apps_exec_info_t;
 
 // should you wish to know where an app will get mounted, call this function to obtain a guess. The
 // logic is wrapped up in pnd_run.sh, but in theory should be easily determined.
