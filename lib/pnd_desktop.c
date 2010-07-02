@@ -103,11 +103,11 @@ unsigned char pnd_emit_dotdesktop ( char *targetpath, char *pndrun, pnd_disco_t 
 
     // basics
     if ( p -> object_type == pnd_object_type_directory ) {
-      snprintf ( buffer, 1020, "Exec=%s%s -p %s -e %s -b %s",
+      snprintf ( buffer, 1020, "Exec=%s%s -p \"%s\" -e \"%s\" -b \"%s\"",
 		 nohup, pndrun, p -> object_path, p -> exec,
 		 p -> appdata_dirname ? p -> appdata_dirname : p -> unique_id );
     } else if ( p -> object_type == pnd_object_type_pnd ) {
-      snprintf ( buffer, 1020, "Exec=%s%s -p %s/%s -e %s -b %s",
+      snprintf ( buffer, 1020, "Exec=%s%s -p \"%s/%s\" -e \"%s\" -b \"%s\"",
 		 nohup, pndrun, p -> object_path, p -> object_filename, p -> exec,
 		 p -> appdata_dirname ? p -> appdata_dirname : p -> unique_id );
     }
@@ -303,6 +303,8 @@ unsigned char pnd_emit_dotinfo ( char *targetpath, char *pndrun, pnd_disco_t *p 
 	       pnd_conf_get_as_char ( desktoph, "info.viewer_args" ), p -> info_filename );
   } else {
     pargs = NULL;
+    // WARNING: This might not be quite right; if no viewer-args, shouldn't we still append the info-filename? likewise,
+    //          even if we do have view-args, shouldn't we check if filename is present?
   }
 
   char pndfile [ 1024 ];
@@ -314,9 +316,11 @@ unsigned char pnd_emit_dotinfo ( char *targetpath, char *pndrun, pnd_disco_t *p 
     snprintf ( pndfile, 1020, "%s/%s", p -> object_path, p -> object_filename );
   }
 
-  if ( ! pnd_apps_exec ( pndrun, pndfile, p -> unique_id, viewer, p -> startdir, pargs,
-			 p -> clockspeed ? atoi ( p -> clockspeed ) : 0, PND_EXEC_OPTION_NORUN ) )
-  {
+  pnd_apps_exec_info_t info;
+  info.viewer = viewer;
+  info.args = pargs;
+
+  if ( ! pnd_apps_exec_disco ( pndrun, p, PND_EXEC_OPTION_NORUN | PND_EXEC_OPTION_INFO, &info ) ) {
     return ( 0 );
   }
 
