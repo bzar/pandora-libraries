@@ -5,7 +5,7 @@
 [keys]
 # pass 'hold duration' to the script
 # if a number follows script name, will always force invocation at that time (or less)
-pandora /usr/pandora/scripts/op_menu.sh 3
+pandora /usr/pandora/scripts/op_menu.sh 1
 power	/usr/pandora/scripts/op_power.sh 3
 lcdbrightdown	/usr/pandora/scripts/op_bright_down.sh
 lcdbrightup	/usr/pandora/scripts/op_bright_up.sh
@@ -22,9 +22,9 @@ minimum_separation	1	# 1 second minimum between a single event repeating
 
 [battery]
 # for LED-blinking when battery gets low
-threshold	   5		# in %age; at x%, we go into blink-mode as warning
+threshold	   10		# in %age; at x%, we go into blink-mode as warning
 check_interval	   90		# in seconds to check threshold; should be a high 300s
 blink_interval	   2		# frequency of blink
 blink_duration	   50000	# how long a blink lasts, in uSecs
-shutdown_threshold 1		# battery %age we force a shutdown (to save the SD!)
+shutdown_threshold 5		# battery %age we force a shutdown (to save the SD!)
 shutdown_script	   /usr/pandora/scripts/op_battlow.sh
