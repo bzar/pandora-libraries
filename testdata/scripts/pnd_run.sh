@@ -47,12 +47,14 @@ while true ; do
 	esac
 done
 
-if [ ! $PND ]; then #check if theres a pnd suplied, need to clean that up a bit more
+if [ ! -e "$PND" ]; then #check if theres a pnd suplied, need to clean that up a bit more
+	echo "ERROR: selected PND file does not exist!"
 	echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 	exit 1
 fi
-if [ ! $EXENAME ]; then
+if [ ! "$EXENAME" ]; then
 	if [ ! $mount ] && [ ! $umount ]; then
+		echo "ERROR: no executable name provided!"
 		echo "Usage: pnd_run.sh -p your.pnd -e executeable [-a \"(arguments)\"] [ -s \"cd to folder inside pnd\"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]"
 		echo "Usage for mounting/umounting pnd_run.sh -p your.pnd -b uid -m or -u"
 		exit 1
@@ -91,8 +93,9 @@ if [ $nox ]; then #the app doesnt want x to run, so we kill it and restart it on
 fi
  
 #vars
+echo "PND ++ $PND"
 DFS=$(file -b "$PND" | awk '{ print $1 }') #is -p a zip/iso or folder?
-MOUNTPOINT=$(df $PND | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
+MOUNTPOINT=$(df "$PND" | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
 if [ ! -d "$MOUNTPOINT" ]; then MOUNTPOINT="/"; fi #make sure folder exists, if it doesnt assume rootfs
 
 #if the pnd is on / set mountpoint to "" so we dont and up with // at the start,
@@ -104,37 +107,40 @@ echo "mountpoint: $MOUNTPOINT"
 #if -b is set use that as basename, else generate it from PND
 #get basename (strip extension if file) for union mountpoints etc, maybe  this should be changed to something specified inside the xml
 #this should probably be changed to .... something more sensible
-if [ ! $BASENAME ]; then BASENAME=$(basename "$PND" | cut -d'.' -f1) ; fi
+#currently only everything up to the first '.' inside the filenames is used.
+if [ ! "$BASENAME" ]; then BASENAME=$(basename $PND | cut -d'.' -f1) ; fi
  
- 
+echo "Basename: $BASENAME"
  
 if [ ! $umount ]; then 
 
 	oCWD=$(pwd)
 	#create mountpoints, check if they exist already first to avoid annoying error messages
-	if [ ! -d "/mnt/pnd/$BASENAME" ]; then sudo mkdir -p "/mnt/pnd/$BASENAME" ; fi #mountpoint for iso, ro
+	if [ ! -d "/mnt/pnd/${BASENAME}" ]; then sudo mkdir -p "/mnt/pnd/${BASENAME}" ; echo "mkdir -p /mnt/pnd/${BASENAME}"; fi #mountpoint for iso, ro
 	#writeable dir for union
-	if [ ! -d "$MOUNTPOINT/pandora/appdata/$BASENAME" ]; then sudo mkdir -p "$MOUNTPOINT/pandora/appdata/$BASENAME"; sudo chmod -R a+xrw "$MOUNTPOINT/pandora/appdata/$BASENAME"; fi
-	if [ ! -d "/mnt/utmp/$BASENAME" ]; then sudo mkdir -p "/mnt/utmp/$BASENAME"; fi #union over the two
+	if [ ! -d "${MOUNTPOINT}/pandora/appdata/${BASENAME}" ]; then sudo mkdir -p "${MOUNTPOINT}/pandora/appdata/${BASENAME}"; echo "mkdir -p ${MOUNTPOINT}/pandora/appdata/${BASENAME}"; sudo chmod -R a+xrw "${MOUNTPOINT}/pandora/appdata/${BASENAME}"; fi
+	if [ ! -d "/mnt/utmp/${BASENAME}" ]; then sudo mkdir -p "/mnt/utmp/${BASENAME}"; echo "/mnt/utmp/${BASENAME}"; fi #union over the two
 
 	if [ ! $cpuspeed -eq $(cat /proc/pandora/cpu_mhz_max) ]; then 
 	  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
 	fi
 	#is the union already mounted? if not mount evrything, else launch the stuff
-	mount | grep "on /mnt/utmp/$BASENAME type" # > /dev/null
+	mount | grep "on /mnt/utmp/${BASENAME} type" # > /dev/null
 	if [ ! $? -eq 0 ]; then 
 
 		echo not mounted on loop yet, doing so
 		#check if pnd is already attached to loop 
-		LOOP=$(sudo losetup -a | grep $PND | tail -n1 | awk -F: '{print $1}')
+		LOOP=$(sudo losetup -a | grep "$PND" | tail -n1 | awk -F: '{print $1}')
 		#check if the loop device is already mounted
 		loopmountedon=$( mount | grep $(mount | grep $LOOP | awk '{print $3}') | grep utmp | awk '{print $3}' )
-		if [ ! $loopmountedon ]; then #check if the pnd is already attached to some loop device but not used
+		echo "LoopMountedon: $loopmountedon"
+		if [ ! "$loopmountedon" ]; then #check if the pnd is already attached to some loop device but not used
 			FREELOOP=$LOOP 
 			#reuse existing loop
-			if [ ! $LOOP ]; then
+			if [ ! "$LOOP" ]; then
 				FREELOOP=$(sudo /sbin/losetup -f) #get first free loop device
-				if [ ! $FREELOOP  ]; then  # no free loop device, create a new one
+				echo $FREELOOP
+				if [ ! "$FREELOOP" ]; then  # no free loop device, create a new one
 					    #find a free loop device and use it 
 					    usedminor=$(sudo /sbin/losetup -a | tail -n1)
 					    usedminor=${usedminor:9:1}
@@ -143,22 +149,22 @@ if [ ! $umount ]; then
 					    echo freeminor $freeminor
 					    sudo mknod -m777 /dev/loop$freeminor b 7 $freeminor
 					    FREELOOP=/dev/loop$freeminor
-				fi			
+				fi
 			fi
 			  #detect fs
 			
 			if [ $DFS = ISO ]; then
-				sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-				mntline="sudo mount $FREELOOP '/mnt/pnd/$BASENAME/'" #setup the mountline for later
+				sudo /sbin/losetup $FREELOOP "$PND" #attach the pnd to the loop device
+				mntline="sudo mount ${FREELOOP}" #setup the mountline for later
 				#mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$BASENAME"
 				echo "Filetype is $DFS"
 			elif [ $DFS = directory ]; then
-				  mntline="sudo mount --bind -o ro '$PND' '/mnt/pnd/$BASENAME'"
-			  #we bind the folder, now it can be treated in a unified way ATTENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
+				  mntline="sudo mount --bind -o ro \"${PND}\" "
+			  #we bind the folder, now it can be treated in a unified way ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
 				  echo "Filetype is $DFS"
 			elif [ $DFS = Squashfs ]; then
-				  sudo /sbin/losetup $FREELOOP $PND #attach the pnd to the loop device
-				  mntline="sudo mount -t squashfs  $FREELOOP '/mnt/pnd/$BASENAME'"
+				  sudo /sbin/losetup $FREELOOP "$PND" #attach the pnd to the loop device
+				  mntline="sudo mount -t squashfs  ${FREELOOP}"
 				  echo "Filetype is $DFS"
 			else
 				  echo "error determining fs, output was $DFS"
@@ -166,15 +172,15 @@ if [ ! $umount ]; then
 			fi
 
 			echo "$mntline"
-			$mntline #mount the pnd/folder
+			$mntline "/mnt/pnd/${BASENAME}" #mount the pnd/folder
 			echo "mounting union!"
 			FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
 			echo "Filesystem is $FILESYSTEM"
 			if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
 				#append is fucking dirty, need to clean that up
-				sudo mount -t aufs -o exec,noplink,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME"=rw+nolwh:"/mnt/pnd/$BASENAME"=rr$append none "/mnt/utmp/$BASENAME" # put union on top
+				sudo mount -t aufs -o exec,noplink,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh":"/mnt/pnd/$BASENAME=rr$append" none "/mnt/utmp/$BASENAME" # put union on top
 				else
-				sudo mount -t aufs -o exec,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME"=rw+nolwh:"/mnt/pnd/$BASENAME"=rr$append none "/mnt/utmp/$BASENAME" # put union on top
+				sudo mount -t aufs -o exec,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh":"/mnt/pnd/$BASENAME=rr$append" none "/mnt/utmp/$BASENAME" # put union on top
 			fi
 		else #the pnd is already mounted but a mount was requested with a different basename/uid, just link it there
 			      echo $LOOP already mounted on $loopmountedon skipping losetup - putting link to old mount
@@ -190,14 +196,14 @@ if [ ! $umount ]; then
 	if [ $mount ]; then echo "mounted /mnt/utmp/$BASENAME"; exit 1; fi; #mount only, die here
 	
 	cd "/mnt/utmp/$BASENAME" # cd to union mount
-	if [ $STARTDIR ]; then cd $STARTDIR; fi #cd to folder specified by the optional arg -s
-	LD_LIBRARY_PATH=/mnt/utmp/$BASENAME ./$EXENAME $ARGUMENTS # execute app with ld_lib_path set to the union mount, a bit evil but i think its a good solution
+	if [ "$STARTDIR" ]; then cd "$STARTDIR"; fi #cd to folder specified by the optional arg -s
+	LD_LIBRARY_PATH="/mnt/utmp/$BASENAME" "./$EXENAME" $ARGUMENTS # execute app with ld_lib_path set to the union mount, a bit evil but i think its a good solution
 	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
-	PID=`pidof -o %PPID -x $EXENAME` #get pid of app
+	PID=`pidof -o %PPID -x \"$EXENAME\"` #get pid of app
 	while [ "$PID" ] #wait till we get no pid back for tha app, again a bit ugly, but it works
 	do
-	sleep 10s
-	PID=`pidof -o %PPID -x $EXENAME`
+		sleep 10s
+		PID=`pidof -o %PPID -x \"$EXENAME\"`
 	done
 	echo app exited
  
@@ -243,9 +249,9 @@ fi
 
 if [ $nox ]; then
 	echo forking now!
-	fork &> /tmp/pndrun$BASENAME$mount.out & 
+	fork &> "/tmp/pndrun$BASENAME$mount.out" & 
 	disown
 else
 	echo Running with x, not disowning!
-	fork &> /tmp/pndrun$BASENAME$mount.out
+	fork &> "/tmp/pndrun$BASENAME$mount.out"
 fi
