@@ -365,7 +365,9 @@ void ui_render ( void ) {
 #endif
 
   // reset touchscreen regions
-  ui_register_reset();
+  if ( render_jobs_b ) {
+    ui_register_reset();
+  }
 
   // ensure selection is visible
   if ( ui_selected ) {
