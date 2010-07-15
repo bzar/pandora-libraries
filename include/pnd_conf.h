@@ -50,7 +50,7 @@ extern "C" {
  * 'conf' config, and then use its suggested searchpath!
  *
  */
-#define PND_CONF_SEARCHPATH "/media/mmcblk0p1/pandora/conf:/media/mmcblk1p1/pandora/conf:/etc/pandora/conf:./testdata/conf"
+#define PND_CONF_SEARCHPATH "/media/*/pandora/conf:/etc/pandora/conf:./testdata/conf"
 
 /* within the base conf file 'conf', the key for the searchpath is 'conf.searchpath' */
 #define PND_CONF_FILE       "conf" /* a config file for config settings! */
