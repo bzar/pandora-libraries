@@ -169,7 +169,7 @@ int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ) {
 
   }
 
-  return ( strcmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
+  return ( strcasecmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
 }
 
 void category_dump ( void ) {

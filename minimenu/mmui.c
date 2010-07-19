@@ -365,7 +365,9 @@ void ui_render ( void ) {
 #endif
 
   // reset touchscreen regions
-  ui_register_reset();
+  if ( render_jobs_b ) {
+    ui_register_reset();
+  }
 
   // ensure selection is visible
   if ( ui_selected ) {
@@ -1303,13 +1305,28 @@ void ui_process_input ( unsigned char block_p ) {
 	if ( isalpha ( event.key.keysym.sym ) && g_categories [ ui_category ].refcount > 0 ) {
 	  mm_appref_t *app = g_categories [ ui_category ].refs;
 
-	  // walk the category, looking for a first-char match
-	  while ( app ) {
-	    if ( app -> ref -> title_en && toupper ( app -> ref -> title_en [ 0 ] ) == toupper ( event.key.keysym.sym ) ) {
-	      break;
+	  //fprintf ( stderr, "sel %s next %s\n", ui_selected -> ref -> title_en, ui_selected -> next -> ref -> title_en );
+
+	  // are we already matching the same char? and next item is also same char?
+	  if ( app && ui_selected &&
+	       ui_selected -> ref -> title_en && ui_selected -> next -> ref -> title_en &&
+	       toupper ( ui_selected -> ref -> title_en [ 0 ] ) == toupper ( ui_selected -> next -> ref -> title_en [ 0 ] ) &&
+	       toupper ( ui_selected -> ref -> title_en [ 0 ] ) == toupper ( event.key.keysym.sym )
+	     )
+	  {
+	    // just skip down one
+	    app = ui_selected -> next;
+	  } else {
+
+	    // walk the category, looking for a first-char match
+	    while ( app ) {
+	      if ( app -> ref -> title_en && toupper ( app -> ref -> title_en [ 0 ] ) == toupper ( event.key.keysym.sym ) ) {
+		break;
+	      }
+	      app = app -> next;
 	    }
-	    app = app -> next;
-	  }
+
+	  } // same start letter, or new run?
 
 	  // found something, or no?
 	  if ( app ) {
@@ -1317,6 +1334,10 @@ void ui_process_input ( unsigned char block_p ) {
 	    ui_selected = app;
 	    ui_set_selected ( ui_selected );
 	  }
+
+
+
+
 
 	} // SDLK_alphanumeric?
 

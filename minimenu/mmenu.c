@@ -494,6 +494,23 @@ void applications_scan ( void ) {
   // merge lists
   if ( merge_apps ) {
     if ( g_active_apps ) {
+      // the key from pnd_disco_search() is the _path_, so easy to look for duplicates
+      // this is pretty inefficient, being linked lists; perhaps should switch to hash tables when
+      // we expect thousands of apps.. or at least an index or something.
+      void *a = pnd_box_get_head ( merge_apps );
+      void *nexta = NULL;
+      while ( a ) {
+	nexta = pnd_box_get_next ( a );
+
+	// if the key for the node is also found in active apps, toss out the merging one
+	if ( pnd_box_find_by_key ( g_active_apps, pnd_box_get_key ( a ) ) ) {
+	  //fprintf ( stderr, "Merging app id '%s' is duplicate; discarding it.\n", pnd_box_get_key ( a ) );
+	  pnd_box_delete_node ( merge_apps, a );
+	}
+
+	a = nexta;
+      }
+
       // got menu apps, and got desktop apps, merge
       pnd_box_append ( g_active_apps, merge_apps );
     } else {
@@ -514,6 +531,28 @@ void applications_scan ( void ) {
   // merge aux apps
   if ( merge_apps ) {
     if ( g_active_apps ) {
+
+      // LAME: snipped from above; should just catenate the 3 sets of searchpaths into a
+      // master searchpath, possibly removing duplicate paths _then_, and keep all this much
+      // more efficient
+
+      // the key from pnd_disco_search() is the _path_, so easy to look for duplicates
+      // this is pretty inefficient, being linked lists; perhaps should switch to hash tables when
+      // we expect thousands of apps.. or at least an index or something.
+      void *a = pnd_box_get_head ( merge_apps );
+      void *nexta = NULL;
+      while ( a ) {
+	nexta = pnd_box_get_next ( a );
+
+	// if the key for the node is also found in active apps, toss out the merging one
+	if ( pnd_box_find_by_key ( g_active_apps, pnd_box_get_key ( a ) ) ) {
+	  fprintf ( stderr, "Merging app id '%s' is duplicate; discarding it.\n", pnd_box_get_key ( a ) );
+	  pnd_box_delete_node ( merge_apps, a );
+	}
+
+	a = nexta;
+      }
+
       pnd_box_append ( g_active_apps, merge_apps );
     } else {
       g_active_apps = merge_apps;

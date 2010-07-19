@@ -123,6 +123,8 @@ unsigned int b_blinkfreq = 2;     // blink every 2sec
 unsigned int b_blinkdur = 1000;   // blink duration (uSec), 0sec + uSec is assumed
 unsigned char b_active = 0;       // 0=inactive, 1=active and waiting to blink, 2=blink is on, waiting to turn off
 unsigned char b_shutdown = 1;     // %age battery to force a shutdown!
+unsigned int  b_shutdelay = 30;   // delay for shutdown script
+unsigned char b_warned = 0;       // Shutdown attempted
 char *b_shutdown_script = NULL;
 
 /* get to it
@@ -404,6 +406,10 @@ int main ( int argc, char *argv[] ) {
   if ( pnd_conf_get_as_int ( evmaph, "battery.shutdown_threshold" ) != PND_CONF_BADNUM ) {
     b_shutdown = pnd_conf_get_as_int ( evmaph, "battery.shutdown_threshold" );
     pnd_log ( pndn_rem, "Battery shutdown threshold set to %u", b_shutdown );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery.shutdown_delay" ) != PND_CONF_BADNUM ) {
+    b_shutdelay = pnd_conf_get_as_int ( evmaph, "battery.shutdown_delay" );
+    pnd_log ( pndn_rem, "Battery shutdown delay set to %u", b_shutdelay );
   }
   if ( pnd_conf_get_as_char ( evmaph, "battery.shutdown_script" ) != NULL ) {
     b_shutdown_script = strdup ( pnd_conf_get_as_char ( evmaph, "battery.shutdown_script" ) );
@@ -848,28 +854,34 @@ void sigalrm_handler ( int n ) {
   }
 
   // first -- are we critical yet? if so, shut down!
-  if ( batlevel <= b_shutdown && b_shutdown_script ) {
+  if ( batlevel <= b_shutdown && b_shutdown_script) {
     int mamps = 0;
 
     if ( pnd_device_get_charge_current ( &mamps ) && mamps > 100 ) {
-      // critical battery, but charging, so relax.
+        // critical battery, but charging, so relax.
+        b_warned = 0;
     } else {
-      int x;
+      if (b_warned == 0) {
+          // Avoid warning again till re-powered
+          b_warned = 1;
+          int x;
+          pnd_log ( pndn_error, "Battery Current: %d\n", mamps );
+          pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n",
+	      	b_shutdown_script );
 
-      pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n",
-		b_shutdown_script );
+          if ( ( x = fork() ) < 0 ) {
+	        pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+    	    exit ( -3 );
+          }
 
-      if ( ( x = fork() ) < 0 ) {
-	pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-	exit ( -3 );
+         if ( x == 0 ) {
+           char value [ 100 ];
+           sprintf ( value, "%d", b_shutdelay );
+	   execl ( b_shutdown_script, b_shutdown_script, value, (char*)NULL );
+	   pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
+	   exit ( -4 );
+         }
       }
-
-      if ( x == 0 ) {
-	execl ( b_shutdown_script, b_shutdown_script, (char*)NULL );
-	pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
-	exit ( -4 );
-      }
-
     } // charging
 
   }
@@ -881,6 +893,8 @@ void sigalrm_handler ( int n ) {
     // is user charging up? if so, stop blinking.
     // perhaps we shoudl check if charger is connected, and not blink at all in that case..
     if ( batlevel > b_threshold + 1 /* allow for error in read */ ) {
+      //Re-arm warning
+      b_warned = 0;
       pnd_log ( pndn_debug, "Battery is high again, flipping to non-blinker mode\n" );
       b_active = 0;
       set_next_alarm ( b_frequency, 0 );
