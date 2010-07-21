@@ -96,12 +96,12 @@ fi
 echo "PND ++ $PND"
 DFS=$(file -b "$PND" | awk '{ print $1 }') #is -p a zip/iso or folder?
 MOUNTPOINT=$(df "$PND" | sed -ne 's/.*\% \(\S*\)/\1/p' | tail -n1) #find out on which mountpoint the pnd is
-if [ ! -d "$MOUNTPOINT" ]; then MOUNTPOINT="/"; fi #make sure folder exists, if it doesnt assume rootfs
+if [ ! -d "/.$MOUNTPOINT" ]; then MOUNTPOINT="/"; fi #make sure folder exists, if it doesnt assume rootfs
 
 #if the pnd is on / set mountpoint to "" so we dont and up with // at the start,
 #this is to make sure sudo doesnt get confused
-if [ $MOUNTPOINT = "/" ]; then MOUNTPOINT=""; fi
-echo "mountpoint: $MOUNTPOINT"
+if [ "$MOUNTPOINT" = "/" ]; then MOUNTPOINT=""; fi
+echo "mountpoint :${MOUNTPOINT}:"
  
 #BASENAME really should be something sensible and somewhat unique
 #if -b is set use that as basename, else generate it from PND
@@ -121,8 +121,10 @@ if [ ! $umount ]; then
 	if [ ! -d "${MOUNTPOINT}/pandora/appdata/${BASENAME}" ]; then sudo mkdir -p "${MOUNTPOINT}/pandora/appdata/${BASENAME}"; echo "mkdir -p ${MOUNTPOINT}/pandora/appdata/${BASENAME}"; sudo chmod -R a+xrw "${MOUNTPOINT}/pandora/appdata/${BASENAME}"; fi
 	if [ ! -d "/mnt/utmp/${BASENAME}" ]; then sudo mkdir -p "/mnt/utmp/${BASENAME}"; echo "/mnt/utmp/${BASENAME}"; fi #union over the two
 
-	if [ ! $cpuspeed -eq $(cat /proc/pandora/cpu_mhz_max) ]; then 
-	  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
+	if [ $cpuspeed ]; then
+		if [ ! $cpuspeed -eq $(cat /proc/pandora/cpu_mhz_max) ]; then 
+		  gksu --message "$BASENAME wants to set the cpu speed to $cpuspeed, enter root password to allow" echo $cpuspeed > /proc/pandora/cpu_mhz_max
+		fi
 	fi
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	mount | grep "on /mnt/utmp/${BASENAME} type" # > /dev/null
@@ -131,8 +133,10 @@ if [ ! $umount ]; then
 		echo not mounted on loop yet, doing so
 		#check if pnd is already attached to loop 
 		LOOP=$(sudo losetup -a | grep "$PND" | tail -n1 | awk -F: '{print $1}')
-		#check if the loop device is already mounted
-		loopmountedon=$( mount | grep $(mount | grep $LOOP | awk '{print $3}') | grep utmp | awk '{print $3}' )
+		if [ $LOOP ]; then
+			#check if the loop device is already mounted
+			loopmountedon=$( mount | grep $(mount | grep $LOOP | awk '{print $3}') | grep utmp | awk '{print $3}' )
+		fi
 		echo "LoopMountedon: $loopmountedon"
 		if [ ! "$loopmountedon" ]; then #check if the pnd is already attached to some loop device but not used
 			FREELOOP=$LOOP 
@@ -176,7 +180,7 @@ if [ ! $umount ]; then
 			echo "mounting union!"
 			FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
 			echo "Filesystem is $FILESYSTEM"
-			if [ $FILESYSTEM = vfat ]; then # use noplink on fat, dont on other fs's 
+			if [ x$FILESYSTEM = xvfat ]; then # use noplink on fat, dont on other fs's 
 				#append is fucking dirty, need to clean that up
 				sudo mount -t aufs -o exec,noplink,dirs="$MOUNTPOINT/pandora/appdata/$BASENAME=rw+nolwh":"/mnt/pnd/$BASENAME=rr$append" none "/mnt/utmp/$BASENAME" # put union on top
 				else
@@ -206,15 +210,14 @@ if [ ! $umount ]; then
 		PID=`pidof -o %PPID -x \"$EXENAME\"`
 	done
 	echo app exited
- 
 	#app exited
 	cd $oCWD #cd out of the mountpoint so we can umount, doesnt really matter to where...
 else
 echo "-u set, nothing to do here"
 fi
  
- 
 #clean up
+echo Un-Mounting, expect some warnings
 sudo rmdir "/mnt/utmp/$BASENAME"
 sudo rm "/mnt/utmp/$BASENAME"
 sudo umount "/mnt/utmp/$BASENAME" #umount union
