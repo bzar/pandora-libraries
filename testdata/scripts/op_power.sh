@@ -37,6 +37,7 @@ if [ "$1" -le "2" ]; then # button was pressed 1-2sec, "suspend"
     do
       kill -18 $PID #send SIGCONT
     done
+    echo 255 > /sys/class/leds/pandora\:\:power/brightness #power LED bright
   else
     #in normal mode
     echo 1 > /tmp/powerstate
@@ -62,6 +63,7 @@ if [ "$1" -le "2" ]; then # button was pressed 1-2sec, "suspend"
 	    /etc/init.d/wl1251-init stop
     fi
     echo 0 > /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/brightness
+    echo 16 > /sys/class/leds/pandora\:\:power/brightness #dim power LED
     #echo 14 > /proc/pandora/cpu_mhz_max
   fi
 elif [ "$1" -ge "3" ]; then #button was pressed 3 sec or longer, shutdown
