@@ -2,7 +2,7 @@
 #actions done when the lid is closed
 #only argument is 0 for open 1 for closed
 
-if [ -e /tmp/powerstate ]; then #do nothing when in powersave mode
+if [ ! -e /tmp/powerstate ]; then #do nothing when in powersave mode
   if [ "$1" = "1" ]; then #lid was closed
     #/usr/pandora/scripts/op_bright.sh 0
     cat /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/brightness > /tmp/oldbright
