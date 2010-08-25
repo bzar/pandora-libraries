@@ -300,7 +300,7 @@ char *pnd_conf_set_char ( pnd_conf_handle c, char *key, char *v ) {
   }
 
   // add the new node
-  char *nv = pnd_box_allocinsert ( c, key, strlen ( v ) );
+  char *nv = pnd_box_allocinsert ( c, key, strlen ( v ) + 1 );
 
   if ( nv ) {
     strcpy ( nv, v );

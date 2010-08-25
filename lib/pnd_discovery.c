@@ -129,7 +129,6 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 #if 1 // icon
     // for convenience, lets skip along past trailing newlines/CR's in hopes of finding icon data?
     {
-      unsigned int pos = ftell ( f );
       char pngbuffer [ 16 ]; // \211 P N G \r \n \032 \n
       pngbuffer [ 0 ] = 137;      pngbuffer [ 1 ] = 80;      pngbuffer [ 2 ] = 78;      pngbuffer [ 3 ] = 71;
       pngbuffer [ 4 ] = 13;       pngbuffer [ 5 ] = 10;       pngbuffer [ 6 ] = 26;      pngbuffer [ 7 ] = 10;

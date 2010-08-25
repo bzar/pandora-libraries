@@ -58,6 +58,7 @@
 #include "mmcache.h"
 #include "mmcat.h"
 #include "mmui.h"
+#include "mmconf.h"
 
 pnd_box_handle g_active_apps = NULL;
 unsigned int g_active_appcount = 0;
@@ -79,6 +80,8 @@ char *g_skinpath = NULL; // where 'skin_selected' is located .. the fullpath inc
 pnd_conf_handle g_skinconf = NULL;
 
 void sigquit_handler ( int n );
+unsigned char cat_is_visible ( pnd_conf_handle h, char *catname );
+unsigned char app_is_visible ( pnd_conf_handle h, char *uniqueid );
 
 int main ( int argc, char *argv[] ) {
   int logall = -1; // -1 means normal logging rules; >=0 means log all!
@@ -167,8 +170,10 @@ int main ( int argc, char *argv[] ) {
   } // spin
   pnd_log ( pndn_rem, "Looks like user '%s' is in, continue.\n", g_username );
 
-  /* conf file
+  /* conf files
    */
+
+  // mmenu conf
   g_conf = pnd_conf_fetch_by_name ( MMENU_CONF, MMENU_CONF_SEARCHPATH );
 
   if ( ! g_conf ) {
@@ -176,6 +181,11 @@ int main ( int argc, char *argv[] ) {
     emit_and_quit ( MM_QUIT );
   }
 
+  // override mmenu conf via user preference conf
+  conf_merge_into ( conf_determine_location ( g_conf ), g_conf );
+  conf_setup_missing ( g_conf );
+
+  // desktop conf for app finding preferences
   g_desktopconf = pnd_conf_fetch_by_id ( pnd_conf_desktop, PND_CONF_SEARCHPATH );
 
   if ( ! g_desktopconf ) {
@@ -314,6 +324,17 @@ int main ( int argc, char *argv[] ) {
   // lets just merge the skin conf onto the regular conf, so it just magicly works
   pnd_box_append ( g_conf, g_skinconf );
 
+  // did user override the splash image?
+  char *splash = pnd_conf_get_as_char ( g_conf, "minimenu.force_wallpaper" );
+  if ( splash ) {
+    // we've got a filename, presumably; lets see if it exists
+    struct stat statbuf;
+    if ( stat ( splash, &statbuf ) == 0 ) {
+      // file seems to exist, lets set our override to that..
+      pnd_conf_set_char ( g_conf, "graphics.IMG_BACKGROUND_800480", splash );
+    }
+  }
+
   // attempt to set up UI
   if ( ! ui_setup() ) {
     pnd_log ( pndn_error, "ERROR: Couldn't set up the UI!\n" );
@@ -362,6 +383,16 @@ int main ( int argc, char *argv[] ) {
 
   } // set up rescan
 
+  /* set speed to minimenu run-speed, now that we're all set up
+   */
+  int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.mm_speed", -1 );
+  if ( mm_speed > 50 && mm_speed < 800 ) {
+    char buffer [ 512 ];
+    snprintf ( buffer, 500, "sudo /usr/pandora/scripts/op_cpuspeed.sh %d", mm_speed );
+    system ( buffer );
+  }
+
+  // do it!
   while ( 1 ) { // forever!
 
     // show the menu, or changes thereof
@@ -633,14 +664,19 @@ void applications_scan ( void ) {
 	category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */ );
       } // all?
 
-      // main categories
-      category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
-      category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
-      category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
-      // alt categories
-      category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
-      category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
-      category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
+      // is this app suppressed? if not, show it in whatever categories the user is allowing
+      if ( iter -> unique_id && app_is_visible ( g_conf, iter -> unique_id ) ) {
+
+	// main categories
+	category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
+	category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
+	category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
+	// alt categories
+	category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
+	category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
+	category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
+
+      } // app is visible?
 
     } // register with categories or filter out
 
@@ -683,6 +719,17 @@ void applications_scan ( void ) {
   ui_post_scan();
 
   return;
+}
+
+static char _vbuf [ 512 ];
+unsigned char cat_is_visible ( pnd_conf_handle h, char *catname ) {
+  snprintf ( _vbuf, 500, "tabshow.%s", catname );
+  return ( pnd_conf_get_as_int_d ( g_conf, _vbuf, 1 ) ); // default to 'show' when unknown
+}
+
+unsigned char app_is_visible ( pnd_conf_handle h, char *uniqueid ) {
+  snprintf ( _vbuf, 500, "appshow.%s", uniqueid );
+  return ( pnd_conf_get_as_int_d ( g_conf, _vbuf, 1 ) ); // default to 'show' when unknown
 }
 
 void sigquit_handler ( int n ) {

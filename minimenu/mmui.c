@@ -34,6 +34,7 @@
 #include "mmcache.h"
 #include "mmui.h"
 #include "mmwrapcmd.h"
+#include "mmconf.h"
 
 #define CHANGED_NOTHING     (0)
 #define CHANGED_CATEGORY    (1<<0)  /* changed to different category */
@@ -357,9 +358,9 @@ void ui_render ( void ) {
     icon_rows++;
   }
 
+#if 1
   // if no selected app yet, select the first one
-#if 0
-  if ( ! ui_selected ) {
+  if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.start_selected", 0 ) && ! ui_selected ) {
     ui_selected = g_categories [ ui_category ].refs;
   }
 #endif
@@ -763,8 +764,8 @@ void ui_render ( void ) {
 
   } // r_grid
 
-  // detail panel
-  if ( ui_selected && render_jobs_b & R_DETAIL ) {
+  // detail panel - show app details or blank-message
+  if ( render_jobs_b & R_DETAIL ) {
 
     unsigned int cell_offset_x = pnd_conf_get_as_int ( g_conf, "detailtext.cell_offset_x" );
     unsigned int cell_offset_y = pnd_conf_get_as_int ( g_conf, "detailtext.cell_offset_y" );
@@ -772,91 +773,164 @@ void ui_render ( void ) {
 
     unsigned int desty = cell_offset_y;
 
-    char buffer [ 256 ];
+    if ( ui_selected ) {
 
-    // full name
-    if ( ui_selected -> ref -> title_en ) {
-      SDL_Surface *rtext;
-      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-      rtext = TTF_RenderText_Blended ( g_detailtext_font, ui_selected -> ref -> title_en, tmpfontcolor );
-      src.x = 0;
-      src.y = 0;
-      src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
-      src.h = rtext -> h;
-      dest -> x = cell_offset_x;
-      dest -> y = desty;
-      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      SDL_FreeSurface ( rtext );
-      dest++;
-      desty += src.h;
-    }
+      char buffer [ 256 ];
 
-    // category
+      // full name
+      if ( ui_selected -> ref -> title_en ) {
+	SDL_Surface *rtext;
+	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, ui_selected -> ref -> title_en, tmpfontcolor );
+	src.x = 0;
+	src.y = 0;
+	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+	src.h = rtext -> h;
+	dest -> x = cell_offset_x;
+	dest -> y = desty;
+	SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	SDL_FreeSurface ( rtext );
+	dest++;
+	desty += src.h;
+      }
+
+      // category
 #if 0
-    if ( ui_selected -> ref -> main_category ) {
+      if ( ui_selected -> ref -> main_category ) {
 
-      sprintf ( buffer, "Category: %s", ui_selected -> ref -> main_category );
+	sprintf ( buffer, "Category: %s", ui_selected -> ref -> main_category );
 
-      SDL_Surface *rtext;
-      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-      rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
-      src.x = 0;
-      src.y = 0;
-      src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
-      src.h = rtext -> h;
-      dest -> x = cell_offset_x;
-      dest -> y = desty;
-      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      SDL_FreeSurface ( rtext );
-      dest++;
-      desty += src.h;
-    }
+	SDL_Surface *rtext;
+	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+	src.x = 0;
+	src.y = 0;
+	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+	src.h = rtext -> h;
+	dest -> x = cell_offset_x;
+	dest -> y = desty;
+	SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	SDL_FreeSurface ( rtext );
+	dest++;
+	desty += src.h;
+      }
 #endif
 
-    // clock
-    if ( ui_selected -> ref -> clockspeed ) {
+      // clock
+      if ( ui_selected -> ref -> clockspeed ) {
 
-      sprintf ( buffer, "CPU Clock: %s", ui_selected -> ref -> clockspeed );
+	sprintf ( buffer, "CPU Clock: %s", ui_selected -> ref -> clockspeed );
 
-      SDL_Surface *rtext;
-      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-      rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
-      src.x = 0;
-      src.y = 0;
-      src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
-      src.h = rtext -> h;
-      dest -> x = cell_offset_x;
-      dest -> y = desty;
-      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-      SDL_FreeSurface ( rtext );
-      dest++;
-      desty += src.h;
-    }
+	SDL_Surface *rtext;
+	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+	src.x = 0;
+	src.y = 0;
+	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+	src.h = rtext -> h;
+	dest -> x = cell_offset_x;
+	dest -> y = desty;
+	SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	SDL_FreeSurface ( rtext );
+	dest++;
+	desty += src.h;
+      }
 
-    // show sub-app# on right side of cpu clock?
-    //if ( ui_selected -> ref -> subapp_number )
-    {
-      sprintf ( buffer, "(app#%u)", ui_selected -> ref -> subapp_number );
+      // show sub-app# on right side of cpu clock?
+      //if ( ui_selected -> ref -> subapp_number )
+      {
+	sprintf ( buffer, "(app#%u)", ui_selected -> ref -> subapp_number );
 
-      SDL_Surface *rtext;
-      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-      rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
-      dest -> x = cell_offset_x + cell_width - rtext -> w;
-      dest -> y = desty - src.h;
-      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
-      SDL_FreeSurface ( rtext );
-      dest++;
-    }
+	SDL_Surface *rtext;
+	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+	dest -> x = cell_offset_x + cell_width - rtext -> w;
+	dest -> y = desty - src.h;
+	SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+	SDL_FreeSurface ( rtext );
+	dest++;
+      }
 
-    // info hint
+      // info hint
 #if 0 // merged into hint-line
-    if ( ui_selected -> ref -> info_filename ) {
+      if ( ui_selected -> ref -> info_filename ) {
 
-      sprintf ( buffer, "Documentation - hit Y" );
+	sprintf ( buffer, "Documentation - hit Y" );
+
+	SDL_Surface *rtext;
+	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+	src.x = 0;
+	src.y = 0;
+	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+	src.h = rtext -> h;
+	dest -> x = cell_offset_x;
+	dest -> y = desty;
+	SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	SDL_FreeSurface ( rtext );
+	dest++;
+	desty += src.h;
+      }
+#endif
+
+      // notes
+      if ( ui_selected -> ovrh ) {
+	char *n;
+	unsigned char i;
+	char buffer [ 50 ];
+
+	desty += 5; // a touch of spacing can't hurt
+
+	for ( i = 1; i < 4; i++ ) {
+	  sprintf ( buffer, "Application-%u.note-%u", ui_selected -> ref -> subapp_number, i );
+	  n = pnd_conf_get_as_char ( ui_selected -> ovrh, buffer );
+
+	  if ( n ) {
+	    SDL_Surface *rtext;
+	    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
+	    rtext = TTF_RenderText_Blended ( g_detailtext_font, n, tmpfontcolor );
+	    src.x = 0;
+	    src.y = 0;
+	    src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
+	    src.h = rtext -> h;
+	    dest -> x = cell_offset_x;
+	    dest -> y = desty;
+	    SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+	    SDL_FreeSurface ( rtext );
+	    dest++;
+	    desty += rtext -> h;
+	  }
+	} // for
+
+      } // r_detail -> notes
+
+      // preview pic
+      mm_cache_t *ic = cache_query_preview ( ui_selected -> ref -> unique_id );
+      SDL_Surface *previewpic;
+
+      if ( ic ) {
+	previewpic = ic -> i;
+      } else {
+	previewpic = g_imagecache [ IMG_PREVIEW_MISSING ].i;
+      }
+
+      if ( previewpic ) {
+	dest -> x = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_offset_x", 50 ) +
+	  ( ( pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 50 ) - previewpic -> w ) / 2 );
+	dest -> y = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_offset_y", 50 );
+	SDL_BlitSurface ( previewpic, NULL /* whole image */, sdl_realscreen, dest );
+	dest++;
+      }
+
+    } else {
+
+      char *empty_message = "Press SELECT for menu";
 
       SDL_Surface *rtext;
       SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-      rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+
+      rtext = TTF_RenderText_Blended ( g_detailtext_font, empty_message, tmpfontcolor );
+
       src.x = 0;
       src.y = 0;
       src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
@@ -866,60 +940,12 @@ void ui_render ( void ) {
       SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
       SDL_FreeSurface ( rtext );
       dest++;
+
       desty += src.h;
-    }
-#endif
 
-    // notes
-    if ( ui_selected -> ovrh ) {
-      char *n;
-      unsigned char i;
-      char buffer [ 50 ];
+    } // r_detail && selected?
 
-      desty += 5; // a touch of spacing can't hurt
-
-      for ( i = 1; i < 4; i++ ) {
-	sprintf ( buffer, "Application-%u.note-%u", ui_selected -> ref -> subapp_number, i );
-	n = pnd_conf_get_as_char ( ui_selected -> ovrh, buffer );
-
-	if ( n ) {
-	  SDL_Surface *rtext;
-	  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	  rtext = TTF_RenderText_Blended ( g_detailtext_font, n, tmpfontcolor );
-	  src.x = 0;
-	  src.y = 0;
-	  src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
-	  src.h = rtext -> h;
-	  dest -> x = cell_offset_x;
-	  dest -> y = desty;
-	  SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
-	  SDL_FreeSurface ( rtext );
-	  dest++;
-	  desty += rtext -> h;
-	}
-      } // for
-
-    } // r_detail -> notes
-
-    // preview pic
-    mm_cache_t *ic = cache_query_preview ( ui_selected -> ref -> unique_id );
-    SDL_Surface *previewpic;
-
-    if ( ic ) {
-      previewpic = ic -> i;
-    } else {
-      previewpic = g_imagecache [ IMG_PREVIEW_MISSING ].i;
-    }
-
-    if ( previewpic ) {
-      dest -> x = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_offset_x", 50 ) +
-	( ( pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_width", 50 ) - previewpic -> w ) / 2 );
-      dest -> y = pnd_conf_get_as_int_d ( g_conf, "previewpic.cell_offset_y", 50 );
-      SDL_BlitSurface ( previewpic, NULL /* whole image */, sdl_realscreen, dest );
-      dest++;
-    }
-
-  } // r_detail && selected?
+  } // r_detail
 
   // extras
   //
@@ -1218,6 +1244,7 @@ void ui_process_input ( unsigned char block_p ) {
 	char *opts [ 20 ] = {
 	  "Reveal hidden category",
 	  "Shutdown Pandora",
+	  "Configure Minimenu",
 	  "Rescan for applications",
 	  "Cache previews to SD now",
 	  "Run a terminal/console",
@@ -1226,7 +1253,7 @@ void ui_process_input ( unsigned char block_p ) {
 	  "Select a Minimenu skin",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 9, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 10, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
@@ -1237,12 +1264,19 @@ void ui_process_input ( unsigned char block_p ) {
 	  sprintf ( buffer, "sudo poweroff" );
 	  system ( buffer );
 	} else if ( sel == 2 ) {
+	  // configure mm
+	  unsigned char restart = conf_run_menu ( NULL );
+	  conf_write ( g_conf, conf_determine_location ( g_conf ) );
+	  if ( restart ) {
+	    emit_and_quit ( MM_RESTART );
+	  }
+	} else if ( sel == 3 ) {
 	  // rescan apps
 	  pnd_log ( pndn_debug, "Freeing up applications\n" );
 	  applications_free();
 	  pnd_log ( pndn_debug, "Rescanning applications\n" );
 	  applications_scan();
-	} else if ( sel == 3 ) {
+	} else if ( sel == 4 ) {
 	  // cache preview to SD now
 	  extern pnd_box_handle g_active_apps;
 	  pnd_box_handle h = g_active_apps;
@@ -1265,7 +1299,7 @@ void ui_process_input ( unsigned char block_p ) {
 	    iter = pnd_box_get_next ( iter );
 	  } // while
 
-	} else if ( sel == 4 ) {
+	} else if ( sel == 5 ) {
 	  // run terminal
 	  char *argv[5];
 	  argv [ 0 ] = pnd_conf_get_as_char ( g_conf, "utility.terminal" );
@@ -1275,18 +1309,18 @@ void ui_process_input ( unsigned char block_p ) {
 	    ui_forkexec ( argv );
 	  }
 
-	} else if ( sel == 5 ) {
+	} else if ( sel == 6 ) {
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/pandora/scripts/op_switchgui.sh" );
 	  emit_and_quit ( buffer );
-	} else if ( sel == 6 ) {
-	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 7 ) {
+	  emit_and_quit ( MM_QUIT );
+	} else if ( sel == 8 ) {
 	  // select skin
 	  if ( ui_pick_skin() ) {
 	    emit_and_quit ( MM_RESTART );
 	  }
-	} else if ( sel == 8 ) {
+	} else if ( sel == 9 ) {
 	  // about
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s/about.txt", g_skinpath );
@@ -1344,8 +1378,8 @@ void ui_process_input ( unsigned char block_p ) {
       } // SDLK_....
 
       // extras
-#if 0
-      if ( event.key.keysym.sym == SDLK_q ) {
+#if 1
+      if ( event.key.keysym.sym == SDLK_ESCAPE ) {
 	emit_and_quit ( MM_QUIT );
       }
 #endif
@@ -1477,7 +1511,7 @@ void ui_push_up ( void ) {
   unsigned int row = ui_determine_row ( ui_selected );
 
   if ( row == 0 &&
-       pnd_conf_get_as_int_d ( g_conf, "grid.wrap_vert_stop", 1 ) == 0 )
+       pnd_conf_get_as_int_d ( g_conf, "grid.wrap_vert_stop", 0 ) == 0 )
   {
     // wrap around instead
 
@@ -1534,7 +1568,7 @@ void ui_push_down ( void ) {
 
     // we at the end?
     if ( row == ( icon_rows - 1 ) &&
-	 pnd_conf_get_as_int_d ( g_conf, "grid.wrap_vert_stop", 1 ) == 0 )
+	 pnd_conf_get_as_int_d ( g_conf, "grid.wrap_vert_stop", 0 ) == 0 )
     {
 
       unsigned char col = ui_determine_screen_col ( ui_selected );
@@ -1650,6 +1684,16 @@ void ui_push_exec ( void ) {
     } // dir or file?
 
   } else {
+
+    // set app-run speed
+    int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.run_speed", -1 );
+    if ( mm_speed > -1 ) {
+      char buffer [ 512 ];
+      snprintf ( buffer, 500, "sudo /usr/pandora/scripts/op_cpuspeed.sh %d", mm_speed );
+      system ( buffer );
+    }
+
+    // request app to run and quit mmenu
     pnd_apps_exec_disco ( pnd_run_script, ui_selected -> ref, PND_EXEC_OPTION_NORUN, NULL );
     char buffer [ PATH_MAX ];
     sprintf ( buffer, "%s %s\n", MM_RUN, pnd_apps_exec_runline() );

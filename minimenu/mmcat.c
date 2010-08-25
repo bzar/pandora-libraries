@@ -292,6 +292,8 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     return ( 1 ); // fine, just nada
   }
 
+  //fprintf ( stderr, "meta push: '%s'\n", catname );
+
   if ( ! visiblep ) {
     //return ( 1 ); // fine, suppress it
 
@@ -331,6 +333,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 
   // not default, just do it
   category_push ( catname, app, ovrh, NULL /* fspath */ );
+
   // hack :(
  visibility_hack_cleanup:
   if ( ! visiblep ) {
@@ -338,6 +341,9 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     g_categories = _categories;
     g_categorycount = catcount;
   }
+
+  //fprintf ( stderr, "cat meta-push : vis[%30s,%d b] : tally; vis %d invis %d\n", catname, visiblep, g_categorycount, _categories_inviscount );
+
   return ( 1 );
 }
 
