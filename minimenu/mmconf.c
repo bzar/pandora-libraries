@@ -80,6 +80,8 @@ unsigned char conf_run_menu ( confitem_t *toplevel ) {
 
     if ( ! page ) {
       page = pages;
+      sel = 0;
+      first_visible = 0;
     }
 
     if ( lastpage != page ) {
@@ -94,7 +96,8 @@ unsigned char conf_run_menu ( confitem_t *toplevel ) {
 
       switch ( event.type ) {
 
-      case SDL_KEYUP:
+      //case SDL_KEYUP:
+      case SDL_KEYDOWN:
 
 	if ( event.key.keysym.sym == SDLK_UP ) {
 
@@ -126,6 +129,9 @@ unsigned char conf_run_menu ( confitem_t *toplevel ) {
 	    }
 
 	  } while ( page [ sel ].type == ct_nil );
+
+	} else if ( event.key.keysym.sym == SDLK_PAGEUP ) {
+	  page = NULL;
 
 	} else if ( event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT ) {
 

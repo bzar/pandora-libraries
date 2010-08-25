@@ -144,6 +144,9 @@ unsigned char ui_setup ( void ) {
   }
 #endif
 
+  // key repeat
+  SDL_EnableKeyRepeat ( 500, 150 );
+
   // images
   //IMG_Init ( IMG_INIT_JPG | IMG_INIT_PNG );
 
@@ -1201,7 +1204,8 @@ void ui_process_input ( unsigned char block_p ) {
 #endif
 
 #if 1 // keyboard events
-    case SDL_KEYUP:
+    //case SDL_KEYUP:
+    case SDL_KEYDOWN:
 
       //pnd_log ( pndn_debug, "key up %u\n", event.key.keysym.sym );
 
@@ -2135,7 +2139,8 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
       switch ( event.type ) {
 
-      case SDL_KEYUP:
+      //case SDL_KEYUP:
+      case SDL_KEYDOWN:
 
 	if ( event.key.keysym.sym == SDLK_UP ) {
 	  if ( sel ) {
@@ -2788,7 +2793,7 @@ void ui_aboutscreen ( char *textpath ) {
 
 	SDL_Event e;
 
-	if ( SDL_PeepEvents ( &e, 1, SDL_GETEVENT, SDL_EVENTMASK(SDL_KEYUP) ) > 0 ) {
+	if ( SDL_PeepEvents ( &e, 1, SDL_GETEVENT, SDL_EVENTMASK(SDL_KEYUP|SDL_KEYDOWN) ) > 0 ) {
 	  return;
 	}
 
