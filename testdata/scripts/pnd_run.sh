@@ -62,7 +62,7 @@ mountPnd() {
 	rm  /tmp/cpuspeed
 	if ! [ -f "${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed" ]; then
 		if [ ${cpuspeed:-$(cat /proc/pandora/cpu_mhz_max)} -gt $(cat /proc/pandora/cpu_mhz_max) ]; then 
-        	   cpuselection=$(zenity --title="set cpu speed" --height=320 --list --column "id" --column "Please select" --hide-column=1 --text="$PND_NAME suggests to set the cpu speed to $cpuspeed MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(cat /proc/pandora/cpu_mhz_max) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" "yes" "Yes, set it to $cpuspeed MHz" "custom" "Yes, select custom value" "yessave" "Yes, set it to $cpuspeed MHz and don't ask again" "customsave" "Yes, set it to custom speed and don't ask again" "no" "No, don't change the speed")
+        	   cpuselection=$(zenity --title="set cpu speed" --height=350 --list --column "id" --column "Please select" --hide-column=1 --text="$PND_NAME suggests to set the cpu speed to $cpuspeed MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(cat /proc/pandora/cpu_mhz_max) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" "yes" "Yes, set it to $cpuspeed MHz" "custom" "Yes, select custom value" "yessave" "Yes, set it to $cpuspeed MHz and don't ask again" "customsave" "Yes, set it to custom speed and don't ask again" "no" "No, don't change the speed" "nosave" "No, don't chage the speed and don't ask again")
 		  if [ ${cpuselection} = "yes" ]; then	
 			cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed	
 			sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
@@ -79,18 +79,19 @@ mountPnd() {
 			zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
 			sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
 			cat /proc/pandora/cpu_mhz_max > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
+                 elif [ ${cpuselection} = "nosave" ]; then			
+			zenity --info --title="Note" --text="Speed will not be changed.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
+			echo 9999 > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
  	 	fi
 	       fi
 	else
 		cpuspeed=$(cat "${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed")
-		cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed
-		echo Setting to CPU-Speed $cpuspeed MHz
-		sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
-		
-	
-	#gksudo --message ", enter your password to allow" "echo $cpuspeed>/proc/pandora/cpu_mhz_max"
-	fi
-
+		if [ "$cpuspeed" -lt "1500" ]; then
+		  cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed
+		  echo Setting to CPU-Speed $cpuspeed MHz
+		  sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
+		fi
+        fi
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	mount | grep "on /mnt/utmp/${PND_NAME} type"
 	if [ $? -ne 0 ];then
