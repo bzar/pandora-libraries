@@ -10,6 +10,7 @@ if [ "$1" -le "2" ]; then # button was pressed 1-2sec, "suspend"
   fi
   if [ $powerstate -eq "1" ]; then
     #in lowpower mode
+    oldspeed=$(cat /tmp/oldspeed)
     if [ $oldspeed -gt 14 ] && [ $oldspeed -le 900 ]; then 
      echo $oldspeed > /proc/pandora/cpu_mhz_max 
     else
