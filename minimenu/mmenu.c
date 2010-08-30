@@ -385,6 +385,7 @@ int main ( int argc, char *argv[] ) {
 
   /* set speed to minimenu run-speed, now that we're all set up
    */
+#if 0 /* something crashes at high speed image caching.. */
   int use_mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.use_mm_speed", 0 );
   if ( use_mm_speed > 0 ) {
     int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.mm_speed", -1 );
@@ -394,6 +395,7 @@ int main ( int argc, char *argv[] ) {
       system ( buffer );
     }
   } // do speed change?
+#endif
 
   // do it!
   while ( 1 ) { // forever!

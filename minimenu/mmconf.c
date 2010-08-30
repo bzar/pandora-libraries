@@ -24,8 +24,10 @@ static char *conf_format_int ( int v, change_type_e c );
 
 confitem_t page_general[] = {
   { "Default tab to show",           "On startup, Minimenu will try to switch to this tab",     NULL /* default */, "categories.default_cat",  ct_visible_tab_list },
+#if 0 // and also in mmenu.c -- something crashes during image caching
   { "Set CPU speed within Minimenu", "Whether the next setting is applied or not",              "0",                "minimenu.use_mm_speed",   ct_boolean },
   { "CPU speed within Minimenu",     "Set low; speed to run Minimenu at",                       "400",              "minimenu.mm_speed",       ct_cpu_speed },
+#endif
   { "Set CPU speed when leaving",    "Whether the next setting is applied or not",              "0",                "minimenu.use_run_speed",  ct_boolean },
   { "CPU speed when leaving",        "Before running app, set this speed; app may override.",   "500",              "minimenu.run_speed",      ct_cpu_speed },
   { "Show 'All' tab",                "Whethor an All tab is shown or not",                      "1",                "categories.do_all_cat",   ct_boolean },
