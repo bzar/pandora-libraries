@@ -23,16 +23,18 @@ static unsigned char conf_render_line ( SDL_Rect *dest, unsigned int y );
 static char *conf_format_int ( int v, change_type_e c );
 
 confitem_t page_general[] = {
-  { "Default tab to show",       "On startup, Minimenu will try to switch to this tab",     NULL /* default */, "categories.default_cat",  ct_visible_tab_list },
-  { "CPU speed within Minimenu", "Set low; speed to run Minimenu at",                       NULL,               "minimenu.mm_speed",       ct_cpu_speed },
-  { "CPU speed to run apps",     "Before running app, set this speed; app may override.",   "500",              "minimenu.run_speed",      ct_cpu_speed },
-  { "Show 'All' tab",            "Whethor an All tab is shown or not",                      "1",                "categories.do_all_cat",   ct_boolean },
-  { "Start with app selected",   "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
-  { "Wrap tab change",           "Changing tab left or right, does it wrap around?",        "0",                "tabs.wraparound",         ct_boolean },
-  { "Grid stop vertical",        "Changing selection up or down, does it stop or wrap?",    "0",                "grid.wrap_vert_stop",     ct_boolean },
-  { "Force wallpaper with..",    "You can force an override over themes background",        "/pandora/appdata/mmenu/wallpaper.png", "minimenu.force_wallpaper",  ct_filename },
-  { "",                          "",                                                        NULL,               NULL,                      ct_nil },
-  { "^- Back up to main",        "Go back to top level of configuration",                   NULL,               NULL,                      ct_switch_page, NULL },
+  { "Default tab to show",           "On startup, Minimenu will try to switch to this tab",     NULL /* default */, "categories.default_cat",  ct_visible_tab_list },
+  { "Set CPU speed within Minimenu", "Whether the next setting is applied or not",              "0",                "minimenu.use_mm_speed",   ct_boolean },
+  { "CPU speed within Minimenu",     "Set low; speed to run Minimenu at",                       "400",              "minimenu.mm_speed",       ct_cpu_speed },
+  { "Set CPU speed when leaving",    "Whether the next setting is applied or not",              "0",                "minimenu.use_run_speed",  ct_boolean },
+  { "CPU speed when leaving",        "Before running app, set this speed; app may override.",   "500",              "minimenu.run_speed",      ct_cpu_speed },
+  { "Show 'All' tab",                "Whethor an All tab is shown or not",                      "1",                "categories.do_all_cat",   ct_boolean },
+  { "Start with app selected",       "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
+  { "Wrap tab change",               "Changing tab left or right, does it wrap around?",        "0",                "tabs.wraparound",         ct_boolean },
+  { "Grid stop vertical",            "Changing selection up or down, does it stop or wrap?",    "0",                "grid.wrap_vert_stop",     ct_boolean },
+  { "Force wallpaper with..",        "You can force an override over themes background",        "/pandora/appdata/mmenu/wallpaper.png", "minimenu.force_wallpaper",  ct_filename },
+  { "",                              "",                                                        NULL,               NULL,                      ct_nil },
+  { "^- Back up to main",            "Go back to top level of configuration",                   NULL,               NULL,                      ct_switch_page, NULL },
   { NULL }
 };
 

@@ -385,12 +385,15 @@ int main ( int argc, char *argv[] ) {
 
   /* set speed to minimenu run-speed, now that we're all set up
    */
-  int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.mm_speed", -1 );
-  if ( mm_speed > 50 && mm_speed < 800 ) {
-    char buffer [ 512 ];
-    snprintf ( buffer, 500, "sudo /usr/pandora/scripts/op_cpuspeed.sh %d", mm_speed );
-    system ( buffer );
-  }
+  int use_mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.use_mm_speed", 0 );
+  if ( use_mm_speed > 0 ) {
+    int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.mm_speed", -1 );
+    if ( mm_speed > 50 && mm_speed < 800 ) {
+      char buffer [ 512 ];
+      snprintf ( buffer, 500, "sudo /usr/pandora/scripts/op_cpuspeed.sh %d", mm_speed );
+      system ( buffer );
+    }
+  } // do speed change?
 
   // do it!
   while ( 1 ) { // forever!

@@ -1690,12 +1690,15 @@ void ui_push_exec ( void ) {
   } else {
 
     // set app-run speed
-    int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.run_speed", -1 );
-    if ( mm_speed > -1 ) {
-      char buffer [ 512 ];
-      snprintf ( buffer, 500, "sudo /usr/pandora/scripts/op_cpuspeed.sh %d", mm_speed );
-      system ( buffer );
-    }
+    int use_run_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.use_run_speed", 0 );
+    if ( use_run_speed > 0 ) {
+      int mm_speed = pnd_conf_get_as_int_d ( g_conf, "minimenu.run_speed", -1 );
+      if ( mm_speed > -1 ) {
+	char buffer [ 512 ];
+	snprintf ( buffer, 500, "sudo /usr/pandora/scripts/op_cpuspeed.sh %d", mm_speed );
+	system ( buffer );
+      }
+    } // do speed change?
 
     // request app to run and quit mmenu
     pnd_apps_exec_disco ( pnd_run_script, ui_selected -> ref, PND_EXEC_OPTION_NORUN, NULL );
