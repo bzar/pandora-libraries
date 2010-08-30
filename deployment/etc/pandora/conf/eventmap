@@ -5,7 +5,7 @@
 [keys]
 # pass 'hold duration' to the script
 # if a number follows script name, will always force invocation at that time (or less)
-pandora /usr/pandora/scripts/op_menu.sh 1
+pandora /usr/pandora/scripts/op_menu.sh 3
 power	/usr/pandora/scripts/op_power.sh 3
 lcdbrightdown	/usr/pandora/scripts/op_bright_down.sh
 lcdbrightup	/usr/pandora/scripts/op_bright_up.sh
