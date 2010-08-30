@@ -2071,16 +2071,16 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
     // show dialog background
     if ( g_imagecache [ IMG_DETAIL_BG ].i ) {
-      src.x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
-      src.y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
-      src.w = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_PANEL ].i)) -> w;
-      src.h = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_PANEL ].i)) -> h;
+      src.x = 0;
+      src.y = 0;
+      src.w = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_BG ].i)) -> w;
+      src.h = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_BG ].i)) -> h;
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
       SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
       // repeat for darken?
-      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
-      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
+      //SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
+      //SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
       //SDL_UpdateRects ( sdl_realscreen, 1, &dest );
       dest++;
     }
