@@ -12,7 +12,7 @@ elif [ "$cur" -gt "0" ]; then
    new=$(($cur-1))
 fi
 
-if [ "$new" -lt "0" ]; then
+if [ "$new" -lt "3" ]; then
    new=0
 fi
 

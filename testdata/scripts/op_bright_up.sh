@@ -11,11 +11,13 @@ elif [ "$cur" -gt "5" ]; then
 elif [ "$cur" -gt "0" ]; then 
    new=$(($cur+1))
 elif [ "$cur" -eq "0" ]; then 
-   new=$(($cur+1))
+   new=3
 fi
 
 if [ "$new" -gt "54" ]; then
    new=54
 fi
+
+
 
 echo $new > /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/brightness
