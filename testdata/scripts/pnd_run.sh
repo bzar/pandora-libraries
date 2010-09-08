@@ -127,17 +127,20 @@ mountPnd() {
 			case $PND_FSTYPE in
 			ISO)
 				sudo /sbin/losetup $FREELOOP "$PND" #attach the pnd to the loop device
-				mntline="sudo mount ${FREELOOP}" #setup the mountline for later
+				mntline="sudo mount" #setup the mountline for later
+				mntdev="${FREELOOP}"
 				#mntline="sudo mount -o loop,mode=777 $PND /mnt/pnd/$PND_NAME"
 				echo "Filetype is $PND_FSTYPE";;
 			directory)
 				#we bind the folder, now it can be treated in a unified way 
 				#ATENTION: -o ro doesnt work for --bind at least on 25, on 26 its possible using remount, may have changed on 27
-				mntline="sudo mount --bind -o ro \"${PND}\" "
+				mntline="sudo mount --bind -o ro"
+				mntdev="${PND}"
 				echo "Filetype is $PND_FSTYPE";;
 			Squashfs)
 				sudo /sbin/losetup $FREELOOP "$PND" #attach the pnd to the loop device
-				mntline="sudo mount -t squashfs  ${FREELOOP}"
+				mntline="sudo mount -t squashfs"
+				mntdev="${FREELOOP}"
 				echo "Filetype is $PND_FSTYPE";;
 			*)
 				echo "error determining fs, output was $PND_FSTYPE"
@@ -145,7 +148,7 @@ mountPnd() {
 			esac
 
 			echo "$mntline"
-			$mntline "/mnt/pnd/${PND_NAME}" #mount the pnd/folder
+			$mntline "$mntdev" "/mnt/pnd/${PND_NAME}" #mount the pnd/folder
 			echo "mounting union!"
 			FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
 			echo "Filesystem is $FILESYSTEM"
