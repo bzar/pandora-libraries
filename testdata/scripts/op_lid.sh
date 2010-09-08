@@ -10,10 +10,10 @@ if [ ! -e /tmp/powerstate ]; then #do nothing when in powersave mode
       echo $brightness > /tmp/oldbright
     fi
     echo 0 > /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/brightness
-    echo 1 > /sys/devices/platform/omapfb/graphics/fb0/blank
+    #echo 1 > /sys/devices/platform/omapfb/graphics/fb0/blank
   elif [ "$1" = "0" ]; then # lid was opened
-    echo 0 > /sys/devices/platform/omapfb/graphics/fb0/blank
-    sleep 0.1s # looks cleaner, could flicker without
+    #echo 0 > /sys/devices/platform/omapfb/graphics/fb0/blank
+    #sleep 0.1s # looks cleaner, could flicker without
     maxbright=$(cat /sys/devices/platform/twl4030-pwm0-bl/backlight/twl4030-pwm0-bl/max_brightness)
     oldbright=0
     if [ -f /tmp/oldbright ]; then
