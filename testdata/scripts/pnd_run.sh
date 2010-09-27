@@ -29,6 +29,41 @@ list_using_fs() {
 }
 
 runApp() {
+	unset CURRENTSPEED
+	if ! [ -f "${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed" ]; then
+		if [ ${cpuspeed:-$(cat /proc/pandora/cpu_mhz_max)} -gt $(cat /proc/pandora/cpu_mhz_max) ]; then 
+        	   cpuselection=$(zenity --title="set cpu speed" --height=350 --list --column "id" --column "Please select" --hide-column=1 --text="$PND_NAME suggests to set the cpu speed to $cpuspeed MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(cat /proc/pandora/cpu_mhz_max) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" "yes" "Yes, set it to $cpuspeed MHz" "custom" "Yes, select custom value" "yessave" "Yes, set it to $cpuspeed MHz and don't ask again" "customsave" "Yes, set it to custom speed and don't ask again" "no" "No, don't change the speed" "nosave" "No, don't chage the speed and don't ask again")
+		  if [ ${cpuselection} = "yes" ]; then	
+			CURRENTSPEED=$(cat /proc/pandora/cpu_mhz_max)
+			sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
+	  	  elif [ ${cpuselection} = "custom" ]; then	
+			CURRENTSPEED=$(cat /proc/pandora/cpu_mhz_max)
+			sudo /usr/pandora/scripts/op_cpuspeed.sh
+		  elif [ ${cpuselection} = "customsave" ]; then	
+			CURRENTSPEED=$(cat /proc/pandora/cpu_mhz_max)
+			sudo /usr/pandora/scripts/op_cpuspeed.sh
+			zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
+			cat /proc/pandora/cpu_mhz_max > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
+         	 elif [ ${cpuselection} = "yessave" ]; then	
+			CURRENTSPEED=$(cat /proc/pandora/cpu_mhz_max)
+			cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed		
+			zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
+			sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
+			cat /proc/pandora/cpu_mhz_max > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
+                 elif [ ${cpuselection} = "nosave" ]; then			
+			zenity --info --title="Note" --text="Speed will not be changed.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
+			echo 9999 > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
+ 	 	fi
+	       fi
+	else
+		cpuspeed=$(cat "${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed")
+		if [ "$cpuspeed" -lt "1500" ]; then
+		  CURRENTSPEED=$(cat /proc/pandora/cpu_mhz_max)
+		  echo Setting to CPU-Speed $cpuspeed MHz
+		  sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
+		fi
+        fi
+
 	cd "/mnt/utmp/$PND_NAME"		# cd to union mount
 	if [ "$STARTDIR" ] && [ -d "$STARTDIR" ]; then
 		cd "$STARTDIR";			# cd to folder specified by the optional arg -s
@@ -44,6 +79,10 @@ runApp() {
 		PID=`pidof -o %PPID -x \"$EXENAME\"`
 	done
 	echo "[-------------------------------]{ App end }[----------------------------------]"
+
+	if [ ! -z "$CURRENTSPEED" ]; then
+		sudo /usr/pandora/scripts/op_cpuspeed.sh $CURRENTSPEED
+	fi
 }
 
 mountPnd() {
@@ -52,46 +91,13 @@ mountPnd() {
 		sudo mkdir -p "/mnt/pnd/${PND_NAME}"		#mountpoint for iso, ro
 	fi 
 	#writeable dir for union
-	if ! [ -d "${MOUNTPOINT}/pandora/appdata/${PND_NAME}" ]; then 
-		sudo mkdir -p "${MOUNTPOINT}/pandora/appdata/${PND_NAME}"
-		sudo chmod -R a+xrw "${MOUNTPOINT}/pandora/appdata/${PND_NAME}" 2>/dev/null
+	if ! [ -d "${APPDATADIR}" ]; then 
+		sudo mkdir -p "${APPDATADIR}"
+		sudo chmod -R a+xrw "${APPDATADIR}" 2>/dev/null
 	fi
 	if ! [ -d "/mnt/utmp/${PND_NAME}" ]; then
 		sudo mkdir -p "/mnt/utmp/${PND_NAME}"		# union over the two
 	fi
-	rm  /tmp/cpuspeed
-	if ! [ -f "${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed" ]; then
-		if [ ${cpuspeed:-$(cat /proc/pandora/cpu_mhz_max)} -gt $(cat /proc/pandora/cpu_mhz_max) ]; then 
-        	   cpuselection=$(zenity --title="set cpu speed" --height=350 --list --column "id" --column "Please select" --hide-column=1 --text="$PND_NAME suggests to set the cpu speed to $cpuspeed MHz to make it run properly.\n\n Do you want to change the cpu speed? (current speed: $(cat /proc/pandora/cpu_mhz_max) MHz)\n\nWarning: Setting the clock speed above 600MHz can be unstable and it NOT recommended!" "yes" "Yes, set it to $cpuspeed MHz" "custom" "Yes, select custom value" "yessave" "Yes, set it to $cpuspeed MHz and don't ask again" "customsave" "Yes, set it to custom speed and don't ask again" "no" "No, don't change the speed" "nosave" "No, don't chage the speed and don't ask again")
-		  if [ ${cpuselection} = "yes" ]; then	
-			cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed	
-			sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
-	  	  elif [ ${cpuselection} = "custom" ]; then	
-			cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed		
-			sudo /usr/pandora/scripts/op_cpuspeed.sh
-		  elif [ ${cpuselection} = "customsave" ]; then	
-			cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed		
-			sudo /usr/pandora/scripts/op_cpuspeed.sh
-			zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
-			cat /proc/pandora/cpu_mhz_max > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
-         	 elif [ ${cpuselection} = "yessave" ]; then	
-			cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed		
-			zenity --info --title="Note" --text="Speed saved.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
-			sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
-			cat /proc/pandora/cpu_mhz_max > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
-                 elif [ ${cpuselection} = "nosave" ]; then			
-			zenity --info --title="Note" --text="Speed will not be changed.\n\nTo re-enable this dialogue, please delete the file\n${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed"
-			echo 9999 > ${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed
- 	 	fi
-	       fi
-	else
-		cpuspeed=$(cat "${MOUNTPOINT}/pandora/appdata/${PND_NAME}/cpuspeed")
-		if [ "$cpuspeed" -lt "1500" ]; then
-		  cat /proc/pandora/cpu_mhz_max > /tmp/cpuspeed
-		  echo Setting to CPU-Speed $cpuspeed MHz
-		  sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
-		fi
-        fi
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	mount | grep "on /mnt/utmp/${PND_NAME} type"
 	if [ $? -ne 0 ];then
@@ -147,19 +153,21 @@ mountPnd() {
 				exit 1;;
 			esac
 
-			echo "$mntline"
+			echo "Mounting union ($mntline) :"
 			$mntline "$mntdev" "/mnt/pnd/${PND_NAME}" #mount the pnd/folder
-			echo "mounting union!"
+			echo done
 			FILESYSTEM=$(mount | grep "on $MOUNTPOINT " | grep -v rootfs | awk '{print $5}' | tail -n1) #get filesystem appdata is on to determine aufs options
 			echo "Filesystem is $FILESYSTEM"
+			echo "Mounting the Union FS using ${APPDATADIR} as Write directory:"
 			if [[ "$FILESYSTEM" = "vfat" ]]; then # use noplink on fat, dont on other fs's 
 				#append is fucking dirty, need to clean that up
-				sudo mount -t aufs -o exec,noplink,dirs="$MOUNTPOINT/pandora/appdata/$PND_NAME=rw+nolwh":"/mnt/pnd/$PND_NAME=rr$append" none "/mnt/utmp/$PND_NAME"
+				sudo mount -t aufs -o exec,noplink,dirs="${APPDATADIR}=rw+nolwh":"/mnt/pnd/$PND_NAME=rr$append" none "/mnt/utmp/$PND_NAME"
 				# put union on top
 			else
-				sudo mount -t aufs -o exec,dirs="$MOUNTPOINT/pandora/appdata/$PND_NAME=rw+nolwh":"/mnt/pnd/$PND_NAME=rr$append" none "/mnt/utmp/$PND_NAME" 
+				sudo mount -t aufs -o exec,dirs="${APPDATADIR}=rw+nolwh":"/mnt/pnd/$PND_NAME=rr$append" none "/mnt/utmp/$PND_NAME" 
 				# put union on top
 			fi
+			echo done
 		else #the pnd is already mounted but a mount was requested with a different basename/uid, just link it there
 			      echo $LOOP already mounted on $loopmountedon skipping losetup - putting link to old mount
 			      #this is bullshit
@@ -173,46 +181,43 @@ mountPnd() {
 }
 
 unmountPnd() {
-	sudo umount "/mnt/utmp/$PND_NAME" #umount union
-	if [ -f /tmp/cpuspeed ]; then
-		cpuspeed=$(cat /tmp/cpuspeed)
-		sudo /usr/pandora/scripts/op_cpuspeed.sh $cpuspeed
-		rm /tmp/cpuspeed
-	fi
-	if [ -z "$(mount |grep utmp/$PND_NAME|cut -f3 -d' ')" ]; then
-		# check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, 
-		# this WILL lead to clutter if it happens, so we should make damn sure it never happens
-		# umount the actual pnd
-		sudo umount "/mnt/pnd/$PND_NAME"
-		if [ -z "$(mount |grep pnd/$PND_NAME|cut -f3 -d' ')" ]; then
-			#delete folders created by aufs if empty
-			sudo rmdir "$MOUNTPOINT/pandora/appdata/$PND_NAME/.wh..wh.plnk" 2>/dev/null
-			sudo rmdir "$MOUNTPOINT/pandora/appdata/$PND_NAME/.wh..wh..tmp" 2>/dev/null
-			#delete appdata folder and ancestors if empty
-			sudo rmdir -p "$MOUNTPOINT/pandora/appdata/$PND_NAME/" 2>/dev/null
-			#delete tmp mountpoint
-			if [ -d "/mnt/utmp/$PND_NAME" ];then
-				sudo rmdir "/mnt/utmp/$PND_NAME"
-			else
-				sudo rm "/mnt/utmp/$PND_NAME" >/dev/null 2>&1
-			fi
-			if [ $PND_FSTYPE = ISO ] || [ $PND_FSTYPE = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
-				LOOP=$(sudo losetup -a | grep "$(basename $PND)" | tail -n1 | awk -F: '{print $1}')
-				sudo /sbin/losetup -d $LOOP
-				sudo rm $LOOP
-			fi
-			if [ -d /mnt/pnd/$PND_NAME ];then
-				sudo rmdir "/mnt/pnd/$PND_NAME" #delete pnd mountpoint
-			fi
+	if mount | grep -q "on /mnt/utmp/${PND_NAME} type";then
+		sudo umount "/mnt/utmp/$PND_NAME" #umount union
+		if [ -z "$(mount |grep utmp/$PND_NAME|cut -f3 -d' ')" ]; then
+			# check if the umount was successfull, if it wasnt it would mean that theres still something running so we skip this stuff, 
+			# this WILL lead to clutter if it happens, so we should make damn sure it never happens
+			# umount the actual pnd
+			sudo umount "/mnt/pnd/$PND_NAME"
+			if [ -z "$(mount |grep pnd/$PND_NAME|cut -f3 -d' ')" ]; then
+				#delete folders created by aufs if empty
+				sudo rmdir "${APPDATADIR}/.wh..wh.plnk" 2>/dev/null
+				sudo rmdir "${APPDATADIR}/.wh..wh..tmp" 2>/dev/null
+				#delete appdata folder and ancestors if empty
+				sudo rmdir -p "${APPDATADIR}" 2>/dev/null
+				#delete tmp mountpoint
+				if [ -d "/mnt/utmp/$PND_NAME" ];then
+					sudo rmdir "/mnt/utmp/$PND_NAME"
+				else
+					sudo rm "/mnt/utmp/$PND_NAME" >/dev/null 2>&1
+				fi
+				if [ $PND_FSTYPE = ISO ] || [ $PND_FSTYPE = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
+					LOOP=$(sudo losetup -a | grep "$(basename $PND)" | tail -n1 | awk -F: '{print $1}')
+					sudo /sbin/losetup -d $LOOP
+					sudo rm $LOOP
+				fi
+				if [ -d /mnt/pnd/$PND_NAME ];then
+					sudo rmdir "/mnt/pnd/$PND_NAME" #delete pnd mountpoint
+				fi
 
-			echo cleanup done
+				echo cleanup done
+			else
+				echo umount failed, didnt clean up. Process still using this FS :
+				list_using_fs "/mnt/pnd/$PND_NAME"
+			fi
 		else
 			echo umount failed, didnt clean up. Process still using this FS :
-			list_using_fs "/mnt/pnd/$PND_NAME"
+			list_using_fs "/mnt/utmp/$PND_NAME"
 		fi
-	else
-		echo umount failed, didnt clean up. Process still using this FS :
-		list_using_fs "/mnt/utmp/$PND_NAME"
 	fi
 }
 
@@ -269,7 +274,7 @@ main() {
 ####	Parse arguments
 ##
 
-TEMP=`getopt -o p:e:a:b:s:m::u::n::x::j:c: -- "$@"`
+TEMP=`getopt -o d:p:e:a:b:s:m::u::n::x::j:c: -- "$@"`
  
 if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
  
@@ -288,6 +293,7 @@ while true ; do
 		-x) nox=1;shift 2;;
 		-j) append=$2;shift 2;;
 		-c) cpuspeed=$2;shift 2;;
+		-d) APPDATASET=1;APPDATADIR=$2;shift 2;;
 		-a) 
 			case "$2" in
 				"") echo "no arguments"; shift 2 ;;
@@ -307,6 +313,8 @@ if [ ! "$EXENAME" ] && [[ "$ACTION" = "run" ]]; then
 	showHelp
 	exit 1
 fi
+[ ! -z $APPDATASET ] && APPDATADIR=${APPDATADIR:-$(dirname $PND)/$PND_NAME}
+APPDATADIR=${APPDATADIR:-${MOUNTPOINT}/pandora/appdata/${PND_NAME}}
 
 
 PND_FSTYPE=$(file -b "$PND" | awk '{ print $1 }')	# is -p a zip/iso or folder?
