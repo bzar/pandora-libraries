@@ -40,6 +40,10 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
     return ( 0 );
   }
 
+  if ( options & PND_EXEC_OPTION_INFO && ! reserved ) {
+    return ( 0 );
+  }
+
   // determine path to pnd-file
   sprintf ( fullpath, "%s/%s", app -> object_path, app -> object_filename );
 
@@ -79,9 +83,14 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
     argv [ f++ ] = "-b";
     argv [ f++ ] = app -> unique_id;
   }
-  if ( app -> clockspeed ) {
-    argv [ f++ ] = "-c";
-    argv [ f++ ] = app -> clockspeed;
+
+  if ( options & PND_EXEC_OPTION_INFO ) {
+    // we don't need to overclock for showing info :) do we? crazy active .js pages maybe?
+  } else {
+    if ( app -> clockspeed ) {
+      argv [ f++ ] = "-c";
+      argv [ f++ ] = app -> clockspeed;
+    }
   }
 
   // skip -a (arguments) for now
