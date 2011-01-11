@@ -17,13 +17,6 @@
 #cleanup
 #Rewrite! - this sucks
 
-showHelp() {
-	cat <<endHELP
-Usage: pnd_run.sh -p your.pnd -e executeable [-a "(arguments)"] [ -s "cd to folder inside pnd"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]
-Usage for mounting/umounting pnd_run.sh -p your.pnd -b uid -m or -u
-endHELP
-}
-
 list_using_fs() {
 	for p in $(fuser -m $1 2>/dev/null);do ps hf $p;done
 }
@@ -341,38 +334,46 @@ main() {
 	fi
 }
 
-######################################################################################
-####	Parse arguments
-##
+showHelp() {
+	cat <<endHELP
+Usage: pnd_run.sh -p your.pnd -e executeable [-a "(arguments)"] [ -s "cd to folder inside pnd"] [-b UID (name of mountpoint/pandora/appdata)] [-x close x before launching(script needs to be started with nohup for this to work]
+Usage for mounting/umounting pnd_run.sh -p your.pnd -b uid -m or -u
+endHELP
+}
 
-PNDARGS="$@"
-
-TEMP=`getopt -o d:p:e:a:b:s:m::u::n::x::j:c: -- $PNDARGS`
-if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
-eval set -- "$TEMP"				# Note the quotes around `$TEMP': they are essential!
- 
+function parseArgs() {
 ACTION=run
+TEMP=`getopt -o d:p:e:a:b:s:m::u::n::x::j:c: -- "$@"`
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
 while true ; do
-	case "$1" in
-		-p) PND=$2;shift 2;;
-		-e) EXENAME=$2;shift 2 ;;
-		-b) PND_NAME=$2;shift 2;;
-		-s) STARTDIR=$2;shift 2;;
-		-m) ACTION=mount;shift 2;;
-		-u) ACTION=umount;shift 2;;
-		-x) nox=1;shift 2;;
-		-j) append=$2;shift 2;;
-		-c) cpuspeed=$2;shift 2;;
-		-d) APPDATASET=1;APPDATADIR=$2;shift 2;;
-		-a) 
-			case "$2" in
-				"") echo "no arguments"; shift 2 ;;
-				*)  echo "args set to \`$2'" ;ARGUMENTS=$2;shift 2 ;;
-			esac ;;
-		--) shift ; break ;;
-		*) echo "Error while parsing arguments!" ; exit 1 ;;
-	esac
+        case "$1" in
+                -p) PND="$2";shift 2;;
+                -e) EXENAME="$2";shift 2 ;;
+                -b) PND_NAME="$2";shift 2;;
+                -s) STARTDIR="$2";shift 2;;
+                -m) ACTION=mount;shift 2;;
+                -u) ACTION=umount;shift 2;;
+                -x) nox=1;shift 2;;
+                -j) append="$2";shift 2;;
+                -c) cpuspeed="$2";shift 2;;
+                -d) APPDATASET=1;APPDATADIR="$2";shift 2;;
+                -a)
+                        case "$2" in
+                                "") echo "no arguments"; shift 2 ;;
+                                *) ARGUMENTS="$2";shift 2 ;;
+                        esac ;;
+                --) shift ; break ;;
+                *) echo "Error while parsing arguments!"; showHelp; exit 1 ;;
+        esac
 done
+}
+######################################################################################
+####	Main :
+##
+PNDARGS="$@"
+parseArgs "$@"
 
 if [ ! -e "$PND" ]; then #check if theres a pnd suplied, need to clean that up a bit more
 	echo "ERROR: selected PND($PND) file does not exist!"
