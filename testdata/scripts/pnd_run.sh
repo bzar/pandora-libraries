@@ -375,6 +375,13 @@ done
 PNDARGS="$@"
 parseArgs "$@"
 
+#PND_NAME really should be something sensible and somewhat unique
+#if -b is set use that as pnd_name, else generate it from PND
+#get basename (strip extension if file) for union mountpoints etc, maybe  this should be changed to something specified inside the xml
+#this should probably be changed to .... something more sensible
+#currently only everything up to the first '.' inside the filenames is used.
+PND_NAME=${PND_NAME:-"$(basename $PND | cut -d'.' -f1)"}
+
 if [ ! -e "$PND" ]; then #check if theres a pnd suplied, need to clean that up a bit more
 	echo "ERROR: selected PND($PND) file does not exist!"
 	showHelp
@@ -389,7 +396,9 @@ fi
 
 PND_FSTYPE=$(file -b "$PND" | awk '{ print $1 }')	# is -p a zip/iso or folder?
 MOUNTPOINT=$(df "$PND" | tail -1|awk '{print $6}')	# find out on which mountpoint the pnd is
-if [ ! -d "$MOUNTPOINT" ] || [ $MOUNTPOINT = "/" ]; then 
+if [ $(df "$PND"|wc -l) -eq 1 ];then			# this is actually a bug in busybox
+	MOUNTPOINT="/";
+elif [ ! -d "$MOUNTPOINT" ]; then 
 	MOUNTPOINT="";
 fi
 
@@ -397,13 +406,6 @@ fi
 APPDATADIR=${APPDATADIR:-${MOUNTPOINT}/pandora/appdata/${PND_NAME}}
 
 LOGFILE="/tmp/pndrun_${PND_NAME}.out"
-
-#PND_NAME really should be something sensible and somewhat unique
-#if -b is set use that as pnd_name, else generate it from PND
-#get basename (strip extension if file) for union mountpoints etc, maybe  this should be changed to something specified inside the xml
-#this should probably be changed to .... something more sensible
-#currently only everything up to the first '.' inside the filenames is used.
-PND_NAME=${PND_NAME:-"$(basename $PND | cut -d'.' -f1)"}
 
 if [[ $ACTION != "run" ]];then #not logging mount and umount as these are from command-line
 	main
