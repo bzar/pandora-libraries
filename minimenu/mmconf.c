@@ -34,6 +34,8 @@ confitem_t page_general[] = {
   { "Start with app selected",       "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
   { "Wrap tab change",               "Changing tab left or right, does it wrap around?",        "0",                "tabs.wraparound",         ct_boolean },
   { "Grid stop vertical",            "Changing selection up or down, does it stop or wrap?",    "0",                "grid.wrap_vert_stop",     ct_boolean },
+  { "Detail panel on start?",        "Show or hide the detail panel when menu starts",          "1",                "display.show_detail_pane", ct_boolean },
+  { "Live (not exit) on app run?",   "Normally menu exits (to save ram) on app run",            "0",                "minimenu.live_on_run",    ct_boolean },
   { "Force wallpaper with..",        "You can force an override over themes background",        "/pandora/appdata/mmenu/wallpaper.png", "minimenu.force_wallpaper",  ct_filename },
   { "",                              "",                                                        NULL,               NULL,                      ct_nil },
   { "^- Back up to main",            "Go back to top level of configuration",                   NULL,               NULL,                      ct_switch_page, NULL },

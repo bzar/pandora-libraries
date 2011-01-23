@@ -101,6 +101,10 @@ unsigned char ui_determine_row ( mm_appref_t *a );
 unsigned char ui_determine_screen_row ( mm_appref_t *a );
 unsigned char ui_determine_screen_col ( mm_appref_t *a );
 
+// detail panel hide/show
+unsigned char ui_is_detail_hideable ( void ); // returns true if detail pane may be hidden with current skin
+void ui_toggle_detail_pane ( void );          // toggle it on/off
+
 // ui_render() can register tappable-areas which touchscreen code can then figure out if we made a hit
 void ui_register_reset ( void );
 void ui_register_tab ( unsigned char catnum, unsigned int x, unsigned int y, unsigned int w, unsigned int h );

@@ -802,3 +802,25 @@ void setup_notifications ( void ) {
 
   return;
 }
+
+// for Pleng
+// Goal: normally menu will quit when an app is invoked, but there are cases when some folks
+// may configure their system and want mmenu to live instead (save on restart time, don't care
+// about RAM, using a multitasking tray/window manager setup...), so instead of 'exit and emit'
+// here we just run the app directly and cross fingers!
+void emit_and_run ( char *buffer ) {
+
+  // run the bloody thing
+  int f;
+
+  if ( ( f = fork() ) < 0 ) {
+    // error forking
+  } else if ( f > 0 ) {
+    // parent
+  } else {
+    // child, do it
+    execl ( "/bin/sh", "/bin/sh", "-c", buffer + strlen(MM_RUN) + 1, (char*) NULL );
+  } 
+
+  return;
+}

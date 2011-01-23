@@ -19,7 +19,8 @@ typedef enum {
   pndn_none
 } pndnotify_loglevels_e;
 
-void emit_and_quit ( char *s );
+void emit_and_quit ( char *s );      // normal case; quit and run an app
+void emit_and_run ( char *buffer );  // odd case; run an app and stay alive
 
 void applications_free ( void );
 void applications_scan ( void );

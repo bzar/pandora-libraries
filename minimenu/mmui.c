@@ -35,6 +35,7 @@
 #include "mmui.h"
 #include "mmwrapcmd.h"
 #include "mmconf.h"
+#include "mmui_context.h"
 
 #define CHANGED_NOTHING     (0)
 #define CHANGED_CATEGORY    (1<<0)  /* changed to different category */
@@ -74,6 +75,9 @@ int ui_rows_scrolled_down = 0;          // number of rows that should be missing
 mm_appref_t *ui_selected = NULL;
 unsigned char ui_category = 0;          // current category
 unsigned char ui_catshift = 0;          // how many cats are offscreen to the left
+ui_context_t ui_display_context;        // display paramaters: see mmui_context.h
+unsigned char ui_detail_hidden = 0;     // if >0, detail panel is hidden
+// FUTURE: If multiple panels can be shown/hidden, convert ui_detail_hidden to a bitmask
 
 extern mm_category_t *g_categories;
 extern unsigned char g_categorycount;
@@ -195,6 +199,14 @@ unsigned char ui_setup ( void ) {
 	      pnd_conf_get_as_char ( g_conf, "tabs.font" ), pnd_conf_get_as_int_d ( g_conf, "tabs.font_ptsize", 10 ) );
     return ( 0 ); // couldn't set up SDL TTF
   }
+
+  // determine display context
+  if ( pnd_conf_get_as_int_d ( g_conf, "display.show_detail_pane", 1 ) > 0 ) {
+    ui_detail_hidden = 0;
+  } else {
+    ui_detail_hidden = 1;
+  }
+  ui_recache_context ( &ui_display_context );
 
   return ( 1 );
 }
@@ -327,43 +339,17 @@ void ui_render ( void ) {
   unsigned int row, displayrow, col;
   mm_appref_t *appiter;
 
-  unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
-
-  unsigned char row_max = pnd_conf_get_as_int_d ( g_conf, "grid.row_max", 4 );
-  unsigned char col_max = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
-
-  unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
-  unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
-  unsigned int font_rgba_b = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_b", 200 );
-  unsigned int font_rgba_a = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_a", 100 );
-
-  unsigned int grid_offset_x = pnd_conf_get_as_int ( g_conf, "grid.grid_offset_x" );
-  unsigned int grid_offset_y = pnd_conf_get_as_int ( g_conf, "grid.grid_offset_y" );
-
-  unsigned int icon_offset_x = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_x" );
-  unsigned int icon_offset_y = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_y" );
-  unsigned int icon_max_width = pnd_conf_get_as_int ( g_conf, "grid.icon_max_width" );
-  unsigned int icon_max_height = pnd_conf_get_as_int ( g_conf, "grid.icon_max_height" );
-  unsigned int sel_icon_offset_x = pnd_conf_get_as_int_d ( g_conf, "grid.sel_offoffset_x", 0 );
-  unsigned int sel_icon_offset_y = pnd_conf_get_as_int_d ( g_conf, "grid.sel_offoffset_y", 0 );
-
-  unsigned int text_width = pnd_conf_get_as_int ( g_conf, "grid.text_width" );
-  unsigned int text_clip_x = pnd_conf_get_as_int ( g_conf, "grid.text_clip_x" );
-  unsigned int text_offset_x = pnd_conf_get_as_int ( g_conf, "grid.text_offset_x" );
-  unsigned int text_offset_y = pnd_conf_get_as_int ( g_conf, "grid.text_offset_y" );
-
-  unsigned int cell_width = pnd_conf_get_as_int ( g_conf, "grid.cell_width" );
-  unsigned int cell_height = pnd_conf_get_as_int ( g_conf, "grid.cell_height" );
+  ui_context_t *c = &ui_display_context; // for convenience and shorthand
 
   // how many total rows do we need?
-  icon_rows = g_categories [ ui_category ].refcount / col_max;
-  if ( g_categories [ ui_category ].refcount % col_max > 0 ) {
+  icon_rows = g_categories [ ui_category ].refcount / c -> col_max;
+  if ( g_categories [ ui_category ].refcount % c -> col_max > 0 ) {
     icon_rows++;
   }
 
 #if 1
   // if no selected app yet, select the first one
-  if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.start_selected", 0 ) && ! ui_selected ) {
+  if ( ! ui_selected && pnd_conf_get_as_int_d ( g_conf, "minimenu.start_selected", 0 ) ) {
     ui_selected = g_categories [ ui_category ].refs;
   }
 #endif
@@ -377,8 +363,8 @@ void ui_render ( void ) {
   if ( ui_selected ) {
 
     int index = ui_selected_index();
-    int topleft = col_max * ui_rows_scrolled_down;
-    int botright = ( col_max * ( ui_rows_scrolled_down + row_max ) - 1 );
+    int topleft = c -> col_max * ui_rows_scrolled_down;
+    int botright = ( c -> col_max * ( ui_rows_scrolled_down + c -> row_max ) - 1 );
 
     if ( index < topleft ) {
       ui_rows_scrolled_down -= pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
@@ -422,16 +408,28 @@ void ui_render ( void ) {
 
   // tabs
   if ( g_imagecache [ IMG_TAB_SEL ].i && g_imagecache [ IMG_TAB_UNSEL ].i ) {
-    unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
-    unsigned int tab_height = pnd_conf_get_as_int ( g_conf, "tabs.tab_height" );
-    //unsigned int tab_selheight = pnd_conf_get_as_int ( g_conf, "tabs.tab_selheight" );
-    unsigned int tab_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_x" );
-    unsigned int tab_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_y" );
-    unsigned int text_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_x" );
-    unsigned int text_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_y" );
-    unsigned int text_width = pnd_conf_get_as_int ( g_conf, "tabs.text_width" );
-    unsigned int maxtab = ( screen_width / tab_width ) < g_categorycount ? ( screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift;
-    unsigned int maxtabspot = ( screen_width / tab_width );
+    static unsigned int tab_width;
+    static unsigned int tab_height;
+    static unsigned int tab_offset_x;
+    static unsigned int tab_offset_y;
+    static unsigned int text_offset_x;
+    static unsigned int text_offset_y;
+    static unsigned int text_width;
+
+    static unsigned char tab_first_run = 1;
+    if ( tab_first_run ) {
+      tab_first_run = 0;
+      tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
+      tab_height = pnd_conf_get_as_int ( g_conf, "tabs.tab_height" );
+      tab_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_x" );
+      tab_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.tab_offset_y" );
+      text_offset_x = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_x" );
+      text_offset_y = pnd_conf_get_as_int ( g_conf, "tabs.text_offset_y" );
+      text_width = pnd_conf_get_as_int ( g_conf, "tabs.text_width" );
+    }
+
+    unsigned int maxtab = ( c -> screen_width / tab_width ) < g_categorycount ? ( c -> screen_width / tab_width ) + ui_catshift : g_categorycount + ui_catshift;
+    unsigned int maxtabspot = ( c -> screen_width / tab_width );
 
     if ( g_categorycount > 0 ) {
 
@@ -518,8 +516,7 @@ void ui_render ( void ) {
 
 	  // draw text
 	  SDL_Surface *rtext;
-	  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	  rtext = TTF_RenderText_Blended ( g_tab_font, g_categories [ col ].catname, tmpfontcolor );
+	  rtext = TTF_RenderText_Blended ( g_tab_font, g_categories [ col ].catname, c -> fontcolor );
 	  src.x = 0;
 	  src.y = 0;
 	  src.w = rtext -> w < text_width ? rtext -> w : text_width;
@@ -566,8 +563,8 @@ void ui_render ( void ) {
 
     // up?
     if ( ui_rows_scrolled_down && g_imagecache [ IMG_ARROW_UP ].i ) {
-      dest -> x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_x", 450 );
-      dest -> y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_y", 80 );
+      dest -> x = c -> arrow_up_x;
+      dest -> y = c -> arrow_up_y;
       SDL_BlitSurface ( g_imagecache [ IMG_ARROW_UP ].i, NULL /* whole image */, sdl_realscreen, dest );
       dest++;
 
@@ -575,9 +572,9 @@ void ui_render ( void ) {
     }
 
     // down?
-    if ( ui_rows_scrolled_down + row_max < icon_rows && g_imagecache [ IMG_ARROW_DOWN ].i ) {
-      dest -> x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_x", 450 );
-      dest -> y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_y", 80 );
+    if ( ui_rows_scrolled_down + c -> row_max < icon_rows && g_imagecache [ IMG_ARROW_DOWN ].i ) {
+      dest -> x = c -> arrow_down_x;
+      dest -> y = c -> arrow_down_y;
       SDL_BlitSurface ( g_imagecache [ IMG_ARROW_DOWN ].i, NULL /* whole image */, sdl_realscreen, dest );
       dest++;
 
@@ -588,10 +585,10 @@ void ui_render ( void ) {
       // show scrollbar as well
       src.x = 0;
       src.y = 0;
-      src.w = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_clip_w", 10 );
-      src.h = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_clip_h", 100 );
-      dest -> x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_x", 450 );
-      dest -> y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_y", 100 );
+      src.w = c -> arrow_bar_clip_w;
+      src.h = c -> arrow_bar_clip_h;
+      dest -> x = c -> arrow_bar_x;
+      dest -> y = c -> arrow_bar_y;
       SDL_BlitSurface ( g_imagecache [ IMG_ARROW_SCROLLBAR ].i, &src /* whole image */, sdl_realscreen, dest );
       dest++;
     } // bar
@@ -599,7 +596,7 @@ void ui_render ( void ) {
   } // r_bg, scroll bars
 
   // render detail pane bg
-  if ( render_jobs_b & R_DETAIL ) {
+  if ( render_jobs_b & R_DETAIL && ui_detail_hidden == 0 ) {
 
     if ( pnd_conf_get_as_int_d ( g_conf, "detailpane.show", 1 ) ) {
 
@@ -633,13 +630,13 @@ void ui_render ( void ) {
     // if just rendering grid, and nothing else, better clear it first
     if ( ! ( render_jobs_b & R_BG ) ) {
       if ( g_imagecache [ IMG_BACKGROUND_800480 ].i ) {
-	src.x = grid_offset_x;
-	src.y = grid_offset_y + sel_icon_offset_y;
-	src.w = col_max * cell_width;
-	src.h = row_max * cell_height;
+	src.x = c -> grid_offset_x;
+	src.y = c -> grid_offset_y + c -> sel_icon_offset_y;
+	src.w = c -> col_max * c -> cell_width;
+	src.h = c -> row_max * c -> cell_height;
 
-	dest -> x = grid_offset_x;
-	dest -> y = grid_offset_y + sel_icon_offset_y;
+	dest -> x = c -> grid_offset_x;
+	dest -> y = c -> grid_offset_y + c -> sel_icon_offset_y;
 
 	SDL_BlitSurface ( g_imagecache [ IMG_BACKGROUND_800480 ].i, &src, sdl_realscreen, dest );
 	dest++;
@@ -656,7 +653,7 @@ void ui_render ( void ) {
       // until we run out of apps, or run out of space
       while ( appiter != NULL ) {
 
-	for ( col = 0; col < col_max && appiter != NULL; col++ ) {
+	for ( col = 0; col < c -> col_max && appiter != NULL; col++ ) {
 
 	  // do we even need to render it? or are we suppressing it due to rows scrolled off the top?
 	  if ( row >= ui_rows_scrolled_down ) {
@@ -666,14 +663,14 @@ void ui_render ( void ) {
 	      SDL_Surface *s = g_imagecache [ IMG_SELECTED_ALPHAMASK ].i;
 	      // icon
 	      //dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + ( ( icon_max_width - s -> w ) / 2 );
-	      dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + sel_icon_offset_x;
+	      dest -> x = c -> grid_offset_x + ( col * c -> cell_width ) + c -> icon_offset_x + c -> sel_icon_offset_x;
 	      //dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y + ( ( icon_max_height - s -> h ) / 2 );
-	      dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y + sel_icon_offset_y;
+	      dest -> y = c -> grid_offset_y + ( displayrow * c -> cell_height ) + c -> icon_offset_y + c -> sel_icon_offset_y;
 	      SDL_BlitSurface ( s, NULL /* all */, sdl_realscreen, dest );
 	      dest++;
 	      // text
-	      dest -> x = grid_offset_x + ( col * cell_width ) + text_clip_x;
-	      dest -> y = grid_offset_y + ( displayrow * cell_height ) + pnd_conf_get_as_int ( g_conf, "grid.text_hilite_offset_y" );
+	      dest -> x = c -> grid_offset_x + ( col * c -> cell_width ) + c -> text_clip_x;
+	      dest -> y = c -> grid_offset_y + ( displayrow * c -> cell_height ) + c -> text_hilite_offset_y;
 	      SDL_BlitSurface ( g_imagecache [ IMG_SELECTED_HILITE ].i, NULL /* all */, sdl_realscreen, dest );
 	      dest++;
 	    } // selected?
@@ -708,8 +705,8 @@ void ui_render ( void ) {
 	      src.y = 0;
 	      src.w = 60;
 	      src.h = 60;
-	      dest -> x = grid_offset_x + ( col * cell_width ) + icon_offset_x + (( icon_max_width - iconsurface -> w ) / 2);
-	      dest -> y = grid_offset_y + ( displayrow * cell_height ) + icon_offset_y + (( icon_max_height - iconsurface -> h ) / 2);
+	      dest -> x = c -> grid_offset_x + ( col * c -> cell_width ) + c -> icon_offset_x + (( c -> icon_max_width - iconsurface -> w ) / 2);
+	      dest -> y = c -> grid_offset_y + ( displayrow * c -> cell_height ) + c -> icon_offset_y + (( c -> icon_max_height - iconsurface -> h ) / 2);
 
 	      SDL_BlitSurface ( iconsurface, &src, sdl_realscreen, dest );
 
@@ -723,18 +720,17 @@ void ui_render ( void ) {
 	    // show text
 	    if ( appiter -> ref -> title_en ) {
 	      SDL_Surface *rtext;
-	      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	      rtext = TTF_RenderText_Blended ( g_grid_font, appiter -> ref -> title_en, tmpfontcolor );
+	      rtext = TTF_RenderText_Blended ( g_grid_font, appiter -> ref -> title_en, c -> fontcolor );
 	      src.x = 0;
 	      src.y = 0;
-	      src.w = text_width < rtext -> w ? text_width : rtext -> w;
+	      src.w = c -> text_width < rtext -> w ? c -> text_width : rtext -> w;
 	      src.h = rtext -> h;
-	      if ( rtext -> w > text_width ) {
-		dest -> x = grid_offset_x + ( col * cell_width ) + text_clip_x;
+	      if ( rtext -> w > c -> text_width ) {
+		dest -> x = c -> grid_offset_x + ( col * c -> cell_width ) + c -> text_clip_x;
 	      } else {
-		dest -> x = grid_offset_x + ( col * cell_width ) + text_offset_x - ( rtext -> w / 2 );
+		dest -> x = c -> grid_offset_x + ( col * c -> cell_width ) + c -> text_offset_x - ( rtext -> w / 2 );
 	      }
-	      dest -> y = grid_offset_y + ( displayrow * cell_height ) + text_offset_y;
+	      dest -> y = c -> grid_offset_y + ( displayrow * c -> cell_height ) + c -> text_offset_y;
 	      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
 	      SDL_FreeSurface ( rtext );
 	      dest++;
@@ -754,7 +750,7 @@ void ui_render ( void ) {
 	row ++;
 
 	// are we done displaying rows?
-	if ( displayrow >= row_max ) {
+	if ( displayrow >= c -> row_max ) {
 	  break;
 	}
 
@@ -768,7 +764,7 @@ void ui_render ( void ) {
   } // r_grid
 
   // detail panel - show app details or blank-message
-  if ( render_jobs_b & R_DETAIL ) {
+  if ( render_jobs_b & R_DETAIL && ui_detail_hidden == 0 ) {
 
     unsigned int cell_offset_x = pnd_conf_get_as_int ( g_conf, "detailtext.cell_offset_x" );
     unsigned int cell_offset_y = pnd_conf_get_as_int ( g_conf, "detailtext.cell_offset_y" );
@@ -783,8 +779,7 @@ void ui_render ( void ) {
       // full name
       if ( ui_selected -> ref -> title_en ) {
 	SDL_Surface *rtext;
-	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	rtext = TTF_RenderText_Blended ( g_detailtext_font, ui_selected -> ref -> title_en, tmpfontcolor );
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, ui_selected -> ref -> title_en, c -> fontcolor );
 	src.x = 0;
 	src.y = 0;
 	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
@@ -804,8 +799,7 @@ void ui_render ( void ) {
 	sprintf ( buffer, "Category: %s", ui_selected -> ref -> main_category );
 
 	SDL_Surface *rtext;
-	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, c -> fontcolor );
 	src.x = 0;
 	src.y = 0;
 	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
@@ -825,8 +819,7 @@ void ui_render ( void ) {
 	sprintf ( buffer, "CPU Clock: %s", ui_selected -> ref -> clockspeed );
 
 	SDL_Surface *rtext;
-	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, c -> fontcolor );
 	src.x = 0;
 	src.y = 0;
 	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
@@ -845,8 +838,7 @@ void ui_render ( void ) {
 	sprintf ( buffer, "(app#%u)", ui_selected -> ref -> subapp_number );
 
 	SDL_Surface *rtext;
-	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+	rtext = TTF_RenderText_Blended ( g_grid_font, buffer, c -> fontcolor );
 	dest -> x = cell_offset_x + cell_width - rtext -> w;
 	dest -> y = desty - src.h;
 	SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
@@ -861,8 +853,7 @@ void ui_render ( void ) {
 	sprintf ( buffer, "Documentation - hit Y" );
 
 	SDL_Surface *rtext;
-	SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, tmpfontcolor );
+	rtext = TTF_RenderText_Blended ( g_detailtext_font, buffer, c -> fontcolor );
 	src.x = 0;
 	src.y = 0;
 	src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
@@ -890,8 +881,7 @@ void ui_render ( void ) {
 
 	  if ( n ) {
 	    SDL_Surface *rtext;
-	    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-	    rtext = TTF_RenderText_Blended ( g_detailtext_font, n, tmpfontcolor );
+	    rtext = TTF_RenderText_Blended ( g_detailtext_font, n, c -> fontcolor );
 	    src.x = 0;
 	    src.y = 0;
 	    src.w = rtext -> w < cell_width ? rtext -> w : cell_width;
@@ -930,9 +920,8 @@ void ui_render ( void ) {
       char *empty_message = "Press SELECT for menu";
 
       SDL_Surface *rtext;
-      SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
 
-      rtext = TTF_RenderText_Blended ( g_detailtext_font, empty_message, tmpfontcolor );
+      rtext = TTF_RenderText_Blended ( g_detailtext_font, empty_message, c -> fontcolor );
 
       src.x = 0;
       src.y = 0;
@@ -967,8 +956,7 @@ void ui_render ( void ) {
     sprintf ( buffer, "Battery: %u%%", batterylevel );
 
     SDL_Surface *rtext;
-    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, c -> fontcolor );
     dest -> x = pnd_conf_get_as_int_d ( g_conf, "display.battery_x", 20 );
     dest -> y = pnd_conf_get_as_int_d ( g_conf, "display.battery_y", 450 );
     SDL_BlitSurface ( rtext, NULL /* all */, sdl_realscreen, dest );
@@ -991,8 +979,7 @@ void ui_render ( void ) {
     }
 
     SDL_Surface *rtext;
-    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, c -> fontcolor );
 
     // clear bg
     if ( ! ( render_jobs_b & R_BG ) ) {
@@ -1026,8 +1013,7 @@ void ui_render ( void ) {
     strftime ( buffer, 50, "%a %H:%M %F", tm );
 
     SDL_Surface *rtext;
-    SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, tmpfontcolor );
+    rtext = TTF_RenderText_Blended ( g_grid_font, buffer, c -> fontcolor );
     dest -> x = pnd_conf_get_as_int_d ( g_conf, "display.clock_x", 700 );
     dest -> y = pnd_conf_get_as_int_d ( g_conf, "display.clock_y", 450 );
     SDL_BlitSurface ( rtext, NULL /* all */, sdl_realscreen, dest );
@@ -1210,6 +1196,8 @@ void ui_process_input ( unsigned char block_p ) {
       //pnd_log ( pndn_debug, "key up %u\n", event.key.keysym.sym );
 
       // SDLK_LALT -> Start
+      // page up/down for y/x
+      // home/end for a and b
 
       // directional
       if ( event.key.keysym.sym == SDLK_RIGHT ) {
@@ -1224,16 +1212,25 @@ void ui_process_input ( unsigned char block_p ) {
       } else if ( event.key.keysym.sym == SDLK_DOWN ) {
 	ui_push_down();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_END ) {
+      } else if ( event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_END ) { // space or B
 	ui_push_exec();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_RSHIFT ) {
+      } else if ( event.key.keysym.sym == SDLK_TAB || event.key.keysym.sym == SDLK_HOME ) { // tab or A
+	// if detail panel is togglable, then toggle it
+	// if not, make sure its ruddy well shown!
+	if ( ui_is_detail_hideable() ) {
+	  ui_toggle_detail_pane();
+	} else {
+	  ui_detail_hidden = 0;
+	}
+	ui_event++;
+      } else if ( event.key.keysym.sym == SDLK_RSHIFT ) { // left trigger
 	ui_push_ltrigger();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_RCTRL ) {
+      } else if ( event.key.keysym.sym == SDLK_RCTRL ) { // right trigger
 	ui_push_rtrigger();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_PAGEUP ) {
+      } else if ( event.key.keysym.sym == SDLK_PAGEUP ) { // Y
 	// info
 	if ( ui_selected ) {
 	  ui_show_info ( pnd_run_script, ui_selected -> ref );
@@ -1438,7 +1435,7 @@ void ui_push_left ( unsigned char forcecoil ) {
        pnd_conf_get_as_int_d ( g_conf, "grid.wrap_horiz_samerow", 0 ) &&
        col == 0 )
   {
-    unsigned int i = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1;
+    unsigned int i = ui_display_context.col_max - 1;
     while ( i && ui_selected -> next ) {
       ui_push_right ( 0 );
       i--;
@@ -1475,7 +1472,7 @@ void ui_push_right ( unsigned char forcecoil ) {
     if ( forcecoil == 0 &&
 	 pnd_conf_get_as_int_d ( g_conf, "grid.wrap_horiz_samerow", 0 ) &&
 	 // and selected is far-right, or last icon in category (might not be far right)
-	 ( ( col == pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 ) - 1 ) ||
+	 ( ( col == ui_display_context.col_max - 1 ) ||
 	   ( ui_selected -> next == NULL ) )
        )
     {
@@ -1505,7 +1502,7 @@ void ui_push_right ( unsigned char forcecoil ) {
 }
 
 void ui_push_up ( void ) {
-  unsigned char col_max = pnd_conf_get_as_int ( g_conf, "grid.col_max" );
+  unsigned char col_max = ui_display_context.col_max;
 
   if ( ! ui_selected ) {
     return;
@@ -1539,7 +1536,7 @@ void ui_push_up ( void ) {
 
     // scroll down to show it
     int r = ui_determine_row ( ui_selected ) - 1;
-    if ( r - pnd_conf_get_as_int ( g_conf, "grid.row_max" ) > 0 ) {
+    if ( r - ui_display_context.row_max > 0 ) {
       ui_rows_scrolled_down = (unsigned int) r;
     }
 
@@ -1557,7 +1554,7 @@ void ui_push_up ( void ) {
 }
 
 void ui_push_down ( void ) {
-  unsigned char col_max = pnd_conf_get_as_int ( g_conf, "grid.col_max" );
+  unsigned char col_max = ui_display_context.col_max;
 
   if ( ui_selected ) {
 
@@ -1666,7 +1663,11 @@ void ui_push_exec ( void ) {
 	  pnd_apps_exec_disco ( pnd_run_script, d, PND_EXEC_OPTION_NORUN, NULL );
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s %s\n", MM_RUN, pnd_apps_exec_runline() );
-	  emit_and_quit ( buffer );
+	  if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.live_on_run", 0 ) == 0 ) {
+	    emit_and_quit ( buffer );
+	  } else {
+	    emit_and_run ( buffer );
+	  }
 	}
 
       } else {
@@ -1681,7 +1682,11 @@ void ui_push_exec ( void ) {
 #else
 	char buffer [ PATH_MAX ];
 	sprintf ( buffer, "%s %s/%s\n", MM_RUN, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
-	emit_and_quit ( buffer );
+	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.live_on_run", 0 ) == 0 ) {
+	  emit_and_quit ( buffer );
+	} else {
+	  emit_and_run ( buffer );
+	}
 #endif
       } // pnd or bin?
 
@@ -1704,7 +1709,11 @@ void ui_push_exec ( void ) {
     pnd_apps_exec_disco ( pnd_run_script, ui_selected -> ref, PND_EXEC_OPTION_NORUN, NULL );
     char buffer [ PATH_MAX ];
     sprintf ( buffer, "%s %s\n", MM_RUN, pnd_apps_exec_runline() );
-    emit_and_quit ( buffer );
+    if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.live_on_run", 0 ) == 0 ) {
+      emit_and_quit ( buffer );
+    } else {
+      emit_and_run ( buffer );
+    }
   }
 
   return;
@@ -1712,7 +1721,7 @@ void ui_push_exec ( void ) {
 
 void ui_push_ltrigger ( void ) {
   unsigned char oldcat = ui_category;
-  unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+  unsigned int screen_width = ui_display_context.screen_width;
   unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
 
   if ( g_categorycount == 0 ) {
@@ -1758,7 +1767,7 @@ void ui_push_rtrigger ( void ) {
     return;
   }
 
-  unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+  unsigned int screen_width = ui_display_context.screen_width;
   unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
 
   if ( ui_category < ( g_categorycount - 1 ) ) {
@@ -1822,18 +1831,12 @@ void ui_loadscreen ( void ) {
 
   SDL_Rect dest;
 
-  unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
-  unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
-  unsigned int font_rgba_b = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_b", 200 );
-  unsigned int font_rgba_a = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_a", 100 );
-
   // clear the screen
   SDL_FillRect( SDL_GetVideoSurface(), NULL, 0 );
 
   // render text
   SDL_Surface *rtext;
-  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-  rtext = TTF_RenderText_Blended ( g_big_font, "Setting up menu...", tmpfontcolor );
+  rtext = TTF_RenderText_Blended ( g_big_font, "Setting up menu...", ui_display_context.fontcolor );
   dest.x = 20;
   dest.y = 20;
   SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, &dest );
@@ -1846,11 +1849,6 @@ void ui_loadscreen ( void ) {
 void ui_discoverscreen ( unsigned char clearscreen ) {
 
   SDL_Rect dest;
-
-  unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
-  unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
-  unsigned int font_rgba_b = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_b", 200 );
-  unsigned int font_rgba_a = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_a", 100 );
 
   // clear the screen
   if ( clearscreen ) {
@@ -1870,8 +1868,7 @@ void ui_discoverscreen ( unsigned char clearscreen ) {
 
   // render text
   SDL_Surface *rtext;
-  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-  rtext = TTF_RenderText_Blended ( g_big_font, "Looking for applications...", tmpfontcolor );
+  rtext = TTF_RenderText_Blended ( g_big_font, "Looking for applications...", ui_display_context.fontcolor );
   if ( clearscreen ) {
     dest.x = 20;
     dest.y = 20;
@@ -2198,13 +2195,13 @@ unsigned char ui_determine_row ( mm_appref_t *a ) {
     i = i -> next;
     row++;
   } // while
-  row /= pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
+  row /= ui_display_context.col_max;
 
   return ( row );
 }
 
 unsigned char ui_determine_screen_row ( mm_appref_t *a ) {
-  return ( ui_determine_row ( a ) % pnd_conf_get_as_int_d ( g_conf, "grid.row_max", 5 ) );
+  return ( ui_determine_row ( a ) % ui_display_context.row_max );
 }
 
 unsigned char ui_determine_screen_col ( mm_appref_t *a ) {
@@ -2215,7 +2212,7 @@ unsigned char ui_determine_screen_col ( mm_appref_t *a ) {
     i = i -> next;
     col++;
   } // while
-  col %= pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
+  col %= ui_display_context.col_max;
 
   return ( col );
 }
@@ -2452,7 +2449,7 @@ void ui_post_scan ( void ) {
       if ( strcasecmp ( g_categories [ i ].catname, dc ) == 0 ) {
 	ui_category = i;
 	// ensure visibility
-	unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+	unsigned int screen_width = ui_display_context.screen_width;
 	unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
 	if ( ui_category > ui_catshift + ( screen_width / tab_width ) - 1 ) {
 	  ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
@@ -2864,7 +2861,7 @@ void ui_revealscreen ( void ) {
     ui_category = g_categorycount - 1;
 
     // ensure visibility
-    unsigned int screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+    unsigned int screen_width = ui_display_context.screen_width;
     unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
     if ( ui_category > ui_catshift + ( screen_width / tab_width ) - 1 ) {
       ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
@@ -2873,6 +2870,112 @@ void ui_revealscreen ( void ) {
     // redraw tabs
     render_mask |= CHANGED_CATEGORY;
   }
+
+  return;
+}
+
+void ui_recache_context ( ui_context_t *c ) {
+
+  c -> screen_width = pnd_conf_get_as_int_d ( g_conf, "display.screen_width", 800 );
+
+  c -> font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
+  c -> font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
+  c -> font_rgba_b = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_b", 200 );
+  c -> font_rgba_a = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_a", 100 );
+
+  c -> grid_offset_x = pnd_conf_get_as_int ( g_conf, "grid.grid_offset_x" );
+  c -> grid_offset_y = pnd_conf_get_as_int ( g_conf, "grid.grid_offset_y" );
+
+  c -> icon_offset_x = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_x" );
+  c -> icon_offset_y = pnd_conf_get_as_int ( g_conf, "grid.icon_offset_y" );
+  c -> icon_max_width = pnd_conf_get_as_int ( g_conf, "grid.icon_max_width" );
+  c -> icon_max_height = pnd_conf_get_as_int ( g_conf, "grid.icon_max_height" );
+  c -> sel_icon_offset_x = pnd_conf_get_as_int_d ( g_conf, "grid.sel_offoffset_x", 0 );
+  c -> sel_icon_offset_y = pnd_conf_get_as_int_d ( g_conf, "grid.sel_offoffset_y", 0 );
+
+  c -> text_width = pnd_conf_get_as_int ( g_conf, "grid.text_width" );
+  c -> text_clip_x = pnd_conf_get_as_int ( g_conf, "grid.text_clip_x" );
+  c -> text_offset_x = pnd_conf_get_as_int ( g_conf, "grid.text_offset_x" );
+  c -> text_offset_y = pnd_conf_get_as_int ( g_conf, "grid.text_offset_y" );
+  c -> text_hilite_offset_y = pnd_conf_get_as_int ( g_conf, "grid.text_hilite_offset_y" );
+
+  c -> row_max = pnd_conf_get_as_int_d ( g_conf, "grid.row_max", 4 );
+  c -> col_max = pnd_conf_get_as_int_d ( g_conf, "grid.col_max", 5 );
+
+  c -> cell_width = pnd_conf_get_as_int ( g_conf, "grid.cell_width" );
+  c -> cell_height = pnd_conf_get_as_int ( g_conf, "grid.cell_height" );
+
+  c -> arrow_bar_x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_x", 450 );
+  c -> arrow_bar_y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_y", 100 );
+  c -> arrow_bar_clip_w = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_clip_w", 10 );
+  c -> arrow_bar_clip_h = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_clip_h", 100 );
+  c -> arrow_up_x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_x", 450 );
+  c -> arrow_up_y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_y", 80 );
+  c -> arrow_down_x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_x", 450 );
+  c -> arrow_down_y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_y", 80 );
+
+  // font colour
+  SDL_Color tmp = { c -> font_rgba_r, c -> font_rgba_g, c -> font_rgba_b, c -> font_rgba_a };
+  c -> fontcolor = tmp;
+
+  // now that we've got 'normal' (detail pane shown) param's, lets check if detail pane
+  // is hidden; if so, override some values with those alternate skin values where possible.
+  if ( ui_detail_hidden ) {
+    // if detail panel is hidden, and theme cannot support it, unhide the bloody thing. (This may help
+    // when someone is amid theme hacking or changing.)
+    if ( ! ui_is_detail_hideable() ) {
+      ui_detail_hidden = 0;
+    }
+
+    // still hidden?
+    if ( ui_detail_hidden ) {
+
+      c -> row_max = pnd_conf_get_as_int_d ( g_conf, "grid.row_max_w", c -> row_max );
+      c -> col_max = pnd_conf_get_as_int_d ( g_conf, "grid.col_max_w", c -> col_max );
+
+      c -> cell_width = pnd_conf_get_as_int_d ( g_conf, "grid.cell_width_w", c -> cell_width );
+      c -> cell_height = pnd_conf_get_as_int_d ( g_conf, "grid.cell_height_w", c -> cell_height );
+
+      c -> arrow_bar_x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_x_w", 450 );
+      c -> arrow_bar_y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_bar_y_w", 100 );
+      c -> arrow_up_x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_x_w", 450 );
+      c -> arrow_up_y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_up_y_w", 80 );
+      c -> arrow_down_x = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_x_w", 450 );
+      c -> arrow_down_y = pnd_conf_get_as_int_d ( g_conf, "grid.arrow_down_y_w", 80 );
+
+    } // if detail hidden.. still.
+
+  } // if detail hidden
+
+  return;
+}
+
+unsigned char ui_is_detail_hideable ( void ) {
+
+  // if skin has a bit of info for wide-mode, we assume wide-mode is available
+  if ( pnd_conf_get_as_char ( g_conf, "grid.row_max_w" ) != NULL ) {
+    return ( 1 );
+  }
+
+  // else not!
+  return ( 0 );
+}
+
+void ui_toggle_detail_pane ( void ) {
+
+  // no bitmask trickery here; I like it to be stand-out obvious at 3am.
+
+  if ( ui_detail_hidden ) {
+    ui_detail_hidden = 0;
+  } else {
+    ui_detail_hidden = 1;
+  }
+
+  // repull skin config
+  ui_recache_context ( &ui_display_context );
+
+  // redraw
+  render_mask |= CHANGED_EVERYTHING;
 
   return;
 }
