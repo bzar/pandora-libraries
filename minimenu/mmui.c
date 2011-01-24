@@ -1224,10 +1224,10 @@ void ui_process_input ( unsigned char block_p ) {
 	  ui_detail_hidden = 0;
 	}
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_RSHIFT ) { // left trigger
+      } else if ( event.key.keysym.sym == SDLK_RSHIFT || event.key.keysym.sym == SDLK_COMMA ) { // left trigger or comma
 	ui_push_ltrigger();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_RCTRL ) { // right trigger
+      } else if ( event.key.keysym.sym == SDLK_RCTRL || event.key.keysym.sym == SDLK_PERIOD ) { // right trigger or period
 	ui_push_rtrigger();
 	ui_event++;
       } else if ( event.key.keysym.sym == SDLK_PAGEUP ) { // Y
@@ -1643,7 +1643,7 @@ void ui_push_exec ( void ) {
       pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ].catname, g_categories [ ui_category ].fspath );
 
       // rescan the dir
-      category_fs_restock ( &(g_categories [ ui_category]) );
+      category_fs_restock ( &(g_categories [ ui_category ]) );
       // forget the selection, nolonger applies
       ui_selected = NULL;
       ui_set_selected ( ui_selected );
@@ -1672,7 +1672,23 @@ void ui_push_exec ( void ) {
 
       } else {
 	// random bin file
+
+	// is it even executable? if we don't have handlers for non-executables yet (Jan 2011 we don't),
+	// then don't even try to run things not-flagged as executable.. but wait most people are on
+	// FAT filesystems, what a drag, we can't tell.
+
+#if 0 // eat up any pending SDL events and toss 'em?
+	{
+	  SDL_PumpEvents();
+	  SDL_Event e;
+	  while ( SDL_PeepEvents ( &e, 1, SDL_GETEVENT, SDL_ALLEVENTS ) > 0 ) {
+	    // spin
+	  }
+	}
+#endif
+
 #if 1
+	// just exec it
 	char cwd [ PATH_MAX ];
 	getcwd ( cwd, PATH_MAX );
 
@@ -1680,6 +1696,7 @@ void ui_push_exec ( void ) {
 	pnd_exec_no_wait_1 ( ui_selected -> ref -> title_en, NULL );
 	chdir ( cwd );
 #else
+	// get mmwrapper to run it
 	char buffer [ PATH_MAX ];
 	sprintf ( buffer, "%s %s/%s\n", MM_RUN, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
 	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.live_on_run", 0 ) == 0 ) {
@@ -2367,6 +2384,8 @@ void ui_touch_act ( unsigned int x, unsigned int y ) {
 	}
 	ui_category = t -> catnum;
 	render_mask |= CHANGED_CATEGORY;
+	// rescan the dir
+	category_fs_restock ( &(g_categories [ ui_category ]) );
       }
 
       break;

@@ -392,9 +392,16 @@ void conf_display_page ( confitem_t *page, unsigned int selitem, unsigned int fi
     dest += conf_render_text ( g_tab_font, "No default value", dest, 380, 420, CONF_UNSELECTED );
   }
 
+  // cursor's conf item count number - not for top level, just the sublevels
+  if ( page != pages ) {
+    char buffer [ 40 ];
+    sprintf ( buffer, "Config item %d of %d", selitem + 1, conf_determine_pagelength ( page ) );
+    /*dest += */conf_render_text ( g_tab_font, buffer, dest, 380, 440, CONF_UNSELECTED );
+  }
+
   // help
   dest += conf_render_line ( dest, 380 );
-  dest += conf_render_text ( g_tab_font, "Up and down to switch selection", dest, 10, 400, CONF_UNSELECTED );
+  dest += conf_render_text ( g_tab_font, "D-pad Up/down; Y return to index", dest, 10, 400, CONF_UNSELECTED );
   dest += conf_render_text ( g_tab_font, "Left and right to alter selected item", dest, 10, 420, CONF_UNSELECTED );
   dest += conf_render_text ( g_tab_font, "B or Enter to activate an option", dest, 10, 440, CONF_UNSELECTED );
 
@@ -783,3 +790,10 @@ void conf_reset_to_default ( pnd_conf_handle h ) {
   return;
 }
 
+unsigned int conf_determine_pagelength ( confitem_t *page ) {
+  confitem_t *p = page;
+  while ( p -> text ) {
+    p++;
+  }
+  return ( p - page );
+}

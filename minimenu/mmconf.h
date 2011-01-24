@@ -34,6 +34,7 @@ void conf_display_page ( confitem_t *page, unsigned int selitem, unsigned int fi
 #define CONF_SELECTED 1
 #define CONF_UNSELECTED 0
 unsigned char conf_prepare_page ( confitem_t *page );
+unsigned int conf_determine_pagelength ( confitem_t *page );
 
 void conf_merge_into ( char *fullpath, pnd_conf_handle h ); // merge fullpath as a conf file into 'h'; no turning back.
 unsigned char conf_write ( pnd_conf_handle h, char *fullpath ); // emit a conf file, based on items known to conf-ui

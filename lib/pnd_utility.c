@@ -167,6 +167,9 @@ void pnd_exec_no_wait_1 ( char *fullpath, char *arg1 ) {
     execl ( fullpath, fullpath, (char*) NULL );
   }
 
+  // error invoking something, and we're the child process, so just die before all hell breaks lose with us thinking we're the (second!) parent on return!
+  exit ( -1 );
+
   // getting here is an error
   //printf ( "Error attempting to run %s\n", fullpath );
 
