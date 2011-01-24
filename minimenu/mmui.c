@@ -2793,7 +2793,7 @@ void ui_aboutscreen ( char *textpath ) {
 
 	SDL_Event e;
 
-	if ( SDL_PeepEvents ( &e, 1, SDL_GETEVENT, SDL_EVENTMASK(SDL_KEYUP|SDL_KEYDOWN) ) > 0 ) {
+	if ( SDL_PeepEvents ( &e, 1, SDL_GETEVENT, SDL_EVENTMASK(/*SDL_KEYUP|*/SDL_KEYDOWN) ) > 0 ) {
 	  return;
 	}
 
