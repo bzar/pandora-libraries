@@ -824,3 +824,29 @@ void emit_and_run ( char *buffer ) {
 
   return;
 }
+
+// this code was swiped from pnd_utility pnd_exec_no_wait_1 as it became a little too minimenu-specific to remain there
+void exec_raw_binary ( char *fullpath ) {
+  int i;
+
+  if ( ( i = fork() ) < 0 ) {
+    printf ( "ERROR: Couldn't fork()\n" );
+    return;
+  }
+
+  if ( i ) {
+    return; // parent process, don't care
+  }
+
+  // child process, do something
+  execl ( "/bin/sh", "/bin/sh", "-c", fullpath, (char*) NULL );
+  //execl ( fullpath, fullpath, (char*) NULL );
+
+  // error invoking something, and we're the child process, so just die before all hell breaks lose with us thinking we're the (second!) parent on return!
+  exit ( -1 );
+
+  // getting here is an error
+  //printf ( "Error attempting to run %s\n", fullpath );
+
+  return;
+}

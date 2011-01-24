@@ -45,6 +45,8 @@
 #define CHANGED_EVERYTHING  (1<<4)  /* redraw it all! */
 unsigned int render_mask = CHANGED_EVERYTHING;
 
+#define MIMETYPE_EXE "/usr/bin/file"     /* check for file type prior to invocation */
+
 /* SDL
  */
 SDL_Surface *sdl_realscreen = NULL;
@@ -1048,6 +1050,10 @@ void ui_process_input ( unsigned char block_p ) {
 	// timer went off, time to load something
 	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
 
+	  if ( ! ui_selected ) {
+	    break;
+	  }
+
 	  // load the preview pics now!
 	  pnd_disco_t *iter = ui_selected -> ref;
 
@@ -1636,17 +1642,21 @@ void ui_push_exec ( void ) {
 
       } else {
 	// go down
-	strcat ( g_categories [ ui_category].fspath, "/" );
-	strcat ( g_categories [ ui_category].fspath, ui_selected -> ref -> title_en );
+	char *temp = malloc ( strlen ( g_categories [ ui_category].fspath ) + strlen ( ui_selected -> ref -> title_en ) + 1 + 1 );
+	sprintf ( temp, "%s/%s", g_categories [ ui_category].fspath, ui_selected -> ref -> title_en );
+	free ( g_categories [ ui_category].fspath );
+	g_categories [ ui_category].fspath = temp;
+	//strcat ( g_categories [ ui_category].fspath, "/" );
+	//strcat ( g_categories [ ui_category].fspath, ui_selected -> ref -> title_en );
       }
 
       pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ].catname, g_categories [ ui_category ].fspath );
 
-      // rescan the dir
-      category_fs_restock ( &(g_categories [ ui_category ]) );
       // forget the selection, nolonger applies
       ui_selected = NULL;
       ui_set_selected ( ui_selected );
+      // rescan the dir
+      category_fs_restock ( &(g_categories [ ui_category ]) );
       // redraw the grid
       render_mask |= CHANGED_SELECTION;
 
@@ -1675,7 +1685,38 @@ void ui_push_exec ( void ) {
 
 	// is it even executable? if we don't have handlers for non-executables yet (Jan 2011 we don't),
 	// then don't even try to run things not-flagged as executable.. but wait most people are on
-	// FAT filesystems, what a drag, we can't tell.
+	// FAT filesystems, what a drag, we can't tell at the fs level.
+	// ... but we can still invoke 'file' and grep out the good bits, at least.
+	//
+	// open a stream reading 'file /path/to/file' and check output for 'executable'
+	// -- not checking for "ARM" so it can pick up x86 (or whatever native) executables in build environment
+	unsigned char is_executable = 0;
+
+	// popen test
+	{
+	  char popenbuf [ FILENAME_MAX ];
+	  snprintf ( popenbuf, FILENAME_MAX, "%s %s/%s", MIMETYPE_EXE, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
+
+	  FILE *marceau;
+	  if ( ! ( marceau = popen ( popenbuf, "r" ) ) ) {
+	    return; // error, we need some useful error handling and dialog boxes here
+	  }
+
+	  if ( fgets ( popenbuf, FILENAME_MAX, marceau ) ) {
+	    //printf ( "File test returns: %s\n", popenbuf );
+	    if ( strstr ( popenbuf, "executable" ) != NULL ) {
+	      is_executable = 1;
+	    }
+	  }
+
+	  pclose ( marceau );
+
+	} // popen test
+
+	if ( ! is_executable ) {
+	  fprintf ( stderr, "ERROR: File to invoke is not executable, skipping. (%s)\n", ui_selected -> ref -> title_en );
+	  return; // need some error handling here
+	}
 
 #if 0 // eat up any pending SDL events and toss 'em?
 	{
@@ -1689,13 +1730,22 @@ void ui_push_exec ( void ) {
 
 #if 1
 	// just exec it
+	//
+
+	// get CWD so we can restore it on return
 	char cwd [ PATH_MAX ];
 	getcwd ( cwd, PATH_MAX );
 
+	// full path to executable so we don't rely on implicit "./"
+	char execbuf [ FILENAME_MAX ];
+	snprintf ( execbuf, FILENAME_MAX, "%s/%s", g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
+
+	// do it!
 	chdir ( g_categories [ ui_category ].fspath );
-	pnd_exec_no_wait_1 ( ui_selected -> ref -> title_en, NULL );
+	exec_raw_binary ( execbuf /*ui_selected -> ref -> title_en*/ );
 	chdir ( cwd );
 #else
+	// DEPRECATED / NOT TESTED
 	// get mmwrapper to run it
 	char buffer [ PATH_MAX ];
 	sprintf ( buffer, "%s %s/%s\n", MM_RUN, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );

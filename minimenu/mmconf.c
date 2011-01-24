@@ -31,6 +31,7 @@ confitem_t page_general[] = {
   { "Set CPU speed when leaving",    "Whether the next setting is applied or not",              "0",                "minimenu.use_run_speed",  ct_boolean },
   { "CPU speed when leaving",        "Before running app, set this speed; app may override.",   "500",              "minimenu.run_speed",      ct_cpu_speed },
   { "Show 'All' tab",                "Whethor an All tab is shown or not",                      "1",                "categories.do_all_cat",   ct_boolean },
+  { "Show directory browser tabs",   "Show a tab for each SD card?",                            "0",                "filesystem.do_browser",   ct_boolean },
   { "Start with app selected",       "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
   { "Wrap tab change",               "Changing tab left or right, does it wrap around?",        "0",                "tabs.wraparound",         ct_boolean },
   { "Grid stop vertical",            "Changing selection up or down, does it stop or wrap?",    "0",                "grid.wrap_vert_stop",     ct_boolean },

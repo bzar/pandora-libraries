@@ -21,6 +21,7 @@ typedef enum {
 
 void emit_and_quit ( char *s );      // normal case; quit and run an app
 void emit_and_run ( char *buffer );  // odd case; run an app and stay alive
+void exec_raw_binary ( char *fullpath ); // just fork/exec something, without exit
 
 void applications_free ( void );
 void applications_scan ( void );
