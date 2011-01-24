@@ -429,7 +429,7 @@ int main ( int argc, char *argv[] ) {
     } // rescan?
 
     // sleep? block?
-    usleep ( 5000 );
+    usleep ( 100000 /*5000*/ );
 
   } // while
 
@@ -662,26 +662,32 @@ void applications_scan ( void ) {
 	 ( pnd_pxml_get_x11 ( iter -> option_no_x11 ) == pnd_pxml_x11_required && g_x11_present == 1 )
        )
     {
+ 
+      if ( iter -> title_en == NULL || iter -> title_en [ 0 ] == '\0' ) {
+	// null title; just skip it.
+      } else {
 
-      // push to All category
-      // we do this first, so first category is always All
-      if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-	category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */ );
-      } // all?
+	// push to All category
+	// we do this first, so first category is always All
+	if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
+	  category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */ );
+	} // all?
 
-      // is this app suppressed? if not, show it in whatever categories the user is allowing
-      if ( iter -> unique_id && app_is_visible ( g_conf, iter -> unique_id ) ) {
+	// is this app suppressed? if not, show it in whatever categories the user is allowing
+	if ( iter -> unique_id && app_is_visible ( g_conf, iter -> unique_id ) ) {
 
-	// main categories
-	category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
-	category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
-	category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
-	// alt categories
-	category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
-	category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
-	category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
+	  // main categories
+	  category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
+	  category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
+	  category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
+	  // alt categories
+	  category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
+	  category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
+	  category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
 
-      } // app is visible?
+	} // app is visible?
+
+      } // has title?
 
     } // register with categories or filter out
 
