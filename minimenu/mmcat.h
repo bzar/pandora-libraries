@@ -16,7 +16,7 @@ typedef struct {
   unsigned int refcount;  // how many apps in this category
   // if a directory browser category, additional info is needed
   char *fspath;           // NULL if a pnd-category (not a filesystem category)
-  pnd_box_handle disco;   // faux-applications generated from filesystem
+  pnd_box_handle disco;   // faux-applications generated from filesystem (so that refs can point to here)
 } mm_category_t;
 
 #define MAX_CATS 200

@@ -32,10 +32,11 @@ confitem_t page_general[] = {
   { "CPU speed when leaving",        "Before running app, set this speed; app may override.",   "500",              "minimenu.run_speed",      ct_cpu_speed },
   { "Show 'All' tab",                "Whethor an All tab is shown or not",                      "1",                "categories.do_all_cat",   ct_boolean },
   { "Show directory browser tabs",   "Show a tab for each SD card?",                            "0",                "filesystem.do_browser",   ct_boolean },
+  { "Detail panel on start?",        "Show or hide the detail panel when menu starts",          "1",                "display.show_detail_pane", ct_boolean },
   { "Start with app selected",       "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
+  { "Sub-categories as folders?",    "If no, uses tabs instead of folders within tabs.",        "1",                "tabs.subcat_as_folders",  ct_boolean },
   { "Wrap tab change",               "Changing tab left or right, does it wrap around?",        "0",                "tabs.wraparound",         ct_boolean },
   { "Grid stop vertical",            "Changing selection up or down, does it stop or wrap?",    "0",                "grid.wrap_vert_stop",     ct_boolean },
-  { "Detail panel on start?",        "Show or hide the detail panel when menu starts",          "1",                "display.show_detail_pane", ct_boolean },
   { "Live (not exit) on app run?",   "Normally menu exits (to save ram) on app run",            "0",                "minimenu.live_on_run",    ct_boolean },
   { "Force wallpaper with..",        "You can force an override over themes background",        "/pandora/appdata/mmenu/wallpaper.png", "minimenu.force_wallpaper",  ct_filename },
   { "",                              "",                                                        NULL,               NULL,                      ct_nil },
@@ -307,6 +308,27 @@ void conf_display_page ( confitem_t *page, unsigned int selitem, unsigned int fi
   // title
   dest += conf_render_text ( g_big_font, "Minimenu Configuration", dest, 10, 10, CONF_UNSELECTED );
   dest += conf_render_line ( dest, 45 );
+
+  // scrollable hints
+  {
+
+    // up
+    if ( first_visible > 0 ) {
+      dest -> x = 10;
+      dest -> y = 65;
+      SDL_BlitSurface ( g_imagecache [ IMG_ARROW_UP ].i, NULL /* whole image */, sdl_realscreen, dest );
+      dest++;
+    } // scroll arrow up
+
+    // down
+    if ( first_visible + max_visible < conf_determine_pagelength ( page ) ) {
+      dest -> x = 10;
+      dest -> y = 345;
+      SDL_BlitSurface ( g_imagecache [ IMG_ARROW_DOWN ].i, NULL /* whole image */, sdl_realscreen, dest );
+      dest++;
+    } // scroll arrow up
+
+  } // scrollbar
 
   // items
   tx = 50; ty = 70;
