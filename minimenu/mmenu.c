@@ -507,6 +507,11 @@ void applications_free ( void ) {
 
 void applications_scan ( void ) {
 
+  // has user disabled pnd scanning, by chance?
+  if ( ! pnd_conf_get_as_int_d ( g_conf, "filesystem.do_pnd_disco", 1 ) ) {
+    goto dirbrowser_scan; // skip pnd's
+  }
+
   // show disco screen
   ui_discoverscreen ( 1 /* clear screen */ );
 
@@ -698,6 +703,8 @@ void applications_scan ( void ) {
     iter = pnd_box_get_next ( iter );
     itercount++;
   } // while
+
+ dirbrowser_scan:
 
   // set up filesystem browser tabs
   if ( pnd_conf_get_as_int_d ( g_conf, "filesystem.do_browser", 0 ) ) {

@@ -339,9 +339,13 @@ void ui_render ( void ) {
   ui_context_t *c = &ui_display_context; // for convenience and shorthand
 
   // how many total rows do we need?
-  icon_rows = g_categories [ ui_category ] -> refcount / c -> col_max;
-  if ( g_categories [ ui_category ] -> refcount % c -> col_max > 0 ) {
-    icon_rows++;
+  if ( g_categorycount ) {
+    icon_rows = g_categories [ ui_category ] -> refcount / c -> col_max;
+    if ( g_categories [ ui_category ] -> refcount % c -> col_max > 0 ) {
+      icon_rows++;
+    }
+  } else {
+    icon_rows = 0;
   }
 
 #if 1
@@ -622,7 +626,7 @@ void ui_render ( void ) {
   } // r_details
 
   // anything to render?
-  if ( render_jobs_b & R_GRID ) {
+  if ( render_jobs_b & R_GRID && g_categorycount ) {
 
     // if just rendering grid, and nothing else, better clear it first
     if ( ! ( render_jobs_b & R_BG ) ) {
