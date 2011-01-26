@@ -296,7 +296,9 @@ mm_category_t *category_map_query ( char *cat ) {
 
 unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep ) {
   mm_category_t *cat;
+#if 0 // prepending
   char catnamebuffer [ 512 ] = "";
+#endif
 
   if ( ! catname ) {
     return ( 1 ); // fine, just nada
@@ -342,10 +344,12 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   } // good cats only?
 
   // if invisible, and a parent category name is known, prepend it for ease of use
+#if 0 // prepending
   if ( ! visiblep && parentcatname ) {
     snprintf ( catnamebuffer, 500, "%s.%s", parentcatname, catname );
     catname = catnamebuffer;
   }
+#endif
 
   // do we honour cat mapping at all?
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_on", 0 ) ) {

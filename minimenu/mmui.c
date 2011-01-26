@@ -1044,7 +1044,15 @@ void ui_process_input ( unsigned char block_p ) {
     case SDL_USEREVENT:
       // update something
 
+      // the user-defined SDL events are all for threaded/delayed previews (and icons, which
+      // generally are not used); if we're in wide mode, we can skip previews
+      // to avoid slowing things down when they're not shown.
+
       if ( event.user.code == sdl_user_ticker ) {
+
+	if ( ui_detail_hidden ) {
+	  break; // skip building previews when not showing them
+	}
 
 	// timer went off, time to load something
 	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.load_previews_later", 0 ) ) {
@@ -2937,6 +2945,7 @@ void ui_revealscreen ( void ) {
   char *labels [ 500 ];
   unsigned int labelmax = 0;
   unsigned int i;
+  char fulllabel [ 200 ];
 
   if ( ! category_count ( CFHIDDEN ) ) {
     return; // nothing to do
@@ -2947,7 +2956,14 @@ void ui_revealscreen ( void ) {
 
   // build up labels to show in menu
   for ( i = 0; i < g_categorycount; i++ ) {
-    labels [ labelmax++ ] = g_categories [ i ] -> catname;
+
+    if ( g_categories [ i ] -> parent_catname ) {
+      sprintf ( fulllabel, "%s [%s]", g_categories [ i ] -> catname, g_categories [ i ] -> parent_catname );
+    } else {
+      sprintf ( fulllabel, "%s", g_categories [ i ] -> catname );
+    }
+
+    labels [ labelmax++ ] = strdup ( fulllabel );
   }
 
   // show menu
@@ -2985,6 +3001,10 @@ void ui_revealscreen ( void ) {
 
     // redraw tabs
     render_mask |= CHANGED_CATEGORY;
+  }
+
+  for ( i = 0; i < g_categorycount; i++ ) {
+    free ( labels [ i ] );
   }
 
   return;
