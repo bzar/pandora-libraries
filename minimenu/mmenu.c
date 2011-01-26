@@ -355,9 +355,12 @@ int main ( int argc, char *argv[] ) {
     emit_and_quit ( MM_QUIT );
   }
 
+  // init categories
+  category_init();
+
   // create all cat
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL /*app*/, 0, NULL /* fspath */ );
+    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL /*app*/, 0, NULL /* fspath */, 1 /* visible */ );
   }
 
   // set up category mappings
@@ -670,7 +673,7 @@ void applications_scan ( void ) {
 	// push to All category
 	// we do this first, so first category is always All
 	if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-	  category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */ );
+	  category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */, 1 /* visible */ );
 	} // all?
 
 	// is this app suppressed? if not, show it in whatever categories the user is allowing
@@ -696,9 +699,6 @@ void applications_scan ( void ) {
     itercount++;
   } // while
 
-  // sort (some) categories
-  category_sort();
-
   // set up filesystem browser tabs
   if ( pnd_conf_get_as_int_d ( g_conf, "filesystem.do_browser", 0 ) ) {
     char *searchpath = pnd_conf_get_as_char ( g_conf, "filesystem.tab_searchpaths" );
@@ -715,7 +715,7 @@ void applications_scan ( void ) {
 
       // check if dir is empty; if so, skip it.
       if ( ! is_dir_empty ( buffer ) ) {
-	category_push ( tabname /* tab name */, NULL /* app */, 0 /* override */, buffer /* fspath */ );
+	category_push ( tabname /* tab name */, NULL /* app */, 0 /* override */, buffer /* fspath */, 1 /* visible */ );
       }
 
     }
@@ -725,6 +725,9 @@ void applications_scan ( void ) {
 
   // dump categories
   //category_dump();
+
+  // publish desired categories
+  category_publish ( CFNORMAL, NULL );
 
   // let deferred icon cache go now
   ui_post_scan();

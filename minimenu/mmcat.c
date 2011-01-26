@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "pnd_conf.h"
 #include "pnd_logger.h"
@@ -18,19 +19,26 @@
 #include "mmcache.h"
 #include "mmcat.h"
 
-mm_category_t _categories [ MAX_CATS ];
-mm_category_t *g_categories = _categories;
-unsigned char g_categorycount = 0;
+// all categories known -- visible, hidden, subcats, whatever.
+pnd_box_handle m_categories = NULL;
+unsigned int m_categorycount = 0;
 
-mm_category_t _categories_invis [ MAX_CATS ];
-unsigned char _categories_inviscount = 0;
+// all categories being published right now -- a subset copied from m_categories
+mm_category_t *g_categories [ MAX_CATS ];
+unsigned char g_categorycount;
 
+// category mappings
 mm_catmap_t g_catmaps [ MAX_CATS ];
 unsigned char g_catmapcount = 0;
 
 extern pnd_conf_handle g_conf;
 
-unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath ) {
+void category_init ( void ) {
+  m_categories = pnd_box_new ( "Schrodinger's cat" );
+  return;
+}
+
+unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath, unsigned char visiblep ) {
   mm_category_t *c;
 
   // check category list; if found, append app to the end of it.
@@ -42,20 +50,25 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
   // find or create category
   //
 
-  if ( ( c = category_query ( catname ) ) ) {
+  if ( ( c = pnd_box_find_by_key ( m_categories, catname ) ) ) {
     // category was found..
   } else {
     // category wasn't found..
     //pnd_log ( PND_LOG_DEFAULT, "New category '%s'\n", catname );
-    g_categories [ g_categorycount ].catname = strdup ( catname );
-    g_categories [ g_categorycount ].refs = NULL;
-    c = &(g_categories [ g_categorycount ]);
+    c = pnd_box_allocinsert ( m_categories, catname, sizeof(mm_category_t) );
+    c -> catname = strdup ( catname );
+    if ( visiblep ) {
+      c -> catflags = CFNORMAL;
+    } else {
+      c -> catflags = CFHIDDEN;
+    }
+    c -> refs = NULL;
 
     if ( fspath ) {
-      g_categories [ g_categorycount ].fspath = strdup ( fspath );;
+      c -> fspath = strdup ( fspath );
     }
 
-    g_categorycount++;
+    m_categorycount++;
   }
 
   if ( ! app ) {
@@ -88,7 +101,7 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
     while ( iter ) {
 
       if ( iter -> ref -> title_en ) {
-	if ( cat_sort_score ( ar, iter ) < 0 ) {
+	if ( cat_sort_score ( c, ar, iter ) < 0 ) {
 	  // new guy is smaller than the current guy!
 	  break;
 	}
@@ -125,26 +138,10 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
   return ( 1 );
 }
 
-mm_category_t *category_query ( char *catname ) {
-  unsigned char i;
-
-  for ( i = 0; i < g_categorycount; i++ ) {
-
-    if ( strcasecmp ( g_categories [ i ].catname, catname ) == 0 ) {
-      return ( &(g_categories [ i ]) );
-    }
-
-  }
-
-  return ( NULL );
-}
-
-int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ) {
-
-  extern unsigned char ui_category;
+int cat_sort_score ( mm_category_t *cat, mm_appref_t *s1, mm_appref_t *s2 ) {
 
   // are we in a directory browser, or looking at pnd-files?
-  if ( g_categories [ ui_category ].fspath ) {
+  if ( cat -> fspath ) {
 
     if ( s1 == s2 ) {
       return ( 0 ); // equal
@@ -173,32 +170,41 @@ int cat_sort_score ( mm_appref_t *s1, mm_appref_t *s2 ) {
 }
 
 void category_dump ( void ) {
-  unsigned int i;
 
   // WHY AREN'T I SORTING ON INSERT?
 
   // dump
-  for ( i = 0; i < g_categorycount; i++ ) {
-    pnd_log ( PND_LOG_DEFAULT, "Category %u: '%s' * %u\n", i, g_categories [ i ].catname, g_categories [ i ].refcount );
-    mm_appref_t *ar = g_categories [ i ].refs;
+  mm_category_t *iter = pnd_box_get_head ( m_categories );
+  unsigned int counter = 0;
+
+  while ( iter ) {
+
+    pnd_log ( PND_LOG_DEFAULT, "Category %u: '%s' * %u\n", counter, iter -> catname, iter -> refcount );
+    mm_appref_t *ar = iter -> refs;
 
     while ( ar ) {
       pnd_log ( PND_LOG_DEFAULT, "  Appref %s\n", IFNULL(ar -> ref -> title_en,"No Name") );
       ar = ar -> next;
     }
 
-  } // for
+    iter = pnd_box_get_next ( iter );
+    counter++;
+  }
 
   return;
 }
 
-static void _category_freeall ( mm_category_t *p, unsigned int c ) {
-  unsigned int i;
+void category_freeall ( void ) {
+  mm_category_t *c, *cnext;
   mm_appref_t *iter, *next;
 
-  for ( i = 0; i < c; i++ ) {
+  c = pnd_box_get_head ( m_categories );
 
-    iter = p [ i ].refs;
+  while ( c ) {
+    cnext = pnd_box_get_next ( c );
+
+    // wipe 'em
+    iter = c -> refs;
 
     while ( iter ) {
       next = iter -> next;
@@ -206,30 +212,23 @@ static void _category_freeall ( mm_category_t *p, unsigned int c ) {
       iter = next;
     }
 
-    p [ i ].refs = NULL;
+    c -> refs = NULL;
 
-    if ( p [ i ].catname ) {
-      free ( p [ i ].catname );
-      p [ i ].catname = NULL;
+    if ( c -> catname ) {
+      free ( c -> catname );
+      c -> catname = NULL;
     }
 
-    if ( p [ i ].fspath ) {
-      free ( p [ i ].fspath );
-      p [ i ].fspath = NULL;
+    if ( c -> fspath ) {
+      free ( c -> fspath );
+      c -> fspath = NULL;
     }
 
-  } // for
+    pnd_box_delete_node ( m_categories, c );
 
-  return;
-}
-
-void category_freeall ( void ) {
-
-  _category_freeall ( g_categories, g_categorycount );
-  _category_freeall ( _categories_invis, _categories_inviscount );
-
-  g_categorycount = 0;
-  _categories_inviscount = 0;
+    // next
+    c = cnext;
+  }
 
   return;
 }
@@ -255,8 +254,8 @@ unsigned char category_map_setup ( void ) {
       {
 	//pnd_log ( pndn_debug, "target(%s) from(%s)\n", k, buffer );
 
-	category_push ( k, NULL, 0, NULL /* fspath */ );
-	g_catmaps [ g_catmapcount ].target = category_query ( k );
+	category_push ( k, NULL, 0, NULL /* fspath */, 1 );
+	g_catmaps [ g_catmapcount ].target = pnd_box_find_by_key ( m_categories, k );
 	g_catmaps [ g_catmapcount ].from = strdup ( buffer );
 	g_catmapcount++;
 
@@ -285,7 +284,6 @@ mm_category_t *category_map_query ( char *cat ) {
 
 unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep ) {
   mm_category_t *cat;
-  unsigned char catcount = g_categorycount;
   char catnamebuffer [ 512 ] = "";
 
   if ( ! catname ) {
@@ -294,19 +292,10 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 
   //fprintf ( stderr, "meta push: '%s'\n", catname );
 
-  if ( ! visiblep ) {
-    //return ( 1 ); // fine, suppress it
-
-    // serious evidence this was a rushed program
-    g_categories = _categories_invis;
-    g_categorycount = _categories_inviscount;
-
-    // if invisible, and a parent category name is known, prepend it for ease of use
-    if ( parentcatname ) {
-      snprintf ( catnamebuffer, 500, "%s.%s", parentcatname, catname );
-      catname = catnamebuffer;
-    }
-
+  // if invisible, and a parent category name is known, prepend it for ease of use
+  if ( ! visiblep && parentcatname ) {
+    snprintf ( catnamebuffer, 500, "%s.%s", parentcatname, catname );
+    catname = catnamebuffer;
   }
 
   // do we honour cat mapping at all?
@@ -316,31 +305,26 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     cat = category_map_query ( catname );
 
     if ( cat ) {
-      category_push ( cat -> catname, app, ovrh, NULL /* fspath */ );
-      goto visibility_hack_cleanup;
+      category_push ( cat -> catname, app, ovrh, NULL /* fspath */, visiblep );
+      goto meta_done;
     }
 
     // not mapped.. but default?
     if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_default_on", 0 ) ) {
       char *def = pnd_conf_get_as_char ( g_conf, "categories.map_default_cat" );
       if ( def ) {
-	category_push ( def, app, ovrh, NULL /* fspath */ );
-	goto visibility_hack_cleanup;
+	category_push ( def, app, ovrh, NULL /* fspath */, visiblep );
+	goto meta_done;
       }
     }
 
   } // cat map is desired?
 
   // not default, just do it
-  category_push ( catname, app, ovrh, NULL /* fspath */ );
+  category_push ( catname, app, ovrh, NULL /* fspath */, visiblep );
 
   // hack :(
- visibility_hack_cleanup:
-  if ( ! visiblep ) {
-    _categories_inviscount = g_categorycount;
-    g_categories = _categories;
-    g_categorycount = catcount;
-  }
+ meta_done:
 
   //fprintf ( stderr, "cat meta-push : vis[%30s,%d b] : tally; vis %d invis %d\n", catname, visiblep, g_categorycount, _categories_inviscount );
 
@@ -427,13 +411,13 @@ unsigned char category_fs_restock ( mm_category_t *cat ) {
 
 	// found a directory or executable?
 	if ( disco ) {
-	  // register with this category
+	  // register with current category
 	  disco -> unique_id = strdup ( uid );
 	  disco -> title_en = strdup ( de -> d_name );
 	  disco -> object_flags = PND_DISCO_GENERATED;
 	  disco -> object_path = strdup ( cat -> fspath );
 	  disco -> object_filename = strdup ( de -> d_name );
-	  category_push ( cat -> catname, disco, 0, NULL /* fspath already set */ );
+	  category_push ( cat -> catname, disco, 0 /* no ovr */, NULL /* fspath already set */, 1 /* visible */ );
 	  // if a override icon exists, cache it up
 	  cache_icon ( disco, pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 ),
 		       pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_height", 50 ) );
@@ -452,16 +436,116 @@ unsigned char category_fs_restock ( mm_category_t *cat ) {
 }
 
 static int catname_cmp ( const void *p1, const void *p2 ) {
-  mm_category_t *c1 = (mm_category_t*) p1;
-  mm_category_t *c2 = (mm_category_t*) p2;
-  return ( strcasecmp ( c1 -> catname, c2 -> catname ) );
+  //mm_category_t *c1 = (mm_category_t*) p1;
+  //mm_category_t *c2 = (mm_category_t*) p2;
+  mm_category_t *c1 = *( (mm_category_t**) p1 );
+  mm_category_t *c2 = *( (mm_category_t**) p2 );
+
+  if ( ( isalnum ( c1 -> catname [ 0 ] ) ) && ( ! isalnum ( c1 -> catname [ 1 ] ) ) ) {
+    return ( -1 );
+  } else if ( ( ! isalnum ( c1 -> catname [ 0 ] ) ) && ( isalnum ( c1 -> catname [ 1 ] ) ) ) {
+    return ( 1 );
+  } else if ( ( ! isalnum ( c1 -> catname [ 0 ] ) ) && ( ! isalnum ( c1 -> catname [ 1 ] ) ) ) {
+    return ( 0 );
+  }
+
+  int i = strcasecmp ( c1 -> catname, c2 -> catname );
+  //printf ( "cat name compare %p %s to %p %s = %d\n", p1, c1 -> catname, p2, c2 -> catname, i );
+
+  return ( i );
 }
 
 void category_sort ( void ) {
   // we probably don't want to sort tab categories, since the user may have specified an ordering
   // But we can sort invisi-cats, to make them easier to find, and ordered by parent category
 
+#if 0
   qsort ( _categories_invis, _categories_inviscount, sizeof(mm_category_t), catname_cmp );
+#endif
+
+#if 1
+  qsort ( g_categories, g_categorycount, sizeof(mm_category_t*), catname_cmp );
+#endif
 
   return;
+}
+
+void category_publish ( unsigned int filter_mask, char *param ) {
+  unsigned char interested;
+
+  // clear published categories
+  memset ( g_categories, '\0', sizeof(mm_category_t*) * MAX_CATS );
+  g_categorycount = 0;
+
+  // figure out the start
+  mm_category_t *iter = pnd_box_get_head ( m_categories );
+
+  // for each category we know...
+  while ( iter ) {
+
+    interested = 0;
+
+    // is this category desired?
+    if ( filter_mask == CFALL ) {
+      interested = 1;
+    } else if ( iter -> catflags == filter_mask ) {
+      interested = 1;
+    } // if
+
+    if ( interested ) {
+      // set us up the bomb; notice that we're just duplicating the pointers, not making
+      // any new data here; none of this should ever be free'd!
+      g_categories [ g_categorycount ] = iter;
+      g_categorycount++;
+    }
+
+    // next
+    iter = pnd_box_get_next ( iter );
+  }
+
+  // dump
+#if 0
+  unsigned int i;
+  for ( i = 0; i < g_categorycount; i++ ) {
+    printf ( "Unsorted cat %d %p: %s\n", i, &(g_categories [ i ]), g_categories [ i ] -> catname );
+  }
+#endif
+
+  // sort published categories
+  category_sort();
+
+  return;
+}
+
+unsigned int category_count ( unsigned int filter_mask ) {
+  mm_category_t *iter = pnd_box_get_head ( m_categories );
+  unsigned int count = 0;
+
+  // for each category we know...
+  while ( iter ) {
+
+    // is this category desired?
+    if ( iter -> catflags == filter_mask ) {
+      count++;
+    } // if
+
+    // next
+    iter = pnd_box_get_next ( iter );
+  }
+
+  return ( count );
+}
+
+int category_index ( char *catname ) {
+  unsigned char i;
+ 
+  for ( i = 0; i < g_categorycount; i++ ) {
+ 
+    if ( strcasecmp ( g_categories [ i ] -> catname, catname ) == 0 ) {
+      return ( i );
+    }
+ 
+  }
+ 
+  return ( -1 );
 }

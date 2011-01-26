@@ -81,11 +81,6 @@ ui_context_t ui_display_context;        // display paramaters: see mmui_context.
 unsigned char ui_detail_hidden = 0;     // if >0, detail panel is hidden
 // FUTURE: If multiple panels can be shown/hidden, convert ui_detail_hidden to a bitmask
 
-extern mm_category_t *g_categories;
-extern unsigned char g_categorycount;
-extern mm_category_t _categories_invis [ MAX_CATS ];
-extern unsigned char _categories_inviscount;
-
 static SDL_Surface *ui_scale_image ( SDL_Surface *s, unsigned int maxwidth, int maxheight ); // height -1 means ignore
 static int ui_selected_index ( void );
 
@@ -344,15 +339,15 @@ void ui_render ( void ) {
   ui_context_t *c = &ui_display_context; // for convenience and shorthand
 
   // how many total rows do we need?
-  icon_rows = g_categories [ ui_category ].refcount / c -> col_max;
-  if ( g_categories [ ui_category ].refcount % c -> col_max > 0 ) {
+  icon_rows = g_categories [ ui_category ] -> refcount / c -> col_max;
+  if ( g_categories [ ui_category ] -> refcount % c -> col_max > 0 ) {
     icon_rows++;
   }
 
 #if 1
   // if no selected app yet, select the first one
   if ( ! ui_selected && pnd_conf_get_as_int_d ( g_conf, "minimenu.start_selected", 0 ) ) {
-    ui_selected = g_categories [ ui_category ].refs;
+    ui_selected = g_categories [ ui_category ] -> refs;
   }
 #endif
 
@@ -518,7 +513,7 @@ void ui_render ( void ) {
 
 	  // draw text
 	  SDL_Surface *rtext;
-	  rtext = TTF_RenderText_Blended ( g_tab_font, g_categories [ col ].catname, c -> fontcolor );
+	  rtext = TTF_RenderText_Blended ( g_tab_font, g_categories [ col ] -> catname, c -> fontcolor );
 	  src.x = 0;
 	  src.y = 0;
 	  src.w = rtext -> w < text_width ? rtext -> w : text_width;
@@ -646,9 +641,9 @@ void ui_render ( void ) {
       }
     }
 
-    if ( g_categories [ ui_category ].refs ) {
+    if ( g_categories [ ui_category ] -> refs ) {
 
-      appiter = g_categories [ ui_category ].refs;
+      appiter = g_categories [ ui_category ] -> refs;
       row = 0;
       displayrow = 0;
 
@@ -1343,8 +1338,8 @@ void ui_process_input ( unsigned char block_p ) {
 	// many SDLK_keycodes map to ASCII ("a" is ascii(a)), so try to jump to a filename of that name, in this category?
 	// and if already there, try to jump to next, maybe?
 	// future: look for sequence typing? ie: user types 'm' then 'a', look for 'ma*' instead of 'm' then 'a' matching
-	if ( isalpha ( event.key.keysym.sym ) && g_categories [ ui_category ].refcount > 0 ) {
-	  mm_appref_t *app = g_categories [ ui_category ].refs;
+	if ( isalpha ( event.key.keysym.sym ) && g_categories [ ui_category ] -> refcount > 0 ) {
+	  mm_appref_t *app = g_categories [ ui_category ] -> refs;
 
 	  //fprintf ( stderr, "sel %s next %s\n", ui_selected -> ref -> title_en, ui_selected -> next -> ref -> title_en );
 
@@ -1447,12 +1442,12 @@ void ui_push_left ( unsigned char forcecoil ) {
       i--;
     }
 
-  } else if ( g_categories [ ui_category ].refs == ui_selected ) {
+  } else if ( g_categories [ ui_category ] -> refs == ui_selected ) {
     // can't go any more left, we're at the head
 
   } else {
     // figure out the previous item; yay for singly linked list :/
-    mm_appref_t *i = g_categories [ ui_category ].refs;
+    mm_appref_t *i = g_categories [ ui_category ] -> refs;
     while ( i ) {
       if ( i -> next == ui_selected ) {
 	ui_selected = i;
@@ -1499,7 +1494,7 @@ void ui_push_right ( unsigned char forcecoil ) {
     }
 
   } else {
-    ui_selected = g_categories [ ui_category ].refs;
+    ui_selected = g_categories [ ui_category ] -> refs;
   }
 
   ui_set_selected ( ui_selected );
@@ -1525,7 +1520,7 @@ void ui_push_up ( void ) {
     unsigned int col = ui_determine_screen_col ( ui_selected );
 
     // go to end
-    ui_selected = g_categories [ ui_category ].refs;
+    ui_selected = g_categories [ ui_category ] -> refs;
     while ( ui_selected -> next ) {
       ui_selected = ui_selected -> next;
     }
@@ -1568,8 +1563,8 @@ void ui_push_down ( void ) {
     unsigned int row = ui_determine_row ( ui_selected );
 
     // max rows?
-    unsigned int icon_rows = g_categories [ ui_category ].refcount / col_max;
-    if ( g_categories [ ui_category ].refcount % col_max > 0 ) {
+    unsigned int icon_rows = g_categories [ ui_category ] -> refcount / col_max;
+    if ( g_categories [ ui_category ] -> refcount % col_max > 0 ) {
       icon_rows++;
     }
 
@@ -1580,7 +1575,7 @@ void ui_push_down ( void ) {
 
       unsigned char col = ui_determine_screen_col ( ui_selected );
 
-      ui_selected = g_categories [ ui_category ].refs;
+      ui_selected = g_categories [ ui_category ] -> refs;
 
       while ( col ) {
 	ui_selected = ui_selected -> next;
@@ -1628,7 +1623,7 @@ void ui_push_exec ( void ) {
 	char *c;
 
 	// lop off last word; if the thing ends with /, lop that one, then the next word.
-	while ( ( c = strrchr ( g_categories [ ui_category].fspath, '/' ) ) ) {
+	while ( ( c = strrchr ( g_categories [ ui_category] -> fspath, '/' ) ) ) {
 	  *c = '\0'; // lop off the last hunk
 	  if ( *(c+1) != '\0' ) {
 	    break;
@@ -1636,27 +1631,26 @@ void ui_push_exec ( void ) {
 	} // while
 
 	// nothing left?
-	if ( g_categories [ ui_category].fspath [ 0 ] == '\0' ) {
-	  strcpy ( g_categories [ ui_category].fspath, "/" );
+	if ( g_categories [ ui_category] -> fspath [ 0 ] == '\0' ) {
+	  free ( g_categories [ ui_category] -> fspath );
+	  g_categories [ ui_category] -> fspath = strdup ( "/" );
 	}
 
       } else {
 	// go down
-	char *temp = malloc ( strlen ( g_categories [ ui_category].fspath ) + strlen ( ui_selected -> ref -> title_en ) + 1 + 1 );
-	sprintf ( temp, "%s/%s", g_categories [ ui_category].fspath, ui_selected -> ref -> title_en );
-	free ( g_categories [ ui_category].fspath );
-	g_categories [ ui_category].fspath = temp;
-	//strcat ( g_categories [ ui_category].fspath, "/" );
-	//strcat ( g_categories [ ui_category].fspath, ui_selected -> ref -> title_en );
+	char *temp = malloc ( strlen ( g_categories [ ui_category] -> fspath ) + strlen ( ui_selected -> ref -> title_en ) + 1 + 1 );
+	sprintf ( temp, "%s/%s", g_categories [ ui_category] -> fspath, ui_selected -> ref -> title_en );
+	free ( g_categories [ ui_category] -> fspath );
+	g_categories [ ui_category] -> fspath = temp;
       }
 
-      pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ].catname, g_categories [ ui_category ].fspath );
+      pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ] -> catname, g_categories [ ui_category ]-> fspath );
 
       // forget the selection, nolonger applies
       ui_selected = NULL;
       ui_set_selected ( ui_selected );
       // rescan the dir
-      category_fs_restock ( &(g_categories [ ui_category ]) );
+      category_fs_restock ( g_categories [ ui_category ] );
       // redraw the grid
       render_mask |= CHANGED_SELECTION;
 
@@ -1695,7 +1689,7 @@ void ui_push_exec ( void ) {
 	// popen test
 	{
 	  char popenbuf [ FILENAME_MAX ];
-	  snprintf ( popenbuf, FILENAME_MAX, "%s %s/%s", MIMETYPE_EXE, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
+	  snprintf ( popenbuf, FILENAME_MAX, "%s %s/%s", MIMETYPE_EXE, g_categories [ ui_category ] -> fspath, ui_selected -> ref -> title_en );
 
 	  FILE *marceau;
 	  if ( ! ( marceau = popen ( popenbuf, "r" ) ) ) {
@@ -1738,17 +1732,17 @@ void ui_push_exec ( void ) {
 
 	// full path to executable so we don't rely on implicit "./"
 	char execbuf [ FILENAME_MAX ];
-	snprintf ( execbuf, FILENAME_MAX, "%s/%s", g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
+	snprintf ( execbuf, FILENAME_MAX, "%s/%s", g_categories [ ui_category ] -> fspath, ui_selected -> ref -> title_en );
 
 	// do it!
-	chdir ( g_categories [ ui_category ].fspath );
+	chdir ( g_categories [ ui_category ] -> fspath );
 	exec_raw_binary ( execbuf /*ui_selected -> ref -> title_en*/ );
 	chdir ( cwd );
 #else
 	// DEPRECATED / NOT TESTED
 	// get mmwrapper to run it
 	char buffer [ PATH_MAX ];
-	sprintf ( buffer, "%s %s/%s\n", MM_RUN, g_categories [ ui_category ].fspath, ui_selected -> ref -> title_en );
+	sprintf ( buffer, "%s %s/%s\n", MM_RUN, g_categories [ ui_category ] -> fspath, ui_selected -> ref -> title_en );
 	if ( pnd_conf_get_as_int_d ( g_conf, "minimenu.live_on_run", 0 ) == 0 ) {
 	  emit_and_quit ( buffer );
 	} else {
@@ -1797,7 +1791,7 @@ void ui_push_ltrigger ( void ) {
 
   if ( ui_category > 0 ) {
     ui_category--;
-    category_fs_restock ( &(g_categories [ ui_category ]) );
+    category_fs_restock ( g_categories [ ui_category ] );
   } else {
     if ( pnd_conf_get_as_int_d ( g_conf, "tabs.wraparound", 0 ) > 0 ) {
       ui_category = g_categorycount - 1;
@@ -1805,7 +1799,7 @@ void ui_push_ltrigger ( void ) {
       if ( ui_category >= ( screen_width / tab_width ) ) {
 	ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
       }
-      category_fs_restock ( &(g_categories [ ui_category ]) );
+      category_fs_restock ( g_categories [ ui_category ] );
     }
   }
 
@@ -1839,12 +1833,12 @@ void ui_push_rtrigger ( void ) {
 
   if ( ui_category < ( g_categorycount - 1 ) ) {
     ui_category++;
-    category_fs_restock ( &(g_categories [ ui_category ]) );
+    category_fs_restock ( g_categories [ ui_category ] );
   } else {
     if ( pnd_conf_get_as_int_d ( g_conf, "tabs.wraparound", 0 ) > 0 ) {
       ui_category = 0;
       ui_catshift = 0;
-      category_fs_restock ( &(g_categories [ ui_category ]) );
+      category_fs_restock ( g_categories [ ui_category ] );
     }
   }
 
@@ -2050,7 +2044,7 @@ int ui_selected_index ( void ) {
     return ( -1 ); // no index
   }
 
-  mm_appref_t *r = g_categories [ ui_category ].refs;
+  mm_appref_t *r = g_categories [ ui_category ] -> refs;
   int counter = 0;
   while ( r ) {
     if ( r == ui_selected ) {
@@ -2257,7 +2251,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 unsigned char ui_determine_row ( mm_appref_t *a ) {
   unsigned int row = 0;
 
-  mm_appref_t *i = g_categories [ ui_category ].refs;
+  mm_appref_t *i = g_categories [ ui_category ] -> refs;
   while ( i != a ) {
     i = i -> next;
     row++;
@@ -2274,7 +2268,7 @@ unsigned char ui_determine_screen_row ( mm_appref_t *a ) {
 unsigned char ui_determine_screen_col ( mm_appref_t *a ) {
   unsigned int col = 0;
 
-  mm_appref_t *i = g_categories [ ui_category ].refs;
+  mm_appref_t *i = g_categories [ ui_category ] -> refs;
   while ( i != a ) {
     i = i -> next;
     col++;
@@ -2435,7 +2429,7 @@ void ui_touch_act ( unsigned int x, unsigned int y ) {
 	ui_category = t -> catnum;
 	render_mask |= CHANGED_CATEGORY;
 	// rescan the dir
-	category_fs_restock ( &(g_categories [ ui_category ]) );
+	category_fs_restock ( g_categories [ ui_category ] );
       }
 
       break;
@@ -2515,7 +2509,7 @@ void ui_post_scan ( void ) {
     // default behaviour will pick first cat (ie: usually All)
     unsigned int i;
     for ( i = 0; i < g_categorycount; i++ ) {
-      if ( strcasecmp ( g_categories [ i ].catname, dc ) == 0 ) {
+      if ( strcasecmp ( g_categories [ i ] -> catname, dc ) == 0 ) {
 	ui_category = i;
 	// ensure visibility
 	unsigned int screen_width = ui_display_context.screen_width;
@@ -2532,6 +2526,12 @@ void ui_post_scan ( void ) {
     }
 
   } // default cat
+
+  // if we're sent right to a dirbrowser tab, restock it now (normally we restock on entry)
+  if ( g_categories [ ui_category ] -> fspath ) {
+    printf ( "Restock on start: '%s'\n", g_categories [ ui_category ] -> fspath );
+    category_fs_restock ( g_categories [ ui_category ] );
+  }
 
   // redraw all
   render_mask |= CHANGED_EVERYTHING;
@@ -2894,40 +2894,43 @@ void ui_revealscreen ( void ) {
   unsigned int labelmax = 0;
   unsigned int i;
 
-  if ( ! _categories_inviscount ) {
+  if ( ! category_count ( CFHIDDEN ) ) {
     return; // nothing to do
   }
 
-  for ( i = 0; i < _categories_inviscount; i++ ) {
-    labels [ labelmax++ ] = _categories_invis [ i ].catname;
+  // switch to hidden categories
+  category_publish ( CFHIDDEN, NULL );
+
+  // build up labels to show in menu
+  for ( i = 0; i < g_categorycount; i++ ) {
+    labels [ labelmax++ ] = g_categories [ i ] -> catname;
   }
 
+  // show menu
   int sel = ui_modal_single_menu ( labels, labelmax, "Temporary Category Reveal",
 				   "Enter to select; other to return." );
 
+  // if selected, try to set this guy to visible
   if ( sel >= 0 ) {
 
-    if ( category_query ( _categories_invis [ sel ].catname ) ) {
-      // already present
-      return;
-    }
-
     // fix up category name, if its been hacked
-    if ( strchr ( _categories_invis [ sel ].catname, '.' ) ) {
-      char *t = _categories_invis [ sel ].catname;
-      _categories_invis [ sel ].catname = strdup ( strchr ( _categories_invis [ sel ].catname, '.' ) + 1 );
+    if ( strchr ( g_categories [ sel ] -> catname, '.' ) ) {
+      char *t = g_categories [ sel ] -> catname;
+      g_categories [ sel ] -> catname = strdup ( strchr ( g_categories [ sel ] -> catname, '.' ) + 1 );
       free ( t );
     }
-    // copy invisi-cat into live-cat
-    memmove ( &(g_categories [ g_categorycount ]), &(_categories_invis [ sel ]), sizeof(mm_category_t) );
-    g_categorycount++;
-    // move subsequent invisi-cats up, so the selected invisi-cat is nolonger existing in invisi-list at
-    // all (avoid double-free() later)
-    memmove ( &(_categories_invis [ sel ]), &(_categories_invis [ sel + 1 ]), sizeof(mm_category_t) * ( _categories_inviscount - sel - 1 ) );
-    _categories_inviscount--;
 
-    // switch to the new category
-    ui_category = g_categorycount - 1;
+    // reflag this guy to be visible
+    g_categories [ sel ] -> catflags = CFNORMAL;
+
+    // switch to the new category.. cache name.
+    char *switch_to_name = g_categories [ sel ] -> catname;
+
+    // republish categories
+    category_publish ( CFNORMAL, NULL );
+
+    // switch to the new category.. with the cached name!
+    ui_category = category_index ( switch_to_name );
 
     // ensure visibility
     unsigned int screen_width = ui_display_context.screen_width;

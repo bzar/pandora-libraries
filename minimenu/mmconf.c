@@ -70,10 +70,6 @@ confitem_t pages[] = {
 extern pnd_conf_handle g_conf;
 extern SDL_Surface *sdl_realscreen;
 extern mm_imgcache_t g_imagecache [ IMG_TRUEMAX ];
-extern mm_category_t *g_categories;
-extern unsigned char g_categorycount;
-extern mm_category_t _categories_invis [ MAX_CATS ];
-extern unsigned char _categories_inviscount;
 extern pnd_box_handle g_active_apps;
 
 unsigned char conf_run_menu ( confitem_t *toplevel ) {
@@ -179,21 +175,21 @@ unsigned char conf_run_menu ( confitem_t *toplevel ) {
 		if ( v ) {
 		  unsigned char n = 0;
 		  for ( n = 0; n < g_categorycount; n++ ) {
-		    if ( strcmp ( v, g_categories [ n ].catname ) == 0 ) {
+		    if ( strcmp ( v, g_categories [ n ] -> catname ) == 0 ) {
 		      break;
 		    }
 		  }
 		  if ( n < g_categorycount ) {
 		    if ( left && n ) {
-		      pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ n - 1 ].catname );
+		      pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ n - 1 ] -> catname );
 		    } else if ( ! left && n + 1 < g_categorycount ) {
-		      pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ n + 1 ].catname );
+		      pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ n + 1 ] -> catname );
 		    }
 		  } else {
-		    pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ 0 ].catname );
+		    pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ 0 ] -> catname );
 		  }
 		} else {
-		  pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ 0 ].catname );
+		  pnd_conf_set_char ( g_conf, page [ sel ].key, g_categories [ 0 ] -> catname );
 		}
 	      } // if category count
 	    }
@@ -564,60 +560,52 @@ unsigned char conf_prepare_page ( confitem_t *page ) {
 
       template -> text = ""; // so it won't get repopulated again later
 
-      typedef struct {
-	mm_category_t *cat;
-	unsigned char n;
-      } _foo;
-      _foo cats [ 2 ];
-      cats [ 0 ].cat = g_categories;
-      cats [ 0 ].n = g_categorycount;
-      cats [ 1 ].cat = _categories_invis;
-      cats [ 1 ].n = _categories_inviscount;
+      // switch categories being published
+      category_publish ( CFALL, NULL );
 
       // for each tab
-      unsigned int i, j;
-      for ( j = 0; j < 2; j++ ) {
-	mm_category_t *cc = cats [ j ].cat;
-	unsigned char cn = cats [ j ].n;
-	char catname [ 512 ];
-	char *actual_catname;
+      unsigned int i;
+      char catname [ 512 ];
+      char *actual_catname;
 
-	for ( i = 0;  i < cn; i++ ) {
+      for ( i = 0;  i < g_categorycount; i++ ) {
 
-	  // if this is an invisi-guy, it has parent-cat prepended; we want the real cat name.
-	  strncpy ( catname, cc [ i ].catname, 500 );
-	  if ( ( actual_catname = strchr ( catname, '.' ) ) ) {
-	    actual_catname++; // skip the period
-	  } else {
-	    actual_catname = catname;
-	  }
-	  //fprintf ( stderr, "conf ui; got '%s' but showing '%s'\n", cc [ i ].catname, actual_catname );
+	// if this is an invisi-guy, it has parent-cat prepended; we want the real cat name.
+	strncpy ( catname, g_categories [ i ] -> catname, 500 );
 
-	  if ( strncmp ( cc [ i ].catname, "All ", 4 ) == 0 ) {
-	    // skip All tab, since it is generated, and managed by another config item
-	    continue;
-	  }
+	if ( ( actual_catname = strchr ( catname, '.' ) ) ) {
+	  actual_catname++; // skip the period
+	} else {
+	  actual_catname = catname;
+	}
+	//fprintf ( stderr, "conf ui; got '%s' but showing '%s'\n", cc [ i ].catname, actual_catname );
 
-	  p -> text = strndup ( actual_catname, 40 );
-	  p -> desc = NULL;
-	  p -> def = NULL;
-
-	  sprintf ( buffer, "%s.%s", template -> key, actual_catname );
-	  p -> key = strdup ( buffer );
-	  p -> type = ct_boolean;
-	  p -> newhead = NULL;
-
-	  // create to positive if not existant
-	  if ( ! pnd_conf_get_as_char ( g_conf, buffer ) ) {
-	    pnd_conf_set_char ( g_conf, buffer, "1" );
-	  }
-
-	  //fprintf ( stderr, "Created tabshow entry '%s'\n", cc [ i ].catname );
-
-	  p++;
+	if ( strncmp ( g_categories [ i ] -> catname, "All ", 4 ) == 0 ) {
+	  // skip All tab, since it is generated, and managed by another config item
+	  continue;
 	}
 
-      }
+	p -> text = strndup ( actual_catname, 40 );
+	p -> desc = NULL;
+	p -> def = NULL;
+
+	sprintf ( buffer, "%s.%s", template -> key, actual_catname );
+	p -> key = strdup ( buffer );
+	p -> type = ct_boolean;
+	p -> newhead = NULL;
+
+	// create to positive if not existant
+	if ( ! pnd_conf_get_as_char ( g_conf, buffer ) ) {
+	  pnd_conf_set_char ( g_conf, buffer, "1" );
+	}
+
+	//fprintf ( stderr, "Created tabshow entry '%s'\n", cc [ i ].catname );
+
+	p++;
+      } // for
+
+      // switch categories being published
+      category_publish ( CFNORMAL, NULL );
 
       break;
     }
