@@ -17,6 +17,7 @@ typedef struct _mm_appref_t {
 // an actual category reference; points to a list of appref's and supplies a tabname, a filesystem mountpoint, etc.
 typedef struct _mm_category_t {
   char *catname;          // name of the category
+  char *parent_catname;   // if known, parent cat name
   unsigned int catflags;  // flags
 
   // current applications
@@ -42,7 +43,7 @@ typedef struct _mm_category_t {
 
 // try to populate as many cats as necessary
 void category_init ( void ); // set up; call first!
-unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath, unsigned char visiblep ); // catname is not pulled from app, so we can make them up on the fly (ie: "All");
+unsigned char category_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath, unsigned char visiblep ); // catname is not pulled from app, so we can make them up on the fly (ie: "All");
 void category_dump ( void ); // sort the apprefs
 void category_freeall ( void );
 int cat_sort_score ( mm_category_t *cat, mm_appref_t *s1, mm_appref_t *s2 ); // like strcmp, but used to sort apps by title

@@ -569,6 +569,7 @@ unsigned char conf_prepare_page ( confitem_t *page ) {
       unsigned int i;
       char catname [ 512 ];
       char *actual_catname;
+      char finalbuf [ 101 ];
 
       for ( i = 0;  i < g_categorycount; i++ ) {
 
@@ -587,7 +588,13 @@ unsigned char conf_prepare_page ( confitem_t *page ) {
 	  continue;
 	}
 
-	p -> text = strndup ( actual_catname, 40 );
+	if ( g_categories [ i ] -> parent_catname ) {
+	  snprintf ( finalbuf, 100, "%s [%s]", actual_catname, g_categories [ i ] -> parent_catname );
+	} else {
+	  strncpy ( finalbuf, actual_catname, 100 );
+	}
+
+	p -> text = strndup ( finalbuf, 40 );
 	p -> desc = NULL;
 	p -> def = NULL;
 

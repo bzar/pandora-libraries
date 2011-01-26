@@ -39,7 +39,7 @@ void category_init ( void ) {
   return;
 }
 
-unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath, unsigned char visiblep ) {
+unsigned char category_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath, unsigned char visiblep ) {
   mm_category_t *c;
 
   // check category list; if found, append app to the end of it.
@@ -58,11 +58,22 @@ unsigned char category_push ( char *catname, pnd_disco_t *app, pnd_conf_handle o
     //pnd_log ( PND_LOG_DEFAULT, "New category '%s'\n", catname );
     c = pnd_box_allocinsert ( m_categories, catname, sizeof(mm_category_t) );
     c -> catname = strdup ( catname );
+    if ( parentcatname ) {
+      c -> parent_catname = strdup ( parentcatname );
+    }
+
     if ( visiblep ) {
       c -> catflags = CFNORMAL;
     } else {
       c -> catflags = CFHIDDEN;
     }
+
+    // if user prefers subcats-as-folders, lets reflag this sucker
+    if ( parentcatname && pnd_conf_get_as_int_d ( g_conf, "tabs.subcat_as_folders", 1 ) ) {
+      //printf ( "subcat: %s parent: %s\n", catname, parentcatname ? parentcatname : "none" );
+      c -> catflags = CFSUBCAT;
+    }
+
     c -> refs = NULL;
 
     if ( fspath ) {
@@ -255,7 +266,7 @@ unsigned char category_map_setup ( void ) {
       {
 	//pnd_log ( pndn_debug, "target(%s) from(%s)\n", k, buffer );
 
-	category_push ( k, NULL, 0, NULL /* fspath */, 1 );
+	category_push ( k, NULL /* parent cat */, NULL, 0, NULL /* fspath */, 1 );
 	g_catmaps [ g_catmapcount ].target = pnd_box_find_by_key ( m_categories, k );
 	g_catmaps [ g_catmapcount ].from = strdup ( buffer );
 	g_catmapcount++;
@@ -343,7 +354,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     cat = category_map_query ( catname );
 
     if ( cat ) {
-      category_push ( cat -> catname, app, ovrh, NULL /* fspath */, visiblep );
+      category_push ( cat -> catname, parentcatname /* parent cat */, app, ovrh, NULL /* fspath */, visiblep );
       goto meta_done;
     }
 
@@ -351,7 +362,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_default_on", 0 ) ) {
       char *def = pnd_conf_get_as_char ( g_conf, "categories.map_default_cat" );
       if ( def ) {
-	category_push ( def, app, ovrh, NULL /* fspath */, visiblep );
+	category_push ( def, parentcatname /* parent cat */, app, ovrh, NULL /* fspath */, visiblep );
 	goto meta_done;
       }
     }
@@ -359,7 +370,69 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   } // cat map is desired?
 
   // not default, just do it
-  category_push ( catname, app, ovrh, NULL /* fspath */, visiblep );
+  category_push ( catname, parentcatname /* parent cat */, app, ovrh, NULL /* fspath */, visiblep );
+
+  // if subcats as folders, then lets just make up a dummy app that pretends to be a folder,
+  // and stuff it into the parent cat
+  if ( parentcatname && pnd_conf_get_as_int_d ( g_conf, "tabs.subcat_as_folders", 1 ) ) {
+
+    // it is implicit that since we're talking parentcat, its already been created in a previous call
+    // therefore, we need to..
+    // i) find the parent cat
+    // ii) ensure it already has a faux-disco container
+    // iii) ensure that disco container doesn't already contain a disco-entry for this subcat
+    // iv) create the dummy app folder by pushing the disco into the apprefs as normal
+    // v) create a dummy '..' for going back up, in the child
+
+    mm_category_t *pcat = pnd_box_find_by_key ( m_categories, parentcatname );
+
+    if ( ! pcat -> disco ) {
+      pcat -> disco = pnd_box_new ( pcat -> catname );
+    }
+
+    // if this subcat is already in the faux-disco list, then its probably already
+    // handled so we needn't concern ourselves anymore. If not, then we can
+    // create it and push it into the parent as a new 'app'
+    pnd_disco_t *disco = pnd_box_find_by_key ( pcat -> disco, catname );
+
+    if ( ! disco ) {
+
+      disco = pnd_box_allocinsert ( pcat -> disco, catname, sizeof(pnd_disco_t) );
+      if ( disco ) {
+
+	// create the subcat faux-disco entry, and register into parent cat
+	char uid [ 30 ];
+	sprintf ( uid, "%p", catname );
+
+	disco -> unique_id = strdup ( uid );
+	if ( strchr ( catname, '.' ) ) {
+	  disco -> title_en = strdup ( strchr ( catname, '.' ) + 1 );
+	} else {
+	  disco -> title_en = strdup ( catname );
+	}
+	disco -> object_flags = PND_DISCO_GENERATED;
+	disco -> object_type = pnd_object_type_directory; // suggest to Grid that its a dir
+	disco -> object_path = strdup ( catname );
+
+	category_push ( parentcatname, NULL /* parent cat */, disco, 0 /*ovrh*/, NULL /* fspath */, 1 /* visible */ );
+
+	// create .. faux-disco entry into child cat
+	disco = pnd_box_allocinsert ( pcat -> disco, catname, sizeof(pnd_disco_t) );
+
+	sprintf ( uid, "%p", uid );
+
+	disco -> unique_id = strdup ( uid );
+	disco -> title_en = strdup ( ".." );
+	disco -> object_flags = PND_DISCO_GENERATED;
+	disco -> object_type = pnd_object_type_directory; // suggest to Grid that its a dir
+
+	category_push ( catname, parentcatname /* parent cat */, disco, 0 /*ovrh*/, NULL /* fspath */, 1 /* visible */ );
+
+      } // making faux disco entries
+
+    } // disco already exist?
+
+  } // subcat as folder?
 
   // hack :(
  meta_done:
@@ -455,7 +528,7 @@ unsigned char category_fs_restock ( mm_category_t *cat ) {
 	  disco -> object_flags = PND_DISCO_GENERATED;
 	  disco -> object_path = strdup ( cat -> fspath );
 	  disco -> object_filename = strdup ( de -> d_name );
-	  category_push ( cat -> catname, disco, 0 /* no ovr */, NULL /* fspath already set */, 1 /* visible */ );
+	  category_push ( cat -> catname, NULL /* parent cat */, disco, 0 /* no ovr */, NULL /* fspath already set */, 1 /* visible */ );
 	  // if a override icon exists, cache it up
 	  cache_icon ( disco, pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_width", 50 ),
 		       pnd_conf_get_as_int_d ( g_conf, "grid.icon_max_height", 50 ) );
@@ -526,6 +599,10 @@ void category_publish ( unsigned int filter_mask, char *param ) {
     // is this category desired?
     if ( filter_mask == CFALL ) {
       interested = 1;
+    } else if ( filter_mask == CFBYNAME ) {
+      if ( strcasecmp ( iter -> catname, param ) == 0 ) {
+	interested = 1;
+      }
     } else if ( iter -> catflags == filter_mask ) {
       interested = 1;
     } // if

@@ -1620,43 +1620,83 @@ void ui_push_exec ( void ) {
     }
 
     if ( ui_selected -> ref -> object_type == pnd_object_type_directory ) {
-      // delve up/down the dir tree
 
-      if ( strcmp ( ui_selected -> ref -> title_en, ".." ) == 0 ) {
-	// go up
-	char *c;
+      // check if this guy is a dir-browser tab, or is a directory on a pnd tab
+      if ( ! g_categories [ ui_category] -> fspath ) {
+	// pnd subcat as dir
 
-	// lop off last word; if the thing ends with /, lop that one, then the next word.
-	while ( ( c = strrchr ( g_categories [ ui_category] -> fspath, '/' ) ) ) {
-	  *c = '\0'; // lop off the last hunk
-	  if ( *(c+1) != '\0' ) {
-	    break;
+	static char *ui_category_stack = NULL;
+
+	// are we already in a subcat? if so, go back to parent; there is no grandparenting or deeper
+	if ( g_categories [ ui_category ] -> parent_catname ) {
+	  // go back up
+
+	  // set to first cat!
+	  ui_category = 0;
+	  // republish cats .. shoudl just be the one
+	  category_publish ( CFNORMAL, NULL );
+
+	  if ( ui_category_stack ) {
+	    ui_category = category_index ( ui_category_stack );
 	  }
-	} // while
 
-	// nothing left?
-	if ( g_categories [ ui_category] -> fspath [ 0 ] == '\0' ) {
-	  free ( g_categories [ ui_category] -> fspath );
-	  g_categories [ ui_category] -> fspath = strdup ( "/" );
+	} else {
+	  // delve into subcat
+
+	  // set to first cat!
+	  ui_category_stack = g_categories [ ui_category ] -> catname;
+	  ui_category = 0;
+	  // republish cats .. shoudl just be the one
+	  category_publish ( CFBYNAME, ui_selected -> ref -> object_path );
+
 	}
 
+	// forget the selection, nolonger applies
+	ui_selected = NULL;
+	ui_set_selected ( ui_selected );
+	// redraw the grid
+	render_mask |= CHANGED_EVERYTHING;
+
       } else {
-	// go down
-	char *temp = malloc ( strlen ( g_categories [ ui_category] -> fspath ) + strlen ( ui_selected -> ref -> title_en ) + 1 + 1 );
-	sprintf ( temp, "%s/%s", g_categories [ ui_category] -> fspath, ui_selected -> ref -> title_en );
-	free ( g_categories [ ui_category] -> fspath );
-	g_categories [ ui_category] -> fspath = temp;
-      }
 
-      pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ] -> catname, g_categories [ ui_category ]-> fspath );
+	// delve up/down the dir tree
+	if ( strcmp ( ui_selected -> ref -> title_en, ".." ) == 0 ) {
+	  // go up
+	  char *c;
 
-      // forget the selection, nolonger applies
-      ui_selected = NULL;
-      ui_set_selected ( ui_selected );
-      // rescan the dir
-      category_fs_restock ( g_categories [ ui_category ] );
-      // redraw the grid
-      render_mask |= CHANGED_SELECTION;
+	  // lop off last word; if the thing ends with /, lop that one, then the next word.
+	  while ( ( c = strrchr ( g_categories [ ui_category] -> fspath, '/' ) ) ) {
+	    *c = '\0'; // lop off the last hunk
+	    if ( *(c+1) != '\0' ) {
+	      break;
+	    }
+	  } // while
+
+	  // nothing left?
+	  if ( g_categories [ ui_category] -> fspath [ 0 ] == '\0' ) {
+	    free ( g_categories [ ui_category] -> fspath );
+	    g_categories [ ui_category] -> fspath = strdup ( "/" );
+	  }
+
+	} else {
+	  // go down
+	  char *temp = malloc ( strlen ( g_categories [ ui_category] -> fspath ) + strlen ( ui_selected -> ref -> title_en ) + 1 + 1 );
+	  sprintf ( temp, "%s/%s", g_categories [ ui_category] -> fspath, ui_selected -> ref -> title_en );
+	  free ( g_categories [ ui_category] -> fspath );
+	  g_categories [ ui_category] -> fspath = temp;
+	}
+
+	pnd_log ( pndn_debug, "Cat %s is now in path %s\n", g_categories [ ui_category ] -> catname, g_categories [ ui_category ]-> fspath );
+
+	// forget the selection, nolonger applies
+	ui_selected = NULL;
+	ui_set_selected ( ui_selected );
+	// rescan the dir
+	category_fs_restock ( g_categories [ ui_category ] );
+	// redraw the grid
+	render_mask |= CHANGED_SELECTION;
+
+      } // directory browser or pnd subcat?
 
     } else {
       // just run it arbitrarily?

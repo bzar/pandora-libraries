@@ -359,7 +359,7 @@ int main ( int argc, char *argv[] ) {
 
   // create all cat
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL /*app*/, 0, NULL /* fspath */, 1 /* visible */ );
+    category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL /* parent cat */, NULL /*app*/, 0, NULL /* fspath */, 1 /* visible */ );
   }
 
   // set up category mappings
@@ -677,7 +677,7 @@ void applications_scan ( void ) {
 	// push to All category
 	// we do this first, so first category is always All
 	if ( pnd_conf_get_as_int_d ( g_conf, "categories.do_all_cat", 1 ) ) {
-	  category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", iter, ovrh, NULL /* fspath */, 1 /* visible */ );
+	  category_push ( g_x11_present ? CATEGORY_ALL "    (X11)" : CATEGORY_ALL "   (No X11)", NULL /* parent cat */, iter, ovrh, NULL /* fspath */, 1 /* visible */ );
 	} // all?
 
 	// is this app suppressed? if not, show it in whatever categories the user is allowing
@@ -721,7 +721,7 @@ void applications_scan ( void ) {
 
       // check if dir is empty; if so, skip it.
       if ( ! is_dir_empty ( buffer ) ) {
-	category_push ( tabname /* tab name */, NULL /* app */, 0 /* override */, buffer /* fspath */, 1 /* visible */ );
+	category_push ( tabname /* tab name */, NULL /* parent cat */, NULL /* app */, 0 /* override */, buffer /* fspath */, 1 /* visible */ );
       }
 
     }
