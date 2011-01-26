@@ -95,6 +95,7 @@ void ui_push_right ( unsigned char forcecoil );
 void ui_push_up ( void );
 void ui_push_down ( void );
 void ui_push_exec ( void );
+void ui_push_backup ( void );
 void ui_push_ltrigger ( void );
 void ui_push_rtrigger ( void );
 unsigned char ui_determine_row ( mm_appref_t *a );

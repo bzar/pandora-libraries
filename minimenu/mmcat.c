@@ -511,6 +511,8 @@ unsigned char category_fs_restock ( mm_category_t *cat ) {
 	case DT_DIR:
 	  if ( strcmp ( de -> d_name, "." ) == 0 ) {
 	    // ignore ".", but ".." is fine
+	  } else if ( strcmp ( de -> d_name, ".." ) == 0 && strcmp ( cat -> fspath, "/" ) == 0 ) {
+	    // ignore ".." only if we're at the true root
 	  } else {
 	    disco = pnd_box_allocinsert ( cat -> disco, uid, sizeof(pnd_disco_t) );
 	    disco -> object_type = pnd_object_type_directory; // suggest to Grid that its a dir

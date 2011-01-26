@@ -1243,12 +1243,25 @@ void ui_process_input ( unsigned char block_p ) {
       } else if ( event.key.keysym.sym == SDLK_RCTRL || event.key.keysym.sym == SDLK_PERIOD ) { // right trigger or period
 	ui_push_rtrigger();
 	ui_event++;
+
       } else if ( event.key.keysym.sym == SDLK_PAGEUP ) { // Y
 	// info
 	if ( ui_selected ) {
 	  ui_show_info ( pnd_run_script, ui_selected -> ref );
 	  ui_event++;
 	}
+      } else if ( event.key.keysym.sym == SDLK_PAGEDOWN ) { // X
+	ui_push_backup();
+
+	// forget the selection, nolonger applies
+	ui_selected = NULL;
+	ui_set_selected ( ui_selected );
+	// rescan the dir
+	if ( g_categories [ ui_category ] -> fspath ) {
+	  category_fs_restock ( g_categories [ ui_category ] );
+	}
+	// redraw the grid
+	render_mask |= CHANGED_EVERYTHING;
 
       } else if ( event.key.keysym.sym == SDLK_LALT ) { // start button
 	ui_push_exec();
@@ -1614,6 +1627,52 @@ void ui_push_down ( void ) {
   return;
 }
 
+// 'backup' is currently 'X', for going back up in a folder/subcat without having to hit exec on the '..' entry
+void ui_push_backup ( void ) {
+
+  // a subcat-as-dir, or a dir browser?
+  if ( g_categories [ ui_category] -> fspath ) {
+    // dir browser, just climb our way back up
+
+    // go up
+    char *c;
+
+    // lop off last word; if the thing ends with /, lop that one, then the next word.
+    while ( ( c = strrchr ( g_categories [ ui_category] -> fspath, '/' ) ) ) {
+      *c = '\0'; // lop off the last hunk
+      if ( *(c+1) != '\0' ) {
+	break;
+      }
+    } // while
+
+    // nothing left?
+    if ( g_categories [ ui_category] -> fspath [ 0 ] == '\0' ) {
+      free ( g_categories [ ui_category] -> fspath );
+      g_categories [ ui_category] -> fspath = strdup ( "/" );
+    }
+
+  } else {
+    // a pnd subcat .. are we in one, or at the 'top'?
+    char *pcatname = g_categories [ ui_category ] -> parent_catname;
+
+    if ( ! pcatname ) {
+      return; // we're at the 'top' already
+    }
+
+    // set to first cat!
+    ui_category = 0;
+    // republish cats .. shoudl just be the one
+    category_publish ( CFNORMAL, NULL );
+
+    if ( pcatname ) {
+      ui_category = category_index ( pcatname );
+    }
+
+  } // dir or subcat?
+
+  return;
+}
+
 void ui_push_exec ( void ) {
 
   if ( ! ui_selected ) {
@@ -1633,26 +1692,15 @@ void ui_push_exec ( void ) {
       if ( ! g_categories [ ui_category] -> fspath ) {
 	// pnd subcat as dir
 
-	static char *ui_category_stack = NULL;
-
 	// are we already in a subcat? if so, go back to parent; there is no grandparenting or deeper
 	if ( g_categories [ ui_category ] -> parent_catname ) {
 	  // go back up
-
-	  // set to first cat!
-	  ui_category = 0;
-	  // republish cats .. shoudl just be the one
-	  category_publish ( CFNORMAL, NULL );
-
-	  if ( ui_category_stack ) {
-	    ui_category = category_index ( ui_category_stack );
-	  }
+	  ui_push_backup();
 
 	} else {
 	  // delve into subcat
 
 	  // set to first cat!
-	  ui_category_stack = g_categories [ ui_category ] -> catname;
 	  ui_category = 0;
 	  // republish cats .. shoudl just be the one
 	  category_publish ( CFBYNAME, ui_selected -> ref -> object_path );
@@ -1669,22 +1717,7 @@ void ui_push_exec ( void ) {
 
 	// delve up/down the dir tree
 	if ( strcmp ( ui_selected -> ref -> title_en, ".." ) == 0 ) {
-	  // go up
-	  char *c;
-
-	  // lop off last word; if the thing ends with /, lop that one, then the next word.
-	  while ( ( c = strrchr ( g_categories [ ui_category] -> fspath, '/' ) ) ) {
-	    *c = '\0'; // lop off the last hunk
-	    if ( *(c+1) != '\0' ) {
-	      break;
-	    }
-	  } // while
-
-	  // nothing left?
-	  if ( g_categories [ ui_category] -> fspath [ 0 ] == '\0' ) {
-	    free ( g_categories [ ui_category] -> fspath );
-	    g_categories [ ui_category] -> fspath = strdup ( "/" );
-	  }
+	  ui_push_backup();
 
 	} else {
 	  // go down
