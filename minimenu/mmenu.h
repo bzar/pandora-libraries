@@ -28,4 +28,6 @@ void applications_scan ( void );
 
 void setup_notifications ( void );
 
+unsigned char cat_is_visible ( pnd_conf_handle h, char *catname );
+
 #endif

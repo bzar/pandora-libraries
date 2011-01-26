@@ -34,6 +34,7 @@ confitem_t page_general[] = {
   { "Sub-categories as folders?",    "If no, uses tabs instead of folders within tabs.",        "1",                "tabs.subcat_as_folders",  ct_boolean },
   { "Start with app selected",       "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
   { "Auto discover pnd apps?",       "If no, turn on diectory browser to manually find apps",   "1",                "filesystem.do_pnd_disco", ct_boolean },
+  { "Keep bad categories in Other?", "Lazy dev! Put broken categories into Other to keep clean", "1",               "categories.good_cats_only", ct_boolean },
   { "Set CPU speed when leaving",    "Whether the next setting is applied or not",              "0",                "minimenu.use_run_speed",  ct_boolean },
   { "CPU speed when leaving",        "Before running app, set this speed; app may override.",   "500",              "minimenu.run_speed",      ct_cpu_speed },
   { "Wrap tab change",               "Changing tab left or right, does it wrap around?",        "0",                "tabs.wraparound",         ct_boolean },

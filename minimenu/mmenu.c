@@ -80,7 +80,6 @@ char *g_skinpath = NULL; // where 'skin_selected' is located .. the fullpath inc
 pnd_conf_handle g_skinconf = NULL;
 
 void sigquit_handler ( int n );
-unsigned char cat_is_visible ( pnd_conf_handle h, char *catname );
 unsigned char app_is_visible ( pnd_conf_handle h, char *uniqueid );
 
 int main ( int argc, char *argv[] ) {

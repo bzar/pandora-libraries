@@ -18,6 +18,7 @@
 #include "mmenu.h"
 #include "mmcache.h"
 #include "mmcat.h"
+#include "freedesktop_cats.h"
 
 // all categories known -- visible, hidden, subcats, whatever.
 pnd_box_handle m_categories = NULL;
@@ -291,6 +292,43 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   }
 
   //fprintf ( stderr, "meta push: '%s'\n", catname );
+
+  // push bad categories into Other (if we're not targeting All right now)
+  if ( pnd_conf_get_as_int_d ( g_conf, "categories.good_cats_only", 1 ) ) {
+
+    // don't audit All
+    if ( strncmp ( catname, "All ", 4 ) != 0 ) {
+
+      // if this is a parent cat..
+      if ( catname && ! parentcatname ) {
+
+	// if bad, shove it to Other
+	if ( ! freedesktop_check_cat ( catname ) ) {
+	  parentcatname = NULL;
+	  catname = BADCATNAME;
+	  visiblep = cat_is_visible ( g_conf, catname );
+	}
+
+      } else if ( catname && parentcatname ) {
+	// this is a subcat
+
+	// if parent is bad, then we probably already pushed it over, so don't do it again.
+	// if its parent is okay, but subcat is bad, push it to other. (ie: lets avoid duplication in Other)
+	if ( ! freedesktop_check_cat ( parentcatname ) ) {
+	  // skip
+	  return ( 1 );
+
+	} else if ( ! freedesktop_check_cat ( catname ) ) {
+	  parentcatname = NULL;
+	  catname = BADCATNAME;
+	  visiblep = cat_is_visible ( g_conf, catname );
+	}
+
+      } // parent or child cat?
+
+    } // not All
+
+  } // good cats only?
 
   // if invisible, and a parent category name is known, prepend it for ease of use
   if ( ! visiblep && parentcatname ) {
