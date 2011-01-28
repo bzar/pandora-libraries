@@ -2,9 +2,14 @@
 #ifndef h_freedesktop_cats_h
 #define h_freedesktop_cats_h
 
-unsigned char freedesktop_check_cat ( char *name );
+typedef struct {
+  char *cat;
+  char *parent_cat;
+  char *desc;
+} freedesktop_cat_t;
 
-extern char *freedesktop_approved_cats[];
+// return NULL on error, otherwise a category entry
+freedesktop_cat_t *freedesktop_category_query ( char *name );
 
 #define BADCATNAME "Other" /* irony: Other is itself not a freedesktop category */
 

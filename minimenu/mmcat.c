@@ -154,6 +154,7 @@ int cat_sort_score ( mm_category_t *cat, mm_appref_t *s1, mm_appref_t *s2 ) {
 
   // are we in a directory browser, or looking at pnd-files?
   if ( cat -> fspath ) {
+    // directory browser mode
 
     if ( s1 == s2 ) {
       return ( 0 ); // equal
@@ -176,6 +177,29 @@ int cat_sort_score ( mm_category_t *cat, mm_appref_t *s1, mm_appref_t *s2 ) {
       return ( strcmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
     }
 
+  }
+
+  // pnd tab
+  //
+
+  // if this is comparing subcat folder to subcat folder, or pnd to pnd, or pnd to subcat folder?
+  unsigned char s1sub = 0;
+  unsigned char s2sub = 0;
+  if ( s1 -> ref -> object_type == pnd_object_type_directory ) {
+    s1sub = 1;
+  }
+  if ( s2 -> ref -> object_type == pnd_object_type_directory ) {
+    s2sub = 1;
+  }
+
+  if        ( (   s1sub ) && (   s2sub ) ) {
+    return ( strcasecmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
+  } else if ( (   s1sub ) && ( ! s2sub ) ) {
+    return ( -1 );
+  } else if ( ( ! s1sub ) && (   s2sub ) ) {
+    return ( 1 );
+  } else if ( ( ! s1sub ) && ( ! s2sub ) ) {
+    return ( strcasecmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
   }
 
   return ( strcasecmp ( s1 -> ref -> title_en, s2 -> ref -> title_en ) );
@@ -300,14 +324,124 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   char catnamebuffer [ 512 ] = "";
 #endif
 
+  //fprintf ( stderr, "meta push: '%s'\n", catname );
+
   if ( ! catname ) {
     return ( 1 ); // fine, just nada
   }
 
-  //fprintf ( stderr, "meta push: '%s'\n", catname );
+  // we don't screw with "All" category that mmenu.c generates on the fly
+  if ( strncmp ( catname, "All ", 4 ) == 0 ) {
+    goto category_done_audit;
+  }
+
+  // category cleansing; lets..
+  // - ensure we only let good freedesktop categories through
+  // - we fix case.. no more UtIliTy (a good cat, studlycaps)
+  // - no more good cats but swapped ancestry; Utility as child of something?
+  // - if bogus, we just ship it off to BAD_CAT
+
+  unsigned char cat_is_clean = 1;
+  freedesktop_cat_t *fdcat = NULL, *fdpcat = NULL;
+  fdcat = freedesktop_category_query ( catname );
+  if ( parentcatname ) {
+    fdpcat = freedesktop_category_query ( parentcatname );
+  }
+
+  // ensure requested cat is good
+  if ( ! fdcat ) {
+    // requested cat is bad, send it to Other
+    cat_is_clean = 0;
+    printf ( "PXML Fail %s: Cat request %s (parent %s) -> bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+
+    // do the Other substitution right away, so remaining code has something to look at in fdcat
+    fdcat = freedesktop_category_query ( BADCATNAME );
+    catname = fdcat -> cat;
+    fdpcat = NULL;
+    parentcatname = NULL;
+
+  } else {
+    // use canonicle entry, so our Case is now correct!
+    catname = fdcat -> cat;
+  }
+
+  // ensure parent is good, if specified
+  if ( parentcatname ) {
+    if ( ! fdpcat ) {
+      // requested cat is bad, send it to Other
+      cat_is_clean = 0;
+      printf ( "PXML Fail %s: Cat request %s (parent %s) -> parent bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      // fix immediately so code doesn't explode
+      parentcatname = NULL;
+    } else {
+      // use canonicle entry, so our Case is now correct!
+      parentcatname = fdpcat -> cat;
+    }
+  }
+
+  // ensure ancestry is good
+  // - if cat request is for child, ensure its a child
+  // - if parent specified, ensure its a parent
+  // - if child specified, ensure its parent is the right parent(?!)
+  //
+  if ( parentcatname ) {
+    // implies catname request is for child, with parent parentcatname
+
+    if ( fdcat -> parent_cat == NULL ) {
+      // but wait, catname is actually a parent cat...
+      cat_is_clean = 0;
+      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child, but FD says its a parent\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+    }
+    if ( fdpcat -> parent_cat ) {
+      // but wait, parent cat is actually a subcat!
+      cat_is_clean = 0;
+      printf ( "PXML Fail %s: Cat request %s (parent %s) -> parent cat, FD says its a child\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+    }
+
+  } else {
+    // implies request is for a parent cat - itself has no parent
+
+    if ( fdcat -> parent_cat ) {
+      // but wait, cat actually has a parent!
+      cat_is_clean = 0;
+      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be parent, FD says its a child\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+    }
+
+  }
+
+  // ensure that if this is a child cat, its parent is the right parent
+  if ( parentcatname ) {
+    if ( ( ! fdcat -> parent_cat ) ||
+	 ( ! fdpcat ) )
+    { 
+      // child cat points to a different parent than requested parent!
+      cat_is_clean = 0;
+      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (1)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+    } else if ( strcasecmp ( fdcat -> parent_cat, fdpcat -> cat ) != 0 ) {
+      // child cat points to a different parent than requested parent!
+      cat_is_clean = 0;
+      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (2)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+    }
+  }
+
+  // did testing fail? if so, bump to Other!
+  //
+  if ( ! cat_is_clean ) {
+    // set Other visibility
+    visiblep = cat_is_visible ( g_conf, BADCATNAME );
+    // fix cat request
+    fdcat = freedesktop_category_query ( BADCATNAME );
+    catname = fdcat -> cat;
+    // nullify parent cat request (if any)
+    fdpcat = NULL;
+    parentcatname = NULL;
+  } else {
+    //printf ( "PXML Category Pass: Cat request %s (parent %s)\n", catname, parentcatname ? parentcatname : "n/a" );
+  }
 
   // push bad categories into Other (if we're not targeting All right now)
-  if ( pnd_conf_get_as_int_d ( g_conf, "categories.good_cats_only", 1 ) ) {
+#if 0
+  if ( 1 /*pnd_conf_get_as_int_d ( g_conf, "categories.good_cats_only", 1 )*/ ) {
 
     // don't audit All
     if ( strncmp ( catname, "All ", 4 ) != 0 ) {
@@ -342,6 +476,9 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     } // not All
 
   } // good cats only?
+#endif
+
+ category_done_audit:
 
   // if invisible, and a parent category name is known, prepend it for ease of use
 #if 0 // prepending
@@ -372,6 +509,14 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     }
 
   } // cat map is desired?
+
+  // is app already in the target cat? (ie: its being pushed twice due to cat mapping or Other'ing or something..)
+  if ( app ) {
+    if ( category_contains_app ( catname, app -> unique_id ) ) {
+      printf ( "App Fail: app (%s %s) is already in cat %s\n", app -> title_en ? app -> title_en : "no name?", app -> unique_id, catname );
+      return ( 1 ); // success, already there!
+    }
+  }
 
   // not default, just do it
   category_push ( catname, parentcatname /* parent cat */, app, ovrh, NULL /* fspath */, visiblep );
@@ -669,4 +814,30 @@ int category_index ( char *catname ) {
   }
  
   return ( -1 );
+}
+
+unsigned char category_contains_app ( char *catname, char *unique_id ) {
+
+  mm_category_t *c = pnd_box_find_by_key ( m_categories, catname );
+
+  if ( ! c ) {
+    return ( 0 ); // wtf?
+  }
+
+  if ( ! c -> refs ) {
+    return ( 0 ); // no apps at all
+  }
+
+  mm_appref_t *iter = c -> refs;
+
+  while ( iter ) {
+
+    if ( strcmp ( iter -> ref -> unique_id, unique_id ) == 0 ) {
+      return ( 1 );
+    }
+
+    iter = iter -> next;
+  }
+
+  return ( 0 );
 }
