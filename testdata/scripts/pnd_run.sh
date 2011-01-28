@@ -74,7 +74,7 @@ runApp() {
 	        export XDG_DATA_DIRS="/mnt/utmp/$PND_NAME/share:$XDG_DATA_DIRS:/usr/share"
 	fi
 	export XDG_CONFIG_HOME="/mnt/utmp/$PND_NAME"
-	"./$EXENAME" $ARGUMENTS 
+	"./$EXENAME" $ARGUMENTS
 						# execute app with ld_lib_path set to the union mount, a bit evil but i think its a good solution
 
 	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
@@ -223,6 +223,8 @@ cleanups() {
 	#delete folders created by aufs if empty
 	rmdir -rf "${APPDATADIR}/.wh..wh.plnk" 2>/dev/null
 	rmdir -rf "${APPDATADIR}/.wh..wh..tmp" 2>/dev/null
+	rmdir "${APPDATADIR}/.wh..wh.orph" 2>/dev/null
+	rm "${APPDATADIR}/.aufs.xino" 2>/dev/null
 
 	#delete appdata folder and ancestors if _empty_
 	rmdir -p "${APPDATADIR}" 2>/dev/null
