@@ -373,15 +373,15 @@ int main ( int argc, char *argv[] ) {
 
   /* actual work now
    */
-  unsigned char block = 1;
-
   if ( g_autorescan ) {
-    block = 0;
 
     // set up notifications
     dbh = pnd_dbusnotify_init();
     pnd_log ( pndn_debug, "Setting up dbusnotify\n" );
     //setup_notifications();
+
+    // create a timer thread, that will trigger us to check for SD insert notifications every once in awhile
+    ui_threaded_timer_create();
 
   } // set up rescan
 
@@ -405,33 +405,8 @@ int main ( int argc, char *argv[] ) {
     // show the menu, or changes thereof
     ui_render();
 
-    // wait for input or time-based events (like animations)
-    // deal with inputs
-    ui_process_input ( block /* block */ );
-
-    // did a rescan event trigger?
-    if ( g_autorescan ) {
-      unsigned char watch_dbus = 0;
-      unsigned char watch_inotify = 0;
-
-      if ( dbh ) {
-	watch_dbus = pnd_dbusnotify_rediscover_p ( dbh );
-      }
-
-      if ( nh ) {
-	watch_inotify = pnd_notify_rediscover_p ( nh );
-      }
-
-      if ( watch_dbus || watch_inotify ) {
-	pnd_log ( pndn_debug, "dbusnotify detected SD event\n" );
-	applications_free();
-	applications_scan();
-      }
-
-    } // rescan?
-
-    // sleep? block?
-    usleep ( 100000 /*5000*/ );
+    // wait for input or time-based events (like animations) and deal with inputs
+    ui_process_input ( dbh, nh );
 
   } // while
 

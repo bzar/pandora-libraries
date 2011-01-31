@@ -28,6 +28,8 @@
 #include "../lib/pnd_pathiter.h"
 #include "pnd_utility.h"
 #include "pnd_pndfiles.h"
+#include "pnd_notify.h"
+#include "pnd_dbusnotify.h"
 
 #include "mmenu.h"
 #include "mmcat.h"
@@ -52,10 +54,12 @@ unsigned int render_mask = CHANGED_EVERYTHING;
 SDL_Surface *sdl_realscreen = NULL;
 unsigned int sdl_ticks = 0;
 SDL_Thread *g_preview_thread = NULL;
+SDL_Thread *g_timer_thread = NULL;
 
 enum { sdl_user_ticker = 0,
        sdl_user_finishedpreview = 1,
        sdl_user_finishedicon = 2,
+       sdl_user_checksd = 3,
 };
 
 /* app state
@@ -1029,14 +1033,14 @@ void ui_render ( void ) {
 
 } // ui_render
 
-void ui_process_input ( unsigned char block_p ) {
+void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
   SDL_Event event;
 
   unsigned char ui_event = 0; // if we get a ui event, flip to 1 and break
   //static ui_sdl_button_e ui_mask = uisb_none; // current buttons down
 
-  while ( ! ui_event &&
-	  block_p ? SDL_WaitEvent ( &event ) : SDL_PollEvent ( &event ) )
+  while ( ( ! ui_event ) &&
+	  /*block_p ?*/ SDL_WaitEvent ( &event ) /*: SDL_PollEvent ( &event )*/ )
   {
 
     switch ( event.type ) {
@@ -1105,7 +1109,29 @@ void ui_process_input ( unsigned char block_p ) {
 	// redraw, so we can show the newly loaded icon
 	ui_event++;
 
-      }
+      } else if ( event.user.code == sdl_user_checksd ) {
+	// check if any inotify-type events occured, forcing us to rescan/re-disco the SDs
+
+	unsigned char watch_dbus = 0;
+	unsigned char watch_inotify = 0;
+
+	if ( dbh ) {
+	  watch_dbus = pnd_dbusnotify_rediscover_p ( dbh );
+	}
+
+	if ( nh ) {
+	  watch_inotify = pnd_notify_rediscover_p ( nh );
+	}
+
+	if ( watch_dbus || watch_inotify ) {
+	  pnd_log ( pndn_debug, "dbusnotify detected SD event\n" );
+	  applications_free();
+	  applications_scan();
+
+	  ui_event++;
+	}
+
+      } // SDL user event
 
       render_mask |= CHANGED_EVERYTHING;
 
@@ -2542,6 +2568,44 @@ unsigned char ui_forkexec ( char *argv[] ) {
 
   // parent, success
   return ( 1 );
+}
+
+unsigned char ui_threaded_timer_create ( void ) {
+
+  g_timer_thread = SDL_CreateThread ( (void*)ui_threaded_timer, NULL );
+
+  if ( ! g_timer_thread ) {
+    pnd_log ( pndn_error, "ERROR: Couldn't create timer thread\n" );
+    return ( 0 );
+  }
+
+  return ( 1 );
+}
+
+int ui_threaded_timer ( pnd_disco_t *p ) {
+
+  // this timer's job is to ..
+  // - do nothing for quite awhile
+  // - on wake, post event to SDL event queue, so that main thread will check if SD insert/eject occurred
+  // - goto 10
+
+  unsigned int delay_s = 2; // seconds
+
+  while ( 1 ) {
+
+    // pause...
+    sleep ( delay_s );
+
+    // .. trigger SD check
+    SDL_Event e;
+    bzero ( &e, sizeof(SDL_Event) );
+    e.type = SDL_USEREVENT;
+    e.user.code = sdl_user_checksd;
+    SDL_PushEvent ( &e );
+
+  } // while
+
+  return ( 0 );
 }
 
 unsigned char ui_threaded_defered_preview ( pnd_disco_t *p ) {

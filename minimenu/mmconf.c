@@ -11,6 +11,8 @@
 #include "pnd_container.h"
 #include "pnd_conf.h"
 #include "pnd_discovery.h"
+#include "pnd_notify.h"
+#include "pnd_dbusnotify.h"
 
 #include "mmenu.h"
 #include "mmconf.h"

@@ -31,6 +31,8 @@
 #include "pnd_apps.h"
 #include "../lib/pnd_pathiter.h"
 #include "pnd_locate.h"
+#include "pnd_notify.h"
+#include "pnd_dbusnotify.h"
 
 #include "mmenu.h"
 #include "mmapps.h"

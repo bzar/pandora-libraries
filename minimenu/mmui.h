@@ -85,11 +85,13 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 unsigned char ui_forkexec ( char *argv[] ); // argv[0] is proggy to exec; argv last entry must be NULLptr
 
 // create a thread of this guy, and it'll try to load the preview pic in background and then signal the app
-unsigned char ui_threaded_defered_preview ( pnd_disco_t *p );
-unsigned char ui_threaded_defered_icon ( void * );
+unsigned char ui_threaded_defered_preview ( pnd_disco_t *p ); // callback
+unsigned char ui_threaded_defered_icon ( void * ); // callback
+unsigned char ui_threaded_timer_create ( void );
+int ui_threaded_timer ( pnd_disco_t *p ); // callback
 
 // change the focus
-void ui_process_input ( unsigned char block_p );
+void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh );
 void ui_push_left ( unsigned char forcecoil );
 void ui_push_right ( unsigned char forcecoil );
 void ui_push_up ( void );
