@@ -523,7 +523,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 
   // if subcats as folders, then lets just make up a dummy app that pretends to be a folder,
   // and stuff it into the parent cat
-  if ( parentcatname && pnd_conf_get_as_int_d ( g_conf, "tabs.subcat_as_folders", 1 ) ) {
+  if ( parentcatname && pnd_conf_get_as_int_d ( g_conf, "tabs.subcat_as_folders", 1 ) && cat_is_visible ( g_conf, catname ) ) {
 
     // it is implicit that since we're talking parentcat, its already been created in a previous call
     // therefore, we need to..
@@ -549,7 +549,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
       disco = pnd_box_allocinsert ( pcat -> disco, catname, sizeof(pnd_disco_t) );
       if ( disco ) {
 
-	// create the subcat faux-disco entry, and register into parent cat
+	// create the subcat faux-disco entry, and register into parent cat .. if its visible
 	char uid [ 30 ];
 	sprintf ( uid, "%p", catname );
 

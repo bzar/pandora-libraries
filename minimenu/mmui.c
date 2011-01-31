@@ -1288,6 +1288,7 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	}
 	// redraw the grid
 	render_mask |= CHANGED_EVERYTHING;
+	ui_event++;
 
       } else if ( event.key.keysym.sym == SDLK_LALT ) { // start button
 	ui_push_exec();
