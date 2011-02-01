@@ -42,6 +42,7 @@
 
 extern pnd_conf_handle g_conf;
 extern unsigned char g_pvwcache;
+extern pnd_conf_handle g_desktopconf;
 
 mm_cache_t *g_icon_cache = NULL;
 mm_cache_t *g_preview_cache = NULL;
@@ -224,7 +225,7 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
   unsigned char *iconbuf = NULL;
   unsigned int buflen = 0;
 
-  // same-path override?
+  // same-path icon override?
   char ovrfile [ PATH_MAX ];
   char *fixpxml;
   sprintf ( ovrfile, "%s/%s", app -> object_path, app -> object_filename );
@@ -247,6 +248,36 @@ unsigned char cache_icon ( pnd_disco_t *app, unsigned char maxwidth, unsigned ch
       } // malloc
     } // stat
   } // ovr?
+
+  // perhaps pndnotifyd has dropped a copy of the icon into /tmp?
+#if 1
+  {
+    static char *iconpath = NULL;
+
+    if ( ! iconpath ) {
+      iconpath = pnd_conf_get_as_char ( g_desktopconf, "desktop.iconpath" );
+    }
+
+    sprintf ( ovrfile, "%s/%s.png", iconpath, app -> unique_id );
+
+    struct stat statbuf;
+    if ( stat ( ovrfile, &statbuf ) == 0 ) {
+      buflen = statbuf.st_size;
+      if ( ( iconbuf = malloc ( statbuf.st_size ) ) ) {
+	int fd = open ( ovrfile, O_RDONLY );
+	if ( fd >= 0 ) {
+	  if ( read ( fd, iconbuf, statbuf.st_size ) != statbuf.st_size ) {
+	    free ( iconbuf );
+	    close ( fd );
+	    return ( 0 );
+	  }
+	  close ( fd );
+	} // open
+      } // malloc
+    } // stat
+
+  }
+#endif
 
   // if this is a real pnd file (dir-app or pnd-file-app), then try to pull icon from there
   if ( ! iconbuf ) {
