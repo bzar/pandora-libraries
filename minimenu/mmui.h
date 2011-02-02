@@ -118,4 +118,13 @@ void ui_touch_act ( unsigned int x, unsigned int y );
 void ui_set_selected ( mm_appref_t *r );
 unsigned int ui_callback_f ( unsigned int t );
 
+// 'popup' 'context' menu
+void ui_menu_context ( mm_appref_t *a );
+unsigned char ui_menu_twoby ( char *title, char *footer, char *one, char *two ); // return 0 (nada), 1 (one), 2 (two)
+unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialvalue,
+				      char *r_buffer, unsigned char maxlen, unsigned char numbersonlyp ); // populates r_buffer
+
+// ovr-file edit
+unsigned char ovr_replace_or_add ( mm_appref_t *a, char *keybase, char *newvalue ); // keybase does not include app#
+
 #endif

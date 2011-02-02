@@ -9,6 +9,8 @@
 #include <string.h> /* for making ftw.h happy */
 #include <time.h>
 #include <ftw.h>
+#include <ctype.h>
+
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_image.h"
@@ -38,6 +40,7 @@
 #include "mmwrapcmd.h"
 #include "mmconf.h"
 #include "mmui_context.h"
+#include "freedesktop_cats.h"
 
 #define CHANGED_NOTHING     (0)
 #define CHANGED_CATEGORY    (1<<0)  /* changed to different category */
@@ -1251,8 +1254,16 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
       } else if ( event.key.keysym.sym == SDLK_DOWN ) {
 	ui_push_down();
 	ui_event++;
-      } else if ( event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_END ) { // space or B
+      } else if ( event.key.keysym.sym == SDLK_END ) { // B
 	ui_push_exec();
+	ui_event++;
+      } else if ( event.key.keysym.sym == SDLK_SPACE ) { // space
+	if ( ui_selected ) {
+	  ui_menu_context ( ui_selected );
+	} else {
+	  // TBD: post an error?
+	}
+	render_mask |= CHANGED_EVERYTHING;
 	ui_event++;
       } else if ( event.key.keysym.sym == SDLK_TAB || event.key.keysym.sym == SDLK_HOME ) { // tab or A
 	// if detail panel is togglable, then toggle it
@@ -1421,10 +1432,8 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	    // looks like we found a potential match; try switching it to visible selection
 	    ui_selected = app;
 	    ui_set_selected ( ui_selected );
+	    ui_event++;
 	  }
-
-
-
 
 
 	} // SDLK_alphanumeric?
@@ -2218,14 +2227,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
   unsigned int sel = 0;
 
-  unsigned int font_rgba_r = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_r", 200 );
-  unsigned int font_rgba_g = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_g", 200 );
-  unsigned int font_rgba_b = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_b", 200 );
-  unsigned int font_rgba_a = pnd_conf_get_as_int_d ( g_conf, "display.font_rgba_a", 100 );
-
-  SDL_Color tmpfontcolor = { font_rgba_r, font_rgba_g, font_rgba_b, font_rgba_a };
-
-  SDL_Color selfontcolor = { 0/*font_rgba_r*/, font_rgba_g, font_rgba_b, font_rgba_a };
+  SDL_Color selfontcolor = { 0/*font_rgba_r*/, ui_display_context.font_rgba_g, ui_display_context.font_rgba_b, ui_display_context.font_rgba_a };
 
   unsigned int i;
   SDL_Event event;
@@ -2266,7 +2268,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
     // show header
     if ( title ) {
-      rtext = TTF_RenderText_Blended ( g_tab_font, title, tmpfontcolor );
+      rtext = TTF_RenderText_Blended ( g_tab_font, title, ui_display_context.fontcolor );
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 20;
       SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
@@ -2276,7 +2278,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
 
     // show footer
     if ( footer ) {
-      rtext = TTF_RenderText_Blended ( g_tab_font, footer, tmpfontcolor );
+      rtext = TTF_RenderText_Blended ( g_tab_font, footer, ui_display_context.fontcolor );
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) +
 	((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> h
@@ -2293,7 +2295,7 @@ int ui_modal_single_menu ( char *argv[], unsigned int argc, char *title, char *f
       if ( sel == i ) {
 	rtext = TTF_RenderText_Blended ( g_tab_font, argv [ i ], selfontcolor );
       } else {
-	rtext = TTF_RenderText_Blended ( g_tab_font, argv [ i ], tmpfontcolor );
+	rtext = TTF_RenderText_Blended ( g_tab_font, argv [ i ], ui_display_context.fontcolor );
       }
       dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
       dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 40 + ( 20 * ( i + 1 - first_visible ) );
@@ -3212,4 +3214,470 @@ void ui_toggle_detail_pane ( void ) {
   render_mask |= CHANGED_EVERYTHING;
 
   return;
+}
+
+void ui_menu_context ( mm_appref_t *a ) {
+
+  unsigned char rescan_apps = 0;
+  unsigned char context_alive = 1;
+
+  enum {
+    context_done = 0,
+    context_file_info,
+    context_file_delete,
+    context_app_info,
+    context_app_hide,
+    context_app_recategorize,
+    context_app_recategorize_sub,
+    context_app_rename,
+    context_app_cpuspeed,
+    context_app_run,
+    context_menu_max
+  };
+
+  char *verbiage[] = {
+    "Done (return to grid)",      // context_done
+    "Get info about file/dir",    // context_file_info
+    "Delete file/dir",            // context_file_delete
+    "Get info",                   // context_app_info
+    "Hide application",           //             hide
+    "Recategorize",               //             recategorize
+    "Recategorize subcategory",   //             recategorize
+    "Change displayed title",     //             rename
+    "Set CPU speed for launch",   //             cpuspeed
+    "Run application"             //             run
+  };
+
+  unsigned short int menu [ context_menu_max ];
+  char *menustring [ context_menu_max ];
+  unsigned char menumax = 0;
+
+  // ++ done
+  menu [ menumax ] = context_done; menustring [ menumax++ ] = verbiage [ context_done ];
+
+  // hook up appropriate menu options based on tab-type and object-type
+  if ( g_categories [ ui_category ] -> fspath ) {
+    return; // TBD
+    menu [ menumax ] = context_file_info; menustring [ menumax++ ] = verbiage [ context_file_info ];
+    menu [ menumax ] = context_file_delete; menustring [ menumax++ ] = verbiage [ context_file_delete ];
+  } else {
+    //menu [ menumax ] = context_app_info; menustring [ menumax++ ] = verbiage [ context_app_info ];
+    menu [ menumax ] = context_app_hide; menustring [ menumax++ ] = verbiage [ context_app_hide ];
+    menu [ menumax ] = context_app_recategorize; menustring [ menumax++ ] = verbiage [ context_app_recategorize ];
+    menu [ menumax ] = context_app_recategorize_sub; menustring [ menumax++ ] = verbiage [ context_app_recategorize_sub ];
+    menu [ menumax ] = context_app_rename; menustring [ menumax++ ] = verbiage [ context_app_rename ];
+    menu [ menumax ] = context_app_cpuspeed; menustring [ menumax++ ] = verbiage [ context_app_cpuspeed ];
+    menu [ menumax ] = context_app_run; menustring [ menumax++ ] = verbiage [ context_app_run ];
+  }
+
+  // operate the menu
+  while ( context_alive ) {
+
+    int sel = ui_modal_single_menu ( menustring, menumax, a -> ref -> title_en ? a -> ref -> title_en : "Quickpick Menu" /* title */, "B or Enter; other to cancel." /* footer */ );
+
+    if ( sel < 0 ) {
+      context_alive = 0;
+
+    } else {
+
+      switch ( menu [ sel ] ) {
+
+      case context_done:
+	context_alive = 0;
+	break;
+
+      case context_file_info:
+	break;
+
+      case context_file_delete:
+	//ui_menu_twoby ( "Delete - Are you sure?", "B/enter; other to cancel", "Delete", "Do not delete" );
+	break;
+
+      case context_app_info:
+	break;
+
+      case context_app_hide:
+	{
+	  // determine key
+	  char confkey [ 1000 ];
+	  snprintf ( confkey, 999, "%s.%s", "appshow", a -> ref -> unique_id );
+
+	  // turn app 'off'
+	  pnd_conf_set_char ( g_conf, confkey, "0" );
+
+	  // write conf, so it will take next time
+	  conf_write ( g_conf, conf_determine_location ( g_conf ) );
+
+	  // request rescan and wrap up
+	  rescan_apps++;
+	  context_alive = 0; // nolonger visible, so lets just get out
+
+	}
+    
+	break;
+
+      case context_app_recategorize:
+	{
+	  char *opts [ 250 ];
+	  unsigned char optmax = 0;
+	  unsigned char i;
+
+	  i = 0;
+	  while ( 1 ) {
+
+	    if ( ! freedesktop_complete [ i ].cat ) {
+	      break;
+	    }
+
+	    if ( ! freedesktop_complete [ i ].parent_cat ) {
+	      opts [ optmax++ ] = freedesktop_complete [ i ].cat;
+	    }
+
+	    i++;
+	  } // while
+
+	  char prompt [ 101 ];
+	  snprintf ( prompt, 100, "Pick category [%s]", a -> ref -> main_category ? a -> ref -> main_category : "NoParentCategory" );
+
+	  int sel = ui_modal_single_menu ( opts, optmax, prompt /*"Select parent category"*/, "Enter to select; other to skip." );
+
+	  if ( sel >= 0 ) {
+	    char confirm [ 1001 ];
+	    snprintf ( confirm, 1000, "Confirm: %s", opts [ sel ] );
+
+	    if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm categorization", "Do not set category" ) == 1 ) {
+	      ovr_replace_or_add ( a, "maincategory", opts [ sel ] );
+	      rescan_apps++;
+	    }
+
+	  }
+
+	}
+	break;
+
+      case context_app_recategorize_sub:
+	{
+	  char *opts [ 250 ];
+	  unsigned char optmax = 0;
+	  unsigned char i;
+
+	  i = 0;
+	  while ( 1 ) {
+
+	    if ( ! freedesktop_complete [ i ].cat ) {
+	      break;
+	    }
+
+	    if ( freedesktop_complete [ i ].parent_cat ) {
+	      opts [ optmax++ ] = freedesktop_complete [ i ].cat;
+	    }
+
+	    i++;
+	  } // while
+
+	  char prompt [ 101 ];
+	  snprintf ( prompt, 100, "Pick subcategory [%s]", a -> ref -> main_category1 ? a -> ref -> main_category1 : "NoSubcategory" );
+
+	  int sel = ui_modal_single_menu ( opts, optmax, prompt /*"Select subcategory"*/, "Enter to select; other to skip." );
+
+	  if ( sel >= 0 ) {
+	    char confirm [ 1001 ];
+	    snprintf ( confirm, 1000, "Confirm: %s", opts [ sel ] );
+
+	    if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm sub-categorization", "Do not set sub-category" ) == 1 ) {
+	      ovr_replace_or_add ( a, "maincategorysub1", opts [ sel ] );
+	      rescan_apps++;
+	    }
+
+	  }
+
+	}
+	break;
+
+      case context_app_rename:
+	{
+	  char namebuf [ 101 ];
+	  unsigned char changed;
+
+	  changed = ui_menu_get_text_line ( "Rename application", "Use keyboard; Enter when done.",
+					    a -> ref -> title_en ? a -> ref -> title_en : "blank", namebuf, 30, 0 /* alphanumeric */ );
+
+	  if ( changed ) {
+	    char confirm [ 1001 ];
+	    snprintf ( confirm, 1000, "Confirm: %s", namebuf );
+
+	    if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm rename", "Do not rename" ) == 1 ) {
+	      ovr_replace_or_add ( a, "title", namebuf );
+	      rescan_apps++;
+	    }
+
+	  }
+
+	}
+
+	break;
+
+      case context_app_cpuspeed:
+	{
+	  char namebuf [ 101 ];
+	  unsigned char changed;
+
+	  changed = ui_menu_get_text_line ( "Specify runspeed", "Use keyboard; Enter when done.",
+					    a -> ref -> clockspeed ? a -> ref -> clockspeed : "500", namebuf, 6, 1 /* numeric */ );
+
+	  if ( changed ) {
+	    char confirm [ 1001 ];
+	    snprintf ( confirm, 1000, "Confirm: %s", namebuf );
+
+	    if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm clockspeed", "Do not set" ) == 1 ) {
+	      ovr_replace_or_add ( a, "clockspeed", namebuf );
+	      rescan_apps++;
+	    }
+
+	  }
+
+	}
+
+	break;
+
+      case context_app_run:
+	ui_push_exec();
+	break;
+
+      default:
+	return;
+
+      } // switch
+
+    } // if useful return
+
+  } // menu is alive?
+
+  // rescan apps?
+  if ( rescan_apps ) {
+    applications_free();
+    applications_scan();
+  }
+
+  return;
+}
+
+unsigned char ui_menu_twoby ( char *title, char *footer, char *one, char *two ) {
+  char *opts [ 3 ];
+  opts [ 0 ] = one;
+  opts [ 1 ] = two;
+  int sel = ui_modal_single_menu ( opts, 2, title, footer );
+  if ( sel < 0 ) {
+    return ( 0 );
+  }
+  return ( sel + 1 );
+}
+
+unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialvalue,
+				      char *r_buffer, unsigned char maxlen, unsigned char numbersonlyp )
+{
+  SDL_Rect rects [ 40 ];
+  SDL_Rect *dest = rects;
+  SDL_Rect src;
+  SDL_Surface *rtext;
+
+  char hacktext [ 1024 ];
+  unsigned char shifted = 0;
+
+  bzero ( rects, sizeof(SDL_Rect) * 40 );
+
+  if ( initialvalue ) {
+    strncpy ( r_buffer, initialvalue, maxlen );
+  } else {
+    bzero ( r_buffer, maxlen );
+  }
+
+  while ( 1 ) {
+
+    // clear
+    dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+    dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+    dest -> w = ((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> w;
+    dest -> h = ((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> h;
+    SDL_FillRect( sdl_realscreen, dest, 0 );
+
+    // show dialog background
+    if ( g_imagecache [ IMG_DETAIL_BG ].i ) {
+      src.x = 0;
+      src.y = 0;
+      src.w = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_BG ].i)) -> w;
+      src.h = ((SDL_Surface*)(g_imagecache [ IMG_DETAIL_BG ].i)) -> h;
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_BG ].i, &src, sdl_realscreen, dest );
+      dest++;
+    }
+
+    // show dialog frame
+    if ( g_imagecache [ IMG_DETAIL_PANEL ].i ) {
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 );
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 );
+      SDL_BlitSurface ( g_imagecache [ IMG_DETAIL_PANEL ].i, NULL /* whole image */, sdl_realscreen, dest );
+      dest++;
+    }
+
+    // show header
+    if ( title ) {
+      rtext = TTF_RenderText_Blended ( g_tab_font, title, ui_display_context.fontcolor );
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 20;
+      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+    }
+
+    // show footer
+    if ( footer ) {
+      rtext = TTF_RenderText_Blended ( g_tab_font, footer, ui_display_context.fontcolor );
+      dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
+      dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) +
+	((SDL_Surface*) g_imagecache [ IMG_DETAIL_PANEL ].i) -> h
+	- 60;
+      SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+    }
+
+    // show text line - and embed cursor
+    dest -> x = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_x", 460 ) + 20;
+    dest -> y = pnd_conf_get_as_int_d ( g_conf, "detailpane.pane_offset_y", 60 ) + 40 + ( 20 * ( 0/*i*/ + 1 - 0/*first_visible*/ ) );
+
+    strncpy ( hacktext, r_buffer, 1000 );
+    strncat ( hacktext, "\n", 1000 ); // add [] in most fonts
+
+    rtext = TTF_RenderText_Blended ( g_tab_font, hacktext, ui_display_context.fontcolor );
+    SDL_BlitSurface ( rtext, NULL /* full src */, sdl_realscreen, dest );
+    SDL_FreeSurface ( rtext );
+    dest++;
+
+    // update all the rects and send it all to sdl
+    SDL_UpdateRects ( sdl_realscreen, dest - rects, rects );
+    dest = rects;
+
+    // check for input
+    SDL_Event event;
+    while ( SDL_WaitEvent ( &event ) ) {
+
+      switch ( event.type ) {
+
+      case SDL_KEYUP:
+	if ( event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT ) {
+	  shifted = 0;
+	}
+	break;
+
+      case SDL_KEYDOWN:
+
+	if ( event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_BACKSPACE ) {
+	  char *eol = strchr ( r_buffer, '\0' );
+	  *( eol - 1 ) = '\0';
+	} else if ( event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_END ) { // return, or "B"
+	  return ( 1 );
+
+	} else if ( event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT ) {
+	  shifted = 1;
+
+	} else if ( event.key.keysym.sym == SDLK_ESCAPE ||
+		    event.key.keysym.sym == SDLK_PAGEUP ||
+		    event.key.keysym.sym == SDLK_PAGEDOWN ||
+		    event.key.keysym.sym == SDLK_HOME
+		  )
+	{
+	  return ( 0 );
+
+	} else {
+
+	  if ( isprint(event.key.keysym.sym) ) {
+
+	    unsigned char good = 1;
+
+	    if ( numbersonlyp && ( ! isdigit(event.key.keysym.sym) ) ) {
+	      good = 0;
+	    }
+
+	    if ( maxlen && strlen(r_buffer) >= maxlen ) {
+	      good = 0;
+	    }
+
+	    if ( good ) {
+	      char b [ 2 ] = { '\0', '\0' };
+	      if ( shifted ) {
+		b [ 0 ] = toupper ( event.key.keysym.sym );
+	      } else {
+		b [ 0 ] = event.key.keysym.sym;
+	      }
+	      strncat ( r_buffer, b, maxlen );
+	    } // good?
+
+	  } // printable?
+
+	}
+
+	break;
+
+      } // switch
+
+      break;
+
+    } // while waiting for input
+
+  } // while
+  
+  return ( 0 );
+}
+
+unsigned char ovr_replace_or_add ( mm_appref_t *a, char *keybase, char *newvalue ) {
+  printf ( "setting %s:%u - '%s' to '%s' - %s/%s\n", a -> ref -> title_en, a -> ref -> subapp_number, keybase, newvalue, a -> ref -> object_path, a -> ref -> object_filename );
+
+  char fullpath [ PATH_MAX ];
+
+  sprintf ( fullpath, "%s/%s", a -> ref -> object_path, a -> ref -> object_filename );
+  char *dot = strrchr ( fullpath, '.' );
+  if ( dot ) {
+    sprintf ( dot, PXML_SAMEPATH_OVERRIDE_FILEEXT );
+  } else {
+    fprintf ( stderr, "ERROR: Bad pnd-path in disco_t! %s\n", fullpath );
+    return ( 0 );
+  }
+
+  struct stat statbuf;
+
+  if ( stat ( fullpath, &statbuf ) == 0 ) {
+    // file exists
+    pnd_conf_handle h;
+
+    h = pnd_conf_fetch_by_path ( fullpath );
+
+    if ( ! h ) {
+      return ( 0 ); // fail!
+    }
+
+    char key [ 101 ];
+    snprintf ( key, 100, "Application-%u.%s", a -> ref -> subapp_number, keybase );
+
+    pnd_conf_set_char ( h, key, newvalue );
+
+    return ( pnd_conf_write ( h, fullpath ) );
+
+  } else {
+    // file needs to be created - easy!
+
+    FILE *f = fopen ( fullpath, "w" );
+
+    if ( f ) {
+      fprintf ( f, "Application-%u.%s\t%s\n", a -> ref -> subapp_number, keybase, newvalue );
+      fclose ( f );
+
+    } else {
+      return ( 0 ); // fail!
+    }
+
+  } // new or used?
+
+  return ( 1 );
 }

@@ -488,6 +488,11 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   }
 #endif
 
+  // if this is a subcat push, and its requesting special 'no subcat', then just ditch it
+  if ( parentcatname && strcmp ( catname, "NoSubcategory" ) == 0 ) {
+    return ( 1 );
+  }
+
   // do we honour cat mapping at all?
   if ( pnd_conf_get_as_int_d ( g_conf, "categories.map_on", 0 ) ) {
 

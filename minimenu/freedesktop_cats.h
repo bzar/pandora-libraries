@@ -8,6 +8,8 @@ typedef struct {
   char *desc;
 } freedesktop_cat_t;
 
+extern freedesktop_cat_t freedesktop_complete[];
+
 // return NULL on error, otherwise a category entry
 freedesktop_cat_t *freedesktop_category_query ( char *name );
 

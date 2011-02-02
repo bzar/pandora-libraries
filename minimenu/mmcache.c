@@ -5,6 +5,7 @@
 #include <limits.h> /* for PATH_MAX */
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h> /* for time() */
 
 #define __USE_GNU /* for strcasestr */
 #include <string.h> /* for making ftw.h happy */

@@ -12,6 +12,8 @@ freedesktop_cat_t freedesktop_complete[] = {
 
   // HACK
   { BADCATNAME,         NULL,           "Lazy PXML dev is lazy." },
+  { "NoParentCategory", NULL,           "To mean no parent category" },
+  { "NoSubcategory",    "NoneParent",   "To mean no subcategory" },
   // HACK
 
   { "AudioVideo",       NULL,           "A multimedia (audio/video) application" },
