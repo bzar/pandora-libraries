@@ -153,7 +153,7 @@ unsigned char ui_setup ( void ) {
 #endif
 
   // key repeat
-  SDL_EnableKeyRepeat ( 500, 150 );
+  SDL_EnableKeyRepeat ( 500, 125 /* 150 */ );
 
   // images
   //IMG_Init ( IMG_INIT_JPG | IMG_INIT_PNG );
@@ -3378,7 +3378,7 @@ void ui_menu_context ( mm_appref_t *a ) {
 	  unsigned char optmax = 0;
 	  unsigned char i;
 
-	  i = 0;
+	  i = 2; // skip first two - Other and NoParentCategory
 	  while ( 1 ) {
 
 	    if ( ! freedesktop_complete [ i ].cat ) {
