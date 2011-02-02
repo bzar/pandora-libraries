@@ -3274,6 +3274,9 @@ void ui_menu_context ( mm_appref_t *a ) {
     context_app_rename,
     context_app_cpuspeed,
     context_app_run,
+    context_app_notes1,
+    context_app_notes2,
+    context_app_notes3,
     context_menu_max
   };
 
@@ -3287,7 +3290,10 @@ void ui_menu_context ( mm_appref_t *a ) {
     "Recategorize subcategory",   //             recategorize
     "Change displayed title",     //             rename
     "Set CPU speed for launch",   //             cpuspeed
-    "Run application"             //             run
+    "Run application",            //             run
+    "Edit notes line 1",          //             notes1
+    "Edit notes line 2",          //             notes2
+    "Edit notes line 3",          //             notes3
   };
 
   unsigned short int menu [ context_menu_max ];
@@ -3303,6 +3309,11 @@ void ui_menu_context ( mm_appref_t *a ) {
     menu [ menumax ] = context_file_info; menustring [ menumax++ ] = verbiage [ context_file_info ];
     menu [ menumax ] = context_file_delete; menustring [ menumax++ ] = verbiage [ context_file_delete ];
   } else {
+
+    if ( a -> ref -> object_type == pnd_object_type_directory ) {
+      return; // don't do anything if the guy is a subcat-as-folder
+    }
+
     //menu [ menumax ] = context_app_info; menustring [ menumax++ ] = verbiage [ context_app_info ];
     menu [ menumax ] = context_app_run; menustring [ menumax++ ] = verbiage [ context_app_run ];
     menu [ menumax ] = context_app_hide; menustring [ menumax++ ] = verbiage [ context_app_hide ];
@@ -3310,6 +3321,9 @@ void ui_menu_context ( mm_appref_t *a ) {
     menu [ menumax ] = context_app_recategorize_sub; menustring [ menumax++ ] = verbiage [ context_app_recategorize_sub ];
     menu [ menumax ] = context_app_rename; menustring [ menumax++ ] = verbiage [ context_app_rename ];
     menu [ menumax ] = context_app_cpuspeed; menustring [ menumax++ ] = verbiage [ context_app_cpuspeed ];
+    menu [ menumax ] = context_app_notes1; menustring [ menumax++ ] = verbiage [ context_app_notes1 ];
+    menu [ menumax ] = context_app_notes2; menustring [ menumax++ ] = verbiage [ context_app_notes2 ];
+    menu [ menumax ] = context_app_notes3; menustring [ menumax++ ] = verbiage [ context_app_notes3 ];
   }
 
   // operate the menu
@@ -3486,6 +3500,48 @@ void ui_menu_context ( mm_appref_t *a ) {
 	ui_push_exec();
 	break;
 
+      case context_app_notes1:
+      case context_app_notes2:
+      case context_app_notes3:
+	{
+	  char namebuf [ 101 ] = "";
+
+	  char key [ 501 ];
+	  unsigned char notenum;
+
+	  // which note line?
+	  if ( menu [ sel ] == context_app_notes1 ) {
+	    notenum = 1;
+	  } else if ( menu [ sel ] == context_app_notes2 ) {
+	    notenum = 2;
+	  } else if ( menu [ sel ] == context_app_notes3 ) {
+	    notenum = 3;
+	  }
+
+	  // figure out key for looking up existing, and for storing replacement
+	  snprintf ( key, 500, "Application-%u.note-%u", a -> ref -> subapp_number, notenum );
+
+	  // do we have existing value?
+	  if ( a -> ovrh ) {
+	    char *existing = pnd_conf_get_as_char ( a -> ovrh, key );
+	    if ( existing ) {
+	      strncpy ( namebuf, existing, 100 );
+	    }
+	  }
+
+	  unsigned char changed;
+
+	  changed = ui_menu_get_text_line ( "Enter replacement note", "Use keyboard; Enter when done.",
+					    namebuf, namebuf, 30, 0 /* not-numeric-forced */ );
+
+	  if ( changed ) {
+	    ovr_replace_or_add ( a, strchr ( key, '.' ) + 1, namebuf );
+	    rescan_apps++;
+	  }
+
+	}
+	break;
+
       default:
 	return;
 
@@ -3529,7 +3585,11 @@ unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialva
   bzero ( rects, sizeof(SDL_Rect) * 40 );
 
   if ( initialvalue ) {
-    strncpy ( r_buffer, initialvalue, maxlen );
+    if ( initialvalue == r_buffer ) {
+      // already good to go
+    } else {
+      strncpy ( r_buffer, initialvalue, maxlen );
+    }
   } else {
     bzero ( r_buffer, maxlen );
   }
