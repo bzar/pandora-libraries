@@ -370,17 +370,25 @@ void ui_render ( void ) {
   // ensure selection is visible
   if ( ui_selected ) {
 
-    int index = ui_selected_index();
-    int topleft = c -> col_max * ui_rows_scrolled_down;
-    int botright = ( c -> col_max * ( ui_rows_scrolled_down + c -> row_max ) - 1 );
+    unsigned char autoscrolled = 1;
+    while ( autoscrolled ) {
+      autoscrolled = 0;
 
-    if ( index < topleft ) {
-      ui_rows_scrolled_down -= pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
-      render_jobs_b |= R_ALL;
-    } else if ( index > botright ) {
-      ui_rows_scrolled_down += pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
-      render_jobs_b |= R_ALL;
-    }
+      int index = ui_selected_index();
+      int topleft = c -> col_max * ui_rows_scrolled_down;
+      int botright = ( c -> col_max * ( ui_rows_scrolled_down + c -> row_max ) - 1 );
+
+      if ( index < topleft ) {
+	ui_rows_scrolled_down -= pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
+	render_jobs_b |= R_ALL;
+	autoscrolled = 1;
+      } else if ( index > botright ) {
+	ui_rows_scrolled_down += pnd_conf_get_as_int_d ( g_conf, "grid.scroll_increment", 1 );
+	render_jobs_b |= R_ALL;
+	autoscrolled = 1;
+      }
+
+    } // while autoscrolling
 
     if ( ui_rows_scrolled_down < 0 ) {
       ui_rows_scrolled_down = 0;
@@ -3296,12 +3304,12 @@ void ui_menu_context ( mm_appref_t *a ) {
     menu [ menumax ] = context_file_delete; menustring [ menumax++ ] = verbiage [ context_file_delete ];
   } else {
     //menu [ menumax ] = context_app_info; menustring [ menumax++ ] = verbiage [ context_app_info ];
+    menu [ menumax ] = context_app_run; menustring [ menumax++ ] = verbiage [ context_app_run ];
     menu [ menumax ] = context_app_hide; menustring [ menumax++ ] = verbiage [ context_app_hide ];
     menu [ menumax ] = context_app_recategorize; menustring [ menumax++ ] = verbiage [ context_app_recategorize ];
     menu [ menumax ] = context_app_recategorize_sub; menustring [ menumax++ ] = verbiage [ context_app_recategorize_sub ];
     menu [ menumax ] = context_app_rename; menustring [ menumax++ ] = verbiage [ context_app_rename ];
     menu [ menumax ] = context_app_cpuspeed; menustring [ menumax++ ] = verbiage [ context_app_cpuspeed ];
-    menu [ menumax ] = context_app_run; menustring [ menumax++ ] = verbiage [ context_app_run ];
   }
 
   // operate the menu
@@ -3608,8 +3616,10 @@ unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialva
       case SDL_KEYDOWN:
 
 	if ( event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_BACKSPACE ) {
-	  char *eol = strchr ( r_buffer, '\0' );
-	  *( eol - 1 ) = '\0';
+	  if ( strlen ( r_buffer ) > 0 ) {
+	    char *eol = strchr ( r_buffer, '\0' );
+	    *( eol - 1 ) = '\0';
+	  }
 	} else if ( event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_END ) { // return, or "B"
 	  return ( 1 );
 
