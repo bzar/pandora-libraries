@@ -1431,7 +1431,7 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	  //fprintf ( stderr, "sel %s next %s\n", ui_selected -> ref -> title_en, ui_selected -> next -> ref -> title_en );
 
 	  // are we already matching the same char? and next item is also same char?
-	  if ( app && ui_selected &&
+	  if ( app && ui_selected && ui_selected -> next &&
 	       ui_selected -> ref -> title_en && ui_selected -> next -> ref -> title_en &&
 	       toupper ( ui_selected -> ref -> title_en [ 0 ] ) == toupper ( ui_selected -> next -> ref -> title_en [ 0 ] ) &&
 	       toupper ( ui_selected -> ref -> title_en [ 0 ] ) == toupper ( event.key.keysym.sym )
@@ -1721,11 +1721,19 @@ void ui_push_backup ( void ) {
 
     // set to first cat!
     ui_category = 0;
+
     // republish cats .. shoudl just be the one
     category_publish ( CFNORMAL, NULL );
 
     if ( pcatname ) {
       ui_category = category_index ( pcatname );
+
+      // ensure tab visible?
+      unsigned int tab_width = pnd_conf_get_as_int ( g_conf, "tabs.tab_width" );
+      if ( ui_category > ui_catshift + ( ui_display_context.screen_width / tab_width ) - 1 ) {
+	ui_catshift = ui_category - ( ui_display_context.screen_width / tab_width ) + 1;
+      }
+
     }
 
   } // dir or subcat?
@@ -1762,6 +1770,8 @@ void ui_push_exec ( void ) {
 
 	  // set to first cat!
 	  ui_category = 0;
+	  ui_catshift = 0;
+
 	  // republish cats .. shoudl just be the one
 	  category_publish ( CFBYNAME, ui_selected -> ref -> object_path );
 
