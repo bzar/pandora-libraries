@@ -943,6 +943,30 @@ void ui_render ( void ) {
 
       desty += src.h;
 
+      rtext = TTF_RenderText_Blended ( g_detailtext_font, "START or B to run app", c -> fontcolor );
+      dest -> x = cell_offset_x;
+      dest -> y = desty;
+      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+      desty += src.h;
+
+      rtext = TTF_RenderText_Blended ( g_detailtext_font, "SPACE for app menu", c -> fontcolor );
+      dest -> x = cell_offset_x;
+      dest -> y = desty;
+      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+      desty += src.h;
+
+      rtext = TTF_RenderText_Blended ( g_detailtext_font, "A to toggle details", c -> fontcolor );
+      dest -> x = cell_offset_x;
+      dest -> y = desty;
+      SDL_BlitSurface ( rtext, &src, sdl_realscreen, dest );
+      SDL_FreeSurface ( rtext );
+      dest++;
+      desty += src.h;
+
     } // r_detail && selected?
 
   } // r_detail
