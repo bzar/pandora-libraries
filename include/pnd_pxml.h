@@ -12,7 +12,7 @@ extern "C" {
 #define PXML_TAGHEAD "<PXML" /* case insensitive; allow for trailing attributes */
 #define PXML_TAGFOOT "</PXML>" /* case insensitive */
 
-#define PXML_MAXAPPS 20 /* max number of <application>'s within a single PXML */
+#define PXML_MAXAPPS 50 /* max number of <application>'s within a single PXML */ /* TODO: make this realloc() and dynamicly grow instead.. */
 
 // for DaveC, we will support same-path-as-.pnd file override, that is simple format and not XML
 #define PXML_SAMEPATH_OVERRIDE_FILEEXT ".ovr" /* ./foo/bar.pnd could have overrides in ./foo/bar.ovr */
