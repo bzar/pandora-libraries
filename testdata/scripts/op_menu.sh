@@ -9,7 +9,8 @@ fi
 xpid=$(pidof xfce4-session)
 if [ $xpid ]; then
   echo "xfce4 is running"
-  xfceuser=$(ps u -C xfce4-session | tail -n1 | awk '{print $1}')
+  # note: max username length ps can output is 19, otherwise it prints uid
+  xfceuser=$(ps -o user:20= -C xfce4-session | tail -n1 | awk '{print $1}')
   if [ $killist ]; then
     echo "displaying kill list"
     pidlist=$(pstree -lpA | grep pnd_run.sh | sed -ne 's/.*-\(.*\)(\([0-9]\+\))/\2\n \1/p' | su -c 'DISPLAY=:0.0 zenity --list --multiple --column "pid" --column "name" --title "kill" --text "which apps should be killed"' - $xfceuser | sed 's/|/\n/')
@@ -18,7 +19,7 @@ if [ $xpid ]; then
       kill -9 $PID
     done
   else
-    echo "starting appfinder"
+    # echo "starting appfinder"
     # invoke the appfinder; nice app, but it takes a few seconds to come up
     #su -c 'DISPLAY=:0.0 xfce4-appfinder' - $xfceuser
     # invoke the bottom-left popup menu, for launching new apps, instead.
