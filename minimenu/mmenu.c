@@ -659,13 +659,13 @@ void applications_scan ( void ) {
 	if ( iter -> unique_id && app_is_visible ( g_conf, iter -> unique_id ) ) {
 
 	  // main categories
-	  category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat", 1 ) );
-	  category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat1", 0 ) );
-	  category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_maincat2", 0 ) );
+	  category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category ), 1);
+	  category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category1 ), 0 );
+	  category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category2 ), 0 );
 	  // alt categories
-	  category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat", 0 ) );
-	  category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category1 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat1", 0 ) );
-	  category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category2 ) ); //pnd_conf_get_as_int_d ( g_conf, "tabs.top_altcat2", 0 ) );
+	  category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ), 1 );
+	  category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category1 ), 0 );
+	  category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category2 ), 0 );
 
 	} // app is visible?
 

@@ -57,7 +57,7 @@ typedef struct {
 
 unsigned char category_map_setup ( void ); // set up the mappings
 mm_category_t *category_map_query ( char *cat );
-unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep );
+unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep, unsigned char parentp );
 
 // filesystem browser
 unsigned char category_fs_restock ( mm_category_t *cat );

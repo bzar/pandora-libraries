@@ -318,7 +318,7 @@ mm_category_t *category_map_query ( char *cat ) {
   return ( NULL );
 }
 
-unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep ) {
+unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, unsigned char visiblep, unsigned char parentp ) {
   mm_category_t *cat;
 #if 0 // prepending
   char catnamebuffer [ 512 ] = "";
@@ -522,6 +522,24 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
       return ( 1 ); // success, already there!
     }
   }
+
+  // are we not putting apps into parent cat, when subcat is present? if so..
+  // if the cat we're looking at now is the main (or main alt-cat), and we also have a subcat, then ditch it.
+  // so, is the cat we're looking at right now the apps main (or main alt) cat?
+  if ( parentp ) {
+    // and does this app have sub/altsub cats?
+    if ( app -> main_category1 || app -> main_category2 ||
+	 app -> alt_category1 || app -> alt_category2 )
+    {
+      // and we're only desiring the subcat version of the app?
+      if ( pnd_conf_get_as_int_d ( g_conf, "tabs.subcat_to_parent", 1 ) == 0 ) {
+	// create the parent category, since we need to be able to place a folder here maybe
+	category_push ( catname, parentcatname /* parent cat */, NULL /* app */, NULL /* ovrh */, NULL /* fspath */, visiblep );
+	// bail
+	return ( 1 );
+      } // subcat to parent?
+    } // app has subcat?
+  } // tab we're looking at now is the main tab?
 
   // not default, just do it
   category_push ( catname, parentcatname /* parent cat */, app, ovrh, NULL /* fspath */, visiblep );
@@ -763,12 +781,22 @@ void category_publish ( unsigned int filter_mask, char *param ) {
       interested = 1;
     } // if
 
+    // desired tab?
     if ( interested ) {
-      // set us up the bomb; notice that we're just duplicating the pointers, not making
-      // any new data here; none of this should ever be free'd!
-      g_categories [ g_categorycount ] = iter;
-      g_categorycount++;
-    }
+
+      // lets only publish tabs that actually have an app in them .. just in case we've
+      // pruned out all the apps (sent them to Other or are suppressing apps in parent cats or
+      // something) at some point.
+      if ( iter -> fspath || iter -> refs ) {
+
+	// set us up the bomb; notice that we're just duplicating the pointers, not making
+	// any new data here; none of this should ever be free'd!
+	g_categories [ g_categorycount ] = iter;
+	g_categorycount++;
+
+      } // has apps?
+
+    } // interested?
 
     // next
     iter = pnd_box_get_next ( iter );
