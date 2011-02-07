@@ -335,6 +335,11 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     goto category_done_audit;
   }
 
+  // check if category came from an ovr-file; if so, we implicitly trust it instead of enforcing rules
+  if ( app -> object_flags & ( PND_DISCO_CUSTOM1 | PND_DISCO_CUSTOM1 ) ) {
+    goto category_done_audit;
+  }
+
   // category cleansing; lets..
   // - ensure we only let good freedesktop categories through
   // - we fix case.. no more UtIliTy (a good cat, studlycaps)

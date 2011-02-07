@@ -44,8 +44,10 @@ typedef enum {
 // fetch the full PXML and get all the details. But I think we got out of control here :)
 // NOTE: We really need to rework disco-t so it can include non-english titles/desc; perhaps more info as optional,
 //   or a name/value pairing system so it can have extra data in it, without a complex structure.
-#define PND_DISCO_FLAG_OVR 1   // An ovr file was found for this app (not per subapp, just per .pnd)
-#define PND_DISCO_GENERATED 2  // This disco is 'faux', made up and not reflecting a real 'pnd file'
+#define PND_DISCO_FLAG_OVR 1       // An ovr file was found for this app (not per subapp, just per .pnd)
+#define PND_DISCO_GENERATED 2      // This disco is 'faux', made up and not reflecting a real 'pnd file'
+#define PND_DISCO_CUSTOM1 (1<<30)  // An app may make use of this bitflag safely
+#define PND_DISCO_CUSTOM2 (1<<31)  // An app may make use of this bitflag safely
 typedef struct {
   // base
   unsigned char object_type;   // see enum above
@@ -53,7 +55,7 @@ typedef struct {
   char *object_filename;       // filename within object_path of the app: the PXML.xml or awesomeapp.pnd file itself
   unsigned int pnd_icon_pos;   // offset to the byte after end of PXML in a pnd file (should be icon if present)
   unsigned char subapp_number; // # of app within PXML (ie: 0, 1, 2, 3, up to the number of apps within the PXML)
-  unsigned int object_flags;
+  unsigned int object_flags;   // see PND_DISCO_ bitmasks above
   // strdup'd from PXML -- hey, who was the idiot who thought it was a reat idea not to just re-use the pxml-struct?
   char *title_en;
   char *desc_en;

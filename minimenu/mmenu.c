@@ -617,6 +617,25 @@ void applications_scan ( void ) {
       }
 #endif
 
+      if ( ovrh ) {
+	// lets also check to see if this ovr is specifying category overrides; if so, we can trust those
+	// more than categories specified by pnd-packager.
+	char ovrkey [ 41 ];
+
+	snprintf ( ovrkey, 40, "Application-%u.maincategory", iter -> subapp_number );
+	if ( pnd_conf_get_as_char ( ovrh, ovrkey ) ) {
+	  iter -> object_flags |= PND_DISCO_CUSTOM1;
+	  //printf ( "App '%s' has main cat ovr %s\n", iter -> title_en, pnd_conf_get_as_char ( ovrh, ovrkey ) );
+	}
+
+	snprintf ( ovrkey, 40, "Application-%u.maincategorysub1", iter -> subapp_number );
+	if ( pnd_conf_get_as_char ( ovrh, ovrkey ) ) {
+	  iter -> object_flags |= PND_DISCO_CUSTOM2;
+	  //printf ( "App '%s' has sub cat ovr %s\n", iter -> title_en, pnd_conf_get_as_char ( ovrh, ovrkey ) );
+	}
+
+      } // got ovr loaded/
+
     } // ovr
 
     // cache the icon, unless deferred
