@@ -3404,6 +3404,8 @@ void ui_menu_context ( mm_appref_t *a ) {
 	    if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm categorization", "Do not set category" ) == 1 ) {
 	      ovr_replace_or_add ( a, "maincategory", opts [ sel ] );
 	      rescan_apps++;
+	      // when changing main cat, reset subcat, otherwise you go from Game/Emu to Network/Emu and get sent to Other right away
+	      ovr_replace_or_add ( a, "maincategorysub1", freedesktop_complete [ 2 ].cat );
 	    }
 
 	  }
@@ -3418,13 +3420,25 @@ void ui_menu_context ( mm_appref_t *a ) {
 	  unsigned char i;
 
 	  i = 0;
+	  opts [ optmax++ ] = freedesktop_complete [ 2 ].cat;
+
 	  while ( 1 ) {
 
 	    if ( ! freedesktop_complete [ i ].cat ) {
 	      break;
 	    }
 
-	    if ( freedesktop_complete [ i ].parent_cat ) {
+	    char *whichparentarewe;
+	    if ( g_categories [ ui_category ] -> parent_catname ) {
+	      whichparentarewe = g_categories [ ui_category ] -> parent_catname;
+	    } else {
+	      whichparentarewe = g_categories [ ui_category ] -> catname;
+	    }
+
+	    if ( ( freedesktop_complete [ i ].parent_cat ) &&
+		 ( strcasecmp ( freedesktop_complete [ i ].parent_cat, whichparentarewe ) == 0 )
+	       )
+	    {
 	      opts [ optmax++ ] = freedesktop_complete [ i ].cat;
 	    }
 

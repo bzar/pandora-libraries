@@ -342,7 +342,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   }
 
   // check if category came from an ovr-file; if so, we implicitly trust it instead of enforcing rules
-  if ( app -> object_flags & ( PND_DISCO_CUSTOM1 | PND_DISCO_CUSTOM1 ) ) {
+  if ( app -> object_flags & ( PND_DISCO_CUSTOM1 | PND_DISCO_CUSTOM2 ) ) {
     goto category_done_audit;
   }
 
@@ -539,9 +539,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   // so, is the cat we're looking at right now the apps main (or main alt) cat?
   if ( parentp ) {
     // and does this app have sub/altsub cats?
-    if ( app -> main_category1 || app -> main_category2 ||
-	 app -> alt_category1 || app -> alt_category2 )
-    {
+    if ( app -> main_category1 || app -> main_category2 || app -> alt_category1 || app -> alt_category2 ) {
       // and we're only desiring the subcat version of the app?
       if ( pnd_conf_get_as_int_d ( g_conf, "tabs.subcat_to_parent", 1 ) == 0 ) {
 	// create the parent category, since we need to be able to place a folder here maybe

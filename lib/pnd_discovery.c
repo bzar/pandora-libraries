@@ -366,8 +366,11 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
 	  if ( p -> main_category1 ) {
 	    free ( p -> main_category1 );
+	    p -> main_category1 = NULL;
 	  }
-	  p -> main_category1 = strdup ( v );
+	  if ( strcasecmp ( v, "NoSubcategory" ) != 0 ) {
+	    p -> main_category1 = strdup ( v );
+	  }
 	}
 
       } // got ovr conf loaded?

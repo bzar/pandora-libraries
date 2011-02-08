@@ -176,6 +176,15 @@ freedesktop_cat_t freedesktop_complete[] = {
 freedesktop_cat_t *freedesktop_category_query ( char *name, char *parentcatname ) {
   freedesktop_cat_t *p = freedesktop_complete;
 
+  // if we're supplied "NoSubcategory" virtual name, then we set it to NULL for the search
+#if 0
+  if ( parentcatname && strcasecmp ( name, freedesktop_complete [ 2 ].cat ) == 0 ) {
+    name = parentcatname;
+    parentcatname = NULL;
+  }
+#endif
+
+  // search for the cat/parent combination
   while ( p -> cat ) {
 
     if ( strcasecmp ( p -> cat, name ) == 0 ) {
