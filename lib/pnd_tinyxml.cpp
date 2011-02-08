@@ -80,24 +80,25 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
 	    continue;
 	  }
 
-		char *text = strdup(pElem->GetText());
-		if (!text) continue;
+	  char *text = strdup(pElem->GetText());
+	  if (!text) continue;
 
-		char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
-		if (!lang) continue;
+	  char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
+	  if (!lang) continue;
 
-		app->descriptions_c++;
-		if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
-		{
-			app->descriptions_alloc_c <<= 1;
-			app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c);
-			if (!app->descriptions) return (0); //errno = ENOMEM
-		}
+	  app->descriptions_c++;
+	  if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
+	  {
+	    app->descriptions_alloc_c <<= 1;
+	    app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
+	    if (!app->descriptions) return (0); //errno = ENOMEM
+	  }
 
-		pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
-		description->language = lang;
-		description->string = text;
+	  pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
+	  description->language = lang;
+	  description->string = text;
 	}
+
 	return (1);
 }
 

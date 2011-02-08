@@ -1,0 +1,1094 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PXML xmlns="http://openpandora.org/namespaces/PXML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+<!-- please see http://pandorawiki.org/PXML_specification for more information before editing -->
+
+  <application id="kde-games-bomber-17790" appdata="kde-games">
+    <exec command="scripts/bomber.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/bomber.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/bomber.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-bovo-17790" appdata="kde-games">
+    <exec command="scripts/bovo.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/bovo.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/bovo.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-granatier-17790" appdata="kde-games">
+    <exec command="scripts/granatier.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/granatier.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/doc/HTML/en/granatier/granatier.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kapman-17790" appdata="kde-games">
+    <exec command="scripts/kapman.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kapman.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/doc/HTML/en/kapman/kapman.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-katomic-17790" appdata="kde-games">
+    <exec command="scripts/katomic.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/katomic.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/katomic.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kbattleship-17790" appdata="kde-games">
+    <exec command="scripts/kbattleship.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kbattleship.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kbattleship.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kblackbox-17790" appdata="kde-games">
+    <exec command="scripts/kblackbox.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kblackbox.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kblackbox.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kblocks-17790" appdata="kde-games">
+    <exec command="scripts/kblocks.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kblocks.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kblocks.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kbounce-17790" appdata="kde-games">
+    <exec command="scripts/kbounce.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kbounce.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kbounce.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kbreakout-17790" appdata="kde-games">
+    <exec command="scripts/kbreakout.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kbreakout.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kbreakout.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kdiamond-17790" appdata="kde-games">
+    <exec command="scripts/kdiamond.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kdiamond.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kdiamond.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="LogicGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kfourinline-17790" appdata="kde-games">
+    <exec command="scripts/kfourinline.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kfourinline.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kfourinline.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kgoldrunner-17790" appdata="kde-games">
+    <exec command="scripts/kgoldrunner.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kgoldrunner.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kgoldrunner.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kigo-17790" appdata="kde-games">
+    <exec command="scripts/kigo.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kigo.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kigo.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-killbots-17790" appdata="kde-games">
+    <exec command="scripts/killbots.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/killbots.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/killbots.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kiriki-17790" appdata="kde-games">
+    <exec command="scripts/kiriki.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kiriki.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kiriki.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kjumpingcube-17790" appdata="kde-games">
+    <exec command="scripts/kjumpingcube.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kjumpingcube.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kjumpingcube.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-klines-17790" appdata="kde-games">
+    <exec command="scripts/klines.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/klines.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/klines.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kmahjongg-17790" appdata="kde-games">
+    <exec command="scripts/kmahjongg.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kmahjongg.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kmahjongg.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kmines-17790" appdata="kde-games">
+    <exec command="scripts/kmines.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kmines.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kmines.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-knetwalk-17790" appdata="kde-games">
+    <exec command="scripts/knetwalk.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/knetwalk.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/knetwalk.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kolf-17790" appdata="kde-games">
+    <exec command="scripts/kolf.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kolf.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kolf.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kollision-17790" appdata="kde-games">
+    <exec command="scripts/kollision.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kollision.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/oxygen/48x48/apps/kollision.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-konquest-17790" appdata="kde-games">
+    <exec command="scripts/konquest.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/konquest.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/konquest.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kpat-17790" appdata="kde-games">
+    <exec command="scripts/kpat.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kpat.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/256x256/apps/kpat.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="CardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kreversi-17790" appdata="kde-games">
+    <exec command="scripts/kreversi.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kreversi.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kreversi.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ksame-17790" appdata="kde-games">
+    <exec command="scripts/ksame.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ksame.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/ksame.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kshisen-17790" appdata="kde-games">
+    <exec command="scripts/kshisen.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kshisen.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kshisen.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kspaceduel-17790" appdata="kde-games">
+    <exec command="scripts/kspaceduel.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kspaceduel.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/kspaceduel.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ksquares-17790" appdata="kde-games">
+    <exec command="scripts/ksquares.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ksquares.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/ksquares.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ksudoku-17790" appdata="kde-games">
+    <exec command="scripts/ksudoku.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ksudoku.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/apps/ksudoku/icons/oxygen/48x48/actions/ksudoku.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="LogicGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ktron-17790" appdata="kde-games">
+    <exec command="scripts/ktron.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ktron.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/256x256/apps/kdesnake.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ktuberling-17790" appdata="kde-games">
+    <exec command="scripts/ktuberling.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ktuberling.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/doc/HTML/en/ktuberling/ktuberling.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="KidsGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-lskat-17790" appdata="kde-games">
+    <exec command="scripts/lskat.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/lskat.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/lskat.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="CardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-palapeli-17790" appdata="kde-games">
+    <exec command="scripts/palapeli.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/palapeli.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src="/mnt/utmp/kde-games/share/icons/hicolor/48x48/apps/palapeli.png"/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Game">
+        <subcategory name="ArcadeGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kajongg-17790" appdata="kde-games">
+    <exec command="scripts/kajongg.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kajongg.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src=""/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="BoardGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ksirk-17790" appdata="kde-games">
+    <exec command="scripts/ksirk.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ksirk.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src=""/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-ksirkskineditor-17790" appdata="kde-games">
+    <exec command="scripts/ksirkskineditor.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/ksirkskineditor.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src=""/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+  <application id="kde-games-kubrick-17790" appdata="kde-games">
+    <exec command="scripts/kubrick.sh"/>
+    <author name="the KDEgames team -package by sebt3" website="http://www.kde.org/"/>		<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <previewpics>
+<!-- <pic src="previews/kubrick.png"/> -->
+    </previewpics>
+    <version major="4" minor="5" release="0" build="1"/>              <!--This programs version-->
+    <icon src=""/>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="Qt">
+        <subcategory name="KDE"/>
+      </category>
+      <category name="Game">
+        <subcategory name="LogicGame"/>
+      </category>
+    </categories>
+  <!-- You can also use these 
+    <clockspeed frequency="600"/>
+    <icon>someIcon.png</icon>
+    <background>Yes</background>
+    <standalone>No</standalone>
+    <startdir>someDirectoryInsidePnd</startdir>
+    <info name="My freaking documentation" type="text/html" src="index.html"/>
+  -->
+  </application>
+
+</PXML>

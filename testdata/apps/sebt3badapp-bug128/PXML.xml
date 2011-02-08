@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PXML xmlns="http://openpandora.org/namespaces/PXML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
+<!-- please see http://pandorawiki.org/PXML_specification for more information before editing -->
+
+  <application id="audacious-audacious2-13669" appdata="audacious">
+    <exec command="scripts/audacious2.sh"/>
+    <author name="sebt3" website="http://www.openpandora.org"/>	<!--Optional email and website, name required-->
+    <osversion major="1" minor="0" release="0" build="0"/>		<!--The minimum OS version required-->
+    <clockspeed frequency="600"/>					<!--Frequency in Hz ; removed if unused -->
+    <previewpics>
+<!-- <pic src="previews/audacious2.png"/> -->
+    </previewpics>
+    <version major="2" minor="3" release="" build="1"/>              <!--This programs version-->
+    <title lang="en_US">Audacious</title>
+    <description lang="en_US">Listen to music</description>
+    <description lang="be">Слухайце музыку</description>
+    <description lang="de">Musik hören</description>
+    <description lang="fr">Écouter de la musique</description>
+    <description lang="hu">Hallgasson zenét</description>
+    <description lang="it">Ascoltare musica</description>
+    <description lang="lt">Klausyti muzikos</description>
+    <description lang="nl">Muziek luisteren</description>
+    <description lang="ru">Слушайте музыку</description>
+    <categories>
+      <!-- http://standards.freedesktop.org/menu-spec/latest/apa.html -->
+      <category name="AudioVideo">
+        <subcategory name="Audio"/>
+      </category>
+    </categories>
+  </application>
+
+</PXML>

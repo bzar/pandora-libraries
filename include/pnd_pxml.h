@@ -23,8 +23,8 @@ typedef void* pnd_pxml_handle;
 
 /* pxml_fetch() will return NULL on fail, otherwise a valid handle which may be further queried
  */
-pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath );
-pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer );
+pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath );                         // fetch from file
+pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer );    // fetch from a buffer
 void pnd_pxml_delete ( pnd_pxml_handle h );
 
 /* overrides() allow for customization of a PXML that persists; ie: An application might be sitting
