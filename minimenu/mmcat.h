@@ -63,7 +63,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 unsigned char category_fs_restock ( mm_category_t *cat );
 
 // apps within cats
-unsigned char category_contains_app ( char *catname, char *unique_id );
+unsigned char category_contains_app ( char *catname, char *parentcatname, char *unique_id );
 
 // advertising to rest of the system
 //

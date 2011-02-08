@@ -39,6 +39,12 @@ void category_init ( void ) {
   return;
 }
 
+static char *_normalize ( char *catname, char *parentcatname ) {
+  static char buffer [ 101 ];
+  snprintf ( buffer, 100, "%s*%s", catname, parentcatname ? parentcatname : "NoParent" );
+  return ( buffer );
+}
+
 unsigned char category_push ( char *catname, char *parentcatname, pnd_disco_t *app, pnd_conf_handle ovrh, char *fspath, unsigned char visiblep ) {
   mm_category_t *c;
 
@@ -51,12 +57,12 @@ unsigned char category_push ( char *catname, char *parentcatname, pnd_disco_t *a
   // find or create category
   //
 
-  if ( ( c = pnd_box_find_by_key ( m_categories, catname ) ) ) {
+  if ( ( c = pnd_box_find_by_key ( m_categories, _normalize ( catname, parentcatname ) ) ) ) {
     // category was found..
   } else {
     // category wasn't found..
     //pnd_log ( PND_LOG_DEFAULT, "New category '%s'\n", catname );
-    c = pnd_box_allocinsert ( m_categories, catname, sizeof(mm_category_t) );
+    c = pnd_box_allocinsert ( m_categories, _normalize ( catname, parentcatname ), sizeof(mm_category_t) );
     c -> catname = strdup ( catname );
     if ( parentcatname ) {
       c -> parent_catname = strdup ( parentcatname );
@@ -291,7 +297,7 @@ unsigned char category_map_setup ( void ) {
 	//pnd_log ( pndn_debug, "target(%s) from(%s)\n", k, buffer );
 
 	category_push ( k, NULL /* parent cat */, NULL, 0, NULL /* fspath */, 1 );
-	g_catmaps [ g_catmapcount ].target = pnd_box_find_by_key ( m_categories, k );
+	g_catmaps [ g_catmapcount ].target = pnd_box_find_by_key ( m_categories, _normalize ( k, NULL /* TBD: hack, not sure if this is right default value */ ) );
 	g_catmaps [ g_catmapcount ].from = strdup ( buffer );
 	g_catmapcount++;
 
@@ -348,9 +354,9 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 
   unsigned char cat_is_clean = 1;
   freedesktop_cat_t *fdcat = NULL, *fdpcat = NULL;
-  fdcat = freedesktop_category_query ( catname );
+  fdcat = freedesktop_category_query ( catname, parentcatname );
   if ( parentcatname ) {
-    fdpcat = freedesktop_category_query ( parentcatname );
+    fdpcat = freedesktop_category_query ( parentcatname, NULL );
   }
 
   // ensure requested cat is good
@@ -360,7 +366,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     printf ( "PXML Fail %s: Cat request %s (parent %s) -> bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
 
     // do the Other substitution right away, so remaining code has something to look at in fdcat
-    fdcat = freedesktop_category_query ( BADCATNAME );
+    fdcat = freedesktop_category_query ( BADCATNAME, NULL );
     catname = fdcat -> cat;
     fdpcat = NULL;
     parentcatname = NULL;
@@ -435,7 +441,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     // set Other visibility
     visiblep = cat_is_visible ( g_conf, BADCATNAME );
     // fix cat request
-    fdcat = freedesktop_category_query ( BADCATNAME );
+    fdcat = freedesktop_category_query ( BADCATNAME, NULL );
     catname = fdcat -> cat;
     // nullify parent cat request (if any)
     fdpcat = NULL;
@@ -522,7 +528,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 
   // is app already in the target cat? (ie: its being pushed twice due to cat mapping or Other'ing or something..)
   if ( app ) {
-    if ( category_contains_app ( catname, app -> unique_id ) ) {
+    if ( category_contains_app ( catname, parentcatname, app -> unique_id ) ) {
       printf ( "App Fail: app (%s %s) is already in cat %s\n", app -> title_en ? app -> title_en : "no name?", app -> unique_id, catname );
       return ( 1 ); // success, already there!
     }
@@ -561,7 +567,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     // iv) create the dummy app folder by pushing the disco into the apprefs as normal
     // v) create a dummy '..' for going back up, in the child
 
-    mm_category_t *pcat = pnd_box_find_by_key ( m_categories, parentcatname );
+    mm_category_t *pcat = pnd_box_find_by_key ( m_categories, _normalize ( parentcatname, NULL ) );
 
     if ( ! pcat -> disco ) {
       pcat -> disco = pnd_box_new ( pcat -> catname );
@@ -589,7 +595,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
 	}
 	disco -> object_flags = PND_DISCO_GENERATED;
 	disco -> object_type = pnd_object_type_directory; // suggest to Grid that its a dir
-	disco -> object_path = strdup ( catname );
+	disco -> object_path = strdup ( _normalize ( catname, parentcatname ) );
 
 	category_push ( parentcatname, NULL /* parent cat */, disco, 0 /*ovrh*/, NULL /* fspath */, 1 /* visible */ );
 
@@ -779,7 +785,10 @@ void category_publish ( unsigned int filter_mask, char *param ) {
     if ( filter_mask == CFALL ) {
       interested = 1;
     } else if ( filter_mask == CFBYNAME ) {
-      if ( strcasecmp ( iter -> catname, param ) == 0 ) {
+      char *foo = strchr ( param, '*' ) + 1;
+      if ( strncasecmp ( iter -> catname, param, strlen ( iter -> catname ) ) == 0 &&
+	   strcasecmp ( iter -> parent_catname, foo ) == 0 )
+      {
 	interested = 1;
       }
     } else if ( iter -> catflags == filter_mask ) {
@@ -854,9 +863,9 @@ int category_index ( char *catname ) {
   return ( -1 );
 }
 
-unsigned char category_contains_app ( char *catname, char *unique_id ) {
+unsigned char category_contains_app ( char *catname, char *parentcatname, char *unique_id ) {
 
-  mm_category_t *c = pnd_box_find_by_key ( m_categories, catname );
+  mm_category_t *c = pnd_box_find_by_key ( m_categories, _normalize ( catname, parentcatname ) );
 
   if ( ! c ) {
     return ( 0 ); // wtf?

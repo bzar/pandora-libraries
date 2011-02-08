@@ -11,7 +11,7 @@ typedef struct {
 extern freedesktop_cat_t freedesktop_complete[];
 
 // return NULL on error, otherwise a category entry
-freedesktop_cat_t *freedesktop_category_query ( char *name );
+freedesktop_cat_t *freedesktop_category_query ( char *name, char *parentcatname );
 
 #define BADCATNAME "Other" /* irony: Other is itself not a freedesktop category */
 

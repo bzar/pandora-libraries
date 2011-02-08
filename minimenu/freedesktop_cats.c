@@ -38,7 +38,9 @@ freedesktop_cat_t freedesktop_complete[] = {
   { "Translation",      "Development",   "A translation tool " },
   { "Calendar",         "Office",   "Calendar application " },
   { "ContactManagement",    "Office",   "E.g. an address book " },
-  { "Database",         "Office",   "Application to manage a database " },
+  { "Database",         "Office",       "Application to manage a database " },
+  { "Database",         "Development",  "Application to manage a database " },
+  { "Database",         "AudioVideo",   "Application to manage a database " },
   { "Dictionary",       "Office",   "A dictionary  " },
   { "Chart",            "Office",   "Chart application" },
   { "Email",            "Office",   "Email application" },
@@ -78,13 +80,23 @@ freedesktop_cat_t freedesktop_complete[] = {
   { "WebBrowser",       "Network",   "A web browser    " },
   { "WebDevelopment",   "Network",   "A tool for web developers " },
   { "Midi",             "AudioVideo",   "An app related to MIDI    " },
+  { "Midi",             "Audio",     "An app related to MIDI    " },
   { "Mixer",            "AudioVideo",   "Just a mixer  " },
+  { "Mixer",            "Audio",     "Just a mixer  " },
   { "Sequencer",        "AudioVideo",   "A sequencer  " },
+  { "Sequencer",        "Audio",     "A sequencer  " },
   { "Tuner",            "AudioVideo",   "A tuner  " },
+  { "Tuner",            "Audio",        "A tuner  " },
   { "TV",               "AudioVideo",   "A TV application" },
+  { "TV",               "Video",   "A TV application" },
   { "AudioVideoEditing",    "Audio",   "Application to edit audio/video files " },
+  { "AudioVideoEditing",    "Video",   "Application to edit audio/video files " },
+  { "AudioVideoEditing",    "AudioVideo",   "Application to edit audio/video files " },
   { "Player",           "Audio",   "Application to play audio/video files " },
+  { "Player",           "AudioVideo",   "Application to play audio/video files " },
+  { "Player",           "Video",   "Application to play audio/video files " },
   { "Recorder",         "Audio",   "Application to record audio/video files " },
+  { "Recorder",         "AudioVideo",   "Application to record audio/video files " },
   { "DiscBurning",      "AudioVideo",   "Application to burn a disc     " },
   { "ActionGame",       "Game",   "An action game " },
   { "AdventureGame",    "Game",   "Adventure style game" },
@@ -131,6 +143,7 @@ freedesktop_cat_t freedesktop_complete[] = {
   { "Emulator",         "Game",   "Emulator of another platform, such as a DOS emulator " },
   { "Engineering",      NULL, "Engineering software, e.g. CAD programs " },
   { "FileTools",        "Utility",   "A file tool utility " },
+  { "FileTools",        "System",   "A file tool utility " },
   { "FileManager",      "System",   "A file manager " },
   { "TerminalEmulator", "System",   "A terminal emulator application " },
   { "Filesystem",       "System",   "A file system tool  " },
@@ -152,13 +165,27 @@ freedesktop_cat_t freedesktop_complete[] = {
   { NULL,               NULL, NULL }
 };
 
-freedesktop_cat_t *freedesktop_category_query ( char *name ) {
+// return the found category, if ..
+//   name matches catname AND
+//   parent is NULL, or
+//     parent is value and matches cats parent.
+// ex:
+//   If you're looking for Game/NULL, you'll find it.
+//   If you're looking for Game/Emulator, you'll find it.
+//   If you're looking for Emulator/NULL you WILL NOT find it.
+freedesktop_cat_t *freedesktop_category_query ( char *name, char *parentcatname ) {
   freedesktop_cat_t *p = freedesktop_complete;
 
   while ( p -> cat ) {
 
     if ( strcasecmp ( p -> cat, name ) == 0 ) {
-      return ( p );
+
+      if ( parentcatname == NULL && p -> parent_cat == NULL ) {
+	return ( p );
+      } else if ( parentcatname && p -> parent_cat && strcasecmp ( p -> parent_cat, parentcatname ) == 0 ) {
+	return ( p );
+      }
+
     }
 
     p++;
