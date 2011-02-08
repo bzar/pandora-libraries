@@ -3116,11 +3116,13 @@ void ui_revealscreen ( void ) {
   if ( sel >= 0 ) {
 
     // fix up category name, if its been hacked
+#if 0 // prepending and .. wtf crap is this
     if ( strchr ( g_categories [ sel ] -> catname, '.' ) ) {
       char *t = g_categories [ sel ] -> catname;
       g_categories [ sel ] -> catname = strdup ( strchr ( g_categories [ sel ] -> catname, '.' ) + 1 );
       free ( t );
     }
+#endif
 
     // reflag this guy to be visible
     g_categories [ sel ] -> catflags = CFNORMAL;
@@ -3141,13 +3143,13 @@ void ui_revealscreen ( void ) {
       ui_catshift = ui_category - ( screen_width / tab_width ) + 1;
     }
 
-    // redraw tabs
-    render_mask |= CHANGED_CATEGORY;
   }
 
-  for ( i = 0; i < g_categorycount; i++ ) {
-    free ( labels [ i ] );
-  }
+  // republish categories
+  category_publish ( CFNORMAL, NULL );
+
+  // redraw tabs
+  render_mask |= CHANGED_CATEGORY;
 
   return;
 }
