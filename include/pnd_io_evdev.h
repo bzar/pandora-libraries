@@ -2,6 +2,10 @@
 #ifndef h_pnd_io_evdev_h
 #define h_pnd_io_evdev_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // some handy routines for open/close/monitor of the evdev controller devices ..
 // ie: so you can watch the analogs and d-pads pretty easily, for when you don't
 // want to rely on SDL or whatever
@@ -65,5 +69,9 @@ unsigned int pnd_evdev_dpad_state ( pnd_evdev_e device ); // returns bitmask of 
 // return 1 when state is copied over
 // return -1 when device not opened
 int pnd_evdev_nub_state ( pnd_evdev_e nubdevice, pnd_nubstate_t *r_nubstate );
+
+#ifdef __cplusplus
+} /* "C" */
+#endif
 
 #endif
