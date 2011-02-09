@@ -74,6 +74,8 @@ void ui_post_scan ( void );
 unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p );
 void ui_aboutscreen ( char *textpath );
 void ui_revealscreen ( void );
+void ui_manage_categories ( void );
+int ui_pick_custom_category ( void );
 
 /* internal functions follow
  */
@@ -120,6 +122,7 @@ unsigned int ui_callback_f ( unsigned int t );
 
 // 'popup' 'context' menu
 void ui_menu_context ( mm_appref_t *a );
+unsigned char ui_menu_oneby ( char *title, char *footer, char *one ); // return 0 (nada) or 1 (one) for they actually picked it
 unsigned char ui_menu_twoby ( char *title, char *footer, char *one, char *two ); // return 0 (nada), 1 (one), 2 (two)
 unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialvalue,
 				      char *r_buffer, unsigned char maxlen, unsigned char numbersonlyp ); // populates r_buffer

@@ -41,6 +41,7 @@
 #include "mmconf.h"
 #include "mmui_context.h"
 #include "freedesktop_cats.h"
+#include "mmcustom_cats.h"
 
 #define CHANGED_NOTHING     (0)
 #define CHANGED_CATEGORY    (1<<0)  /* changed to different category */
@@ -1342,6 +1343,7 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	  "Reveal hidden category",
 	  "Shutdown Pandora",
 	  "Configure Minimenu",
+	  "Manage custom app categories",
 	  "Rescan for applications",
 	  "Cache previews to SD now",
 	  "Run a terminal/console",
@@ -1350,7 +1352,7 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	  "Select a Minimenu skin",
 	  "About Minimenu"
 	};
-	int sel = ui_modal_single_menu ( opts, 10, "Minimenu", "Enter to select; other to return." );
+	int sel = ui_modal_single_menu ( opts, 11, "Minimenu", "Enter to select; other to return." );
 
 	char buffer [ 100 ];
 	if ( sel == 0 ) {
@@ -1368,12 +1370,15 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	    emit_and_quit ( MM_RESTART );
 	  }
 	} else if ( sel == 3 ) {
+	  // manage custom categories
+	  ui_manage_categories();
+	} else if ( sel == 4 ) {
 	  // rescan apps
 	  pnd_log ( pndn_debug, "Freeing up applications\n" );
 	  applications_free();
 	  pnd_log ( pndn_debug, "Rescanning applications\n" );
 	  applications_scan();
-	} else if ( sel == 4 ) {
+	} else if ( sel == 5 ) {
 	  // cache preview to SD now
 	  extern pnd_box_handle g_active_apps;
 	  pnd_box_handle h = g_active_apps;
@@ -1396,7 +1401,7 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	    iter = pnd_box_get_next ( iter );
 	  } // while
 
-	} else if ( sel == 5 ) {
+	} else if ( sel == 6 ) {
 	  // run terminal
 	  char *argv[5];
 	  argv [ 0 ] = pnd_conf_get_as_char ( g_conf, "utility.terminal" );
@@ -1406,18 +1411,18 @@ void ui_process_input ( pnd_dbusnotify_handle dbh, pnd_notify_handle nh ) {
 	    ui_forkexec ( argv );
 	  }
 
-	} else if ( sel == 6 ) {
+	} else if ( sel == 7 ) {
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s %s\n", MM_RUN, "/usr/pandora/scripts/op_switchgui.sh" );
 	  emit_and_quit ( buffer );
-	} else if ( sel == 7 ) {
-	  emit_and_quit ( MM_QUIT );
 	} else if ( sel == 8 ) {
+	  emit_and_quit ( MM_QUIT );
+	} else if ( sel == 9 ) {
 	  // select skin
 	  if ( ui_pick_skin() ) {
 	    emit_and_quit ( MM_RESTART );
 	  }
-	} else if ( sel == 9 ) {
+	} else if ( sel == 10 ) {
 	  // about
 	  char buffer [ PATH_MAX ];
 	  sprintf ( buffer, "%s/about.txt", g_skinpath );
@@ -3576,6 +3581,16 @@ void ui_menu_context ( mm_appref_t *a ) {
   return;
 }
 
+unsigned char ui_menu_oneby ( char *title, char *footer, char *one ) {
+  char *opts [ 2 ];
+  opts [ 0 ] = one;
+  int sel = ui_modal_single_menu ( opts, 1, title, footer );
+  if ( sel < 0 ) {
+    return ( 0 );
+  }
+  return ( sel + 1 );
+}
+
 unsigned char ui_menu_twoby ( char *title, char *footer, char *one, char *two ) {
   char *opts [ 3 ];
   opts [ 0 ] = one;
@@ -3696,6 +3711,10 @@ unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialva
 	    char *eol = strchr ( r_buffer, '\0' );
 	    *( eol - 1 ) = '\0';
 	  }
+
+	} else if ( event.key.keysym.sym == SDLK_UP ) {
+	  r_buffer [ 0 ] = '\0'; // truncate!
+
 	} else if ( event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_END ) { // return, or "B"
 	  return ( 1 );
 
@@ -3800,4 +3819,283 @@ unsigned char ovr_replace_or_add ( mm_appref_t *a, char *keybase, char *newvalue
   } // new or used?
 
   return ( 1 );
+}
+
+void ui_manage_categories ( void ) {
+  unsigned char require_app_scan = 0;
+
+  if ( ! mmcustom_setup() ) {
+    return; // error
+  }
+
+  char *opts [ 20 ] = {
+    "List custom categories",
+    "List custom subcategories",
+    "Register custom category",
+    "Register custom subcategory",
+    "Unregister custom category",
+    "Unregister custom subcategory",
+    "Done"
+  };
+
+  while ( 1 ) {
+
+    int sel = ui_modal_single_menu ( opts, 7, "Custom Categories", "B to select; other to cancel." );
+
+    switch ( sel ) {
+
+    case 0: // list custom
+      if ( mmcustom_count ) {
+	ui_pick_custom_category();
+      } else {
+	ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
+      }
+      break;
+
+    case 1: // list custom sub
+      if ( mmcustom_count ) {
+
+	int maincat = ui_pick_custom_category();
+
+	if ( maincat >= 0 ) {
+	  unsigned int subcount = mmcustom_count_subcats ( mmcustom_complete [ maincat ].cat );
+	  char titlebuf [ 201 ];
+
+	  snprintf ( titlebuf, 200, "Category: %s", mmcustom_complete [ maincat ].cat );
+
+	  if ( subcount == 0 ) {
+	    ui_menu_oneby ( titlebuf, "B/Enter to accept", "Category has no subcategories." );
+	  } else {
+
+	    char **list = malloc ( subcount * sizeof(char*) );
+	    int i;
+	    unsigned int counter = 0;
+
+	    for ( i = 0; i < mmcustom_count; i++ ) {
+	      if ( mmcustom_complete [ i ].parent_cat && strcasecmp ( mmcustom_complete [ i ].parent_cat, mmcustom_complete [ maincat ].cat ) == 0 ) {
+		list [ counter++ ] = mmcustom_complete [ i ].cat;
+	      }
+	    }
+
+	    ui_modal_single_menu ( list, counter, titlebuf, "Any button to exit." );
+
+	    free ( list );
+
+	  } // more than 0 subcats?
+
+	} // user picked a main cat?
+
+      } else {
+	ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
+      }
+      break;
+
+    case 2: // register custom
+      {
+	unsigned char changed;
+	char namebuf [ 101 ] = "";
+
+	changed = ui_menu_get_text_line ( "Enter unique category name", "Use keyboard; Enter when done.",
+					  "Pandora", namebuf, 30, 0 /* alphanumeric */ );
+
+	// did the user enter something?
+	if ( changed ) {
+
+	  // and if so, is it existant already or not?
+	  if ( mmcustom_query ( namebuf, NULL ) ) {
+	    ui_menu_oneby ( "Warning", "B/Enter to accept", "Already a registered category." );
+	  } else if ( freedesktop_category_query ( namebuf, NULL ) ) {
+	    ui_menu_oneby ( "Warning", "B/Enter to accept", "Already a Standard category." );
+	  } else {
+
+	    char confirm [ 1001 ];
+	    snprintf ( confirm, 1000, "Confirm: %s", namebuf );
+
+	    if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm new category", "Do not register" ) == 1 ) {
+	      // register, save, recycle the current list
+	      mmcustom_register ( namebuf, NULL );
+	      mmcustom_write ( NULL );
+	      mmcustom_shutdown();
+	      mmcustom_setup();
+	    }
+
+	  } // dupe?
+
+	} // entered something?
+
+      }
+      break;
+
+    case 3: // register custom sub
+      if ( mmcustom_count ) {
+
+	int maincat = ui_pick_custom_category();
+
+	if ( maincat >= 0 ) {
+	  char titlebuf [ 201 ];
+
+	  snprintf ( titlebuf, 200, "Subcat of: %s", mmcustom_complete [ maincat ].cat );
+
+	  unsigned char changed;
+	  char namebuf [ 101 ] = "";
+
+	  changed = ui_menu_get_text_line ( titlebuf, "Use keyboard; Enter when done.", "Submarine", namebuf, 30, 0 /* alphanumeric */ );
+
+	  // did the user enter something?
+	  if ( changed ) {
+
+	    // and if so, is it existant already or not?
+	    if ( mmcustom_query ( namebuf, mmcustom_complete [ maincat ].cat ) ) {
+	      ui_menu_oneby ( "Warning", "B/Enter to accept", "Already a subcategory." );
+	    } else if ( freedesktop_category_query ( namebuf, mmcustom_complete [ maincat ].cat ) ) {
+	      ui_menu_oneby ( "Warning", "B/Enter to accept", "Already a Standard subcategory." );
+	    } else {
+
+	      char confirm [ 1001 ];
+	      snprintf ( confirm, 1000, "Confirm: %s [%s]", namebuf, mmcustom_complete [ maincat ].cat );
+
+	      if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm new category", "Do not register" ) == 1 ) {
+		// register, save, recycle the current list
+		mmcustom_register ( namebuf, mmcustom_complete [ maincat ].cat );
+		mmcustom_write ( NULL );
+		mmcustom_shutdown();
+		mmcustom_setup();
+	      }
+
+	    } // dupe?
+
+	  } // entered something?
+
+	} // selected parent cat?
+
+      } else {
+	ui_menu_oneby ( "Warning", "B/Enter to accept", "No categories registered." );
+      }
+      break;
+
+    case 4: // unreg custom
+      if ( mmcustom_count ) {
+	int maincat = ui_pick_custom_category();
+
+	if ( maincat >= 0 ) {
+	  char confirm [ 1001 ];
+	  snprintf ( confirm, 1000, "Confirm remove: %s", mmcustom_complete [ maincat ].cat );
+
+	  if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm unregister", "Do not unregister" ) == 1 ) {
+	    // register, save, recycle the current list
+	    mmcustom_unregister ( mmcustom_complete [ maincat ].cat, NULL );
+	    mmcustom_write ( NULL );
+	    mmcustom_shutdown();
+	    mmcustom_setup();
+	  }
+
+	} // picked?
+
+      } else {
+	ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
+      }
+      break;
+
+    case 5: // unreg custom sub
+      if ( mmcustom_count ) {
+	int maincat = ui_pick_custom_category();
+
+	if ( maincat >= 0 ) {
+	  unsigned int subcount = mmcustom_count_subcats ( mmcustom_complete [ maincat ].cat );
+	  char titlebuf [ 201 ];
+
+	  snprintf ( titlebuf, 200, "Category: %s", mmcustom_complete [ maincat ].cat );
+
+	  if ( subcount == 0 ) {
+	    ui_menu_oneby ( titlebuf, "B/Enter to accept", "Category has no subcategories." );
+	  } else {
+
+	    char **list = malloc ( subcount * sizeof(char*) );
+	    int i;
+	    unsigned int counter = 0;
+
+	    for ( i = 0; i < mmcustom_count; i++ ) {
+	      if ( mmcustom_complete [ i ].parent_cat && strcasecmp ( mmcustom_complete [ i ].parent_cat, mmcustom_complete [ maincat ].cat ) == 0 ) {
+		list [ counter++ ] = mmcustom_complete [ i ].cat;
+	      }
+	    }
+
+	    int sel = ui_modal_single_menu ( list, counter, titlebuf, "B to selct; other to exit." );
+
+	    if ( sel >= 0 ) {
+	      char confirm [ 1001 ];
+	      snprintf ( confirm, 1000, "Confirm remove: %s", list [ sel ] );
+
+	      if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm unregister", "Do not unregister" ) == 1 ) {
+		// register, save, recycle the current list
+		mmcustom_unregister ( list [ sel ], mmcustom_complete [ maincat ].cat );
+		mmcustom_write ( NULL );
+		mmcustom_shutdown();
+		mmcustom_setup();
+	      }
+
+	    } // confirm kill?
+
+	    free ( list );
+
+	  } // more than 0 subcats?
+
+	} // user picked a main cat?
+
+      } else {
+	ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
+      }
+      break;
+
+    } // switch
+
+    // exeunt
+    if ( sel < 0 || sel > 5 ) {
+      break;
+    }
+
+  } // while running the menu
+
+  // shut down custom cats
+  mmcustom_shutdown();
+
+  // reload apps?
+  if ( require_app_scan ) {
+    applications_free();
+    applications_scan();
+  }
+
+  // redraw
+  render_mask |= CHANGED_EVERYTHING;
+
+  return;
+}
+
+int ui_pick_custom_category ( void ) {
+  char **list = malloc ( mmcustom_count * sizeof(char*) );
+  int i;
+  unsigned int counter = 0;
+
+  for ( i = 0; i < mmcustom_count; i++ ) {
+    if ( mmcustom_complete [ i ].parent_cat == NULL ) {
+      list [ counter++ ] = mmcustom_complete [ i ].cat;
+    }
+  }
+
+  int sel = ui_modal_single_menu ( list, counter, "Custom Main Categories", "Any button to exit." );
+
+  counter = 0;
+  for ( i = 0; i < mmcustom_count; i++ ) {
+    if ( mmcustom_complete [ i ].parent_cat == NULL ) {
+      if ( counter == sel ) {
+	free ( list );
+	return ( i );
+      }
+      counter ++;
+    }
+  }
+
+  free ( list );
+
+  return ( -1 );
 }

@@ -26,7 +26,7 @@ ALLOBJ = pnd_conf.o pnd_container.o pnd_discovery.o pnd_pxml.o pnd_notify.o pnd_
 all: ${SOLIB} ${LIB} conftest discotest evdevtest notifytest pndnotifyd rawpxmltest pndvalidator loggertest dbusnotifytest pnd_run pndevmapperd pnd_info evtest mmenu mmwrapper
 
 clean:
-	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o evdevtest.o bin/evdevtest bin/discotest dbusnotifytest.o bin/dbusnotifytest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o pnd_info.o bin/pnd_info bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/bin/pnd_info deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd testdata/menuicons/* evtest.o bin/evtest bin/mmenu bin/mmwrapper mmenu.o mmwrapper.o deployment/usr/bin/mmenu deployment/usr/bin/mmwrapper mmcache.o mmui.o mmcat.o mmconf.o freedsktop_cats.o freedesktop_cats.o
+	${RM} -f ${ALLOBJ} ${XMLOBJ} ${LIB} ${SOLIB1} locatetest.o bin/locatetest conftest.o bin/conftest discotest.o evdevtest.o bin/evdevtest bin/discotest dbusnotifytest.o bin/dbusnotifytest loggertest.o bin/loggertest bin/notifytest notifytest.o bin/rawpxmltest rawpxmltest.o bin/pnd_run pnd_run.o pnd_info.o bin/pnd_info bin/pndevmapperd pndevmapperd.o bin/pndnotifyd pndnotifyd.o ${SOLIB} testdata/dotdesktop/*.desktop testdata/menu/*.desktop testdata/apps/*.pnd testdata/dotdesktop/*.png deployment/usr/lib/libpnd* deployment/usr/bin/pndnotifyd deployment/usr/bin/pnd_run deployment/usr/bin/pnd_info deployment/usr/pandora/scripts/* deployment/etc/sudoers deployment/etc/init.d/pndnotifyd bin/pndvalidator pndvalidator.o deployment/usr/bin/pndevmapperd testdata/menuicons/* evtest.o bin/evtest bin/mmenu bin/mmwrapper mmenu.o mmwrapper.o deployment/usr/bin/mmenu deployment/usr/bin/mmwrapper mmcache.o mmui.o mmcat.o mmconf.o freedsktop_cats.o freedesktop_cats.o mmcustom_cats.o
 	${RM} -rf deployment/media deployment/etc/pandora/mmenu
 	find . -name "*~*" -exec rm {} \; -print
 
@@ -60,8 +60,8 @@ pnd_info:	pnd_info.o ${SOLIB1}
 pndevmapperd:	pndevmapperd.o ${SOLIB1}
 	${CC} -lstdc++ -o bin/pndevmapperd pndevmapperd.o ${SOLIB1}
 
-mmenu:	mmenu.o mmui.o mmcache.o mmcat.o mmconf.o freedesktop_cats.o ${SOLIB1}
-	${CC} -lstdc++ -o bin/mmenu mmenu.o mmui.o mmcache.o mmcat.o mmconf.o freedesktop_cats.o ${SOLIB1} -L${PNDSTUFF}/usr/lib -lSDL -lSDL_image -lSDL_ttf -lSDL_gfx
+mmenu:	mmenu.o mmui.o mmcache.o mmcat.o mmconf.o freedesktop_cats.o mmcustom_cats.o ${SOLIB1}
+	${CC} -lstdc++ -o bin/mmenu mmenu.o mmui.o mmcache.o mmcat.o mmconf.o freedesktop_cats.o mmcustom_cats.o ${SOLIB1} -L${PNDSTUFF}/usr/lib -lSDL -lSDL_image -lSDL_ttf -lSDL_gfx
 mmwrapper:	mmwrapper.o ${SOLIB1}
 	${CC} -lstdc++ -o bin/mmwrapper mmwrapper.o ${SOLIB1}
 

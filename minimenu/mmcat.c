@@ -363,7 +363,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   if ( ! fdcat ) {
     // requested cat is bad, send it to Other
     cat_is_clean = 0;
-    printf ( "PXML Fail %s: Cat request %s (parent %s) -> bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+    pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
 
     // do the Other substitution right away, so remaining code has something to look at in fdcat
     fdcat = freedesktop_category_query ( BADCATNAME, NULL );
@@ -381,7 +381,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     if ( ! fdpcat ) {
       // requested cat is bad, send it to Other
       cat_is_clean = 0;
-      printf ( "PXML Fail %s: Cat request %s (parent %s) -> parent bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> parent bad cat\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
       // fix immediately so code doesn't explode
       parentcatname = NULL;
     } else {
@@ -401,12 +401,12 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     if ( fdcat -> parent_cat == NULL ) {
       // but wait, catname is actually a parent cat...
       cat_is_clean = 0;
-      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child, but FD says its a parent\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child, but FD says its a parent\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
     }
     if ( fdpcat -> parent_cat ) {
       // but wait, parent cat is actually a subcat!
       cat_is_clean = 0;
-      printf ( "PXML Fail %s: Cat request %s (parent %s) -> parent cat, FD says its a child\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> parent cat, FD says its a child\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
     }
 
   } else {
@@ -415,7 +415,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     if ( fdcat -> parent_cat ) {
       // but wait, cat actually has a parent!
       cat_is_clean = 0;
-      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be parent, FD says its a child\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be parent, FD says its a child\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
     }
 
   }
@@ -427,11 +427,11 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
     { 
       // child cat points to a different parent than requested parent!
       cat_is_clean = 0;
-      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (1)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (1)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
     } else if ( strcasecmp ( fdcat -> parent_cat, fdpcat -> cat ) != 0 ) {
       // child cat points to a different parent than requested parent!
       cat_is_clean = 0;
-      printf ( "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (2)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
+      pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (2)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
     }
   }
 
@@ -529,7 +529,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   // is app already in the target cat? (ie: its being pushed twice due to cat mapping or Other'ing or something..)
   if ( app ) {
     if ( category_contains_app ( catname, parentcatname, app -> unique_id ) ) {
-      printf ( "App Fail: app (%s %s) is already in cat %s\n", app -> title_en ? app -> title_en : "no name?", app -> unique_id, catname );
+      pnd_log ( pndn_warning, "App Fail: app (%s %s) is already in cat %s\n", app -> title_en ? app -> title_en : "no name?", app -> unique_id, catname );
       return ( 1 ); // success, already there!
     }
   }
