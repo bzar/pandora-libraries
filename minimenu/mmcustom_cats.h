@@ -19,6 +19,8 @@ extern unsigned int mmcustom_count;
 
 unsigned char mmcustom_setup ( void ); // load
 void mmcustom_shutdown ( void );       // unload
+unsigned char mmcustom_is_ready ( void );
+
 unsigned char mmcustom_write ( char *fullpath /* if NULL, uses canonical location */ );   // save
 char *mmcustom_determine_path ( void );
 

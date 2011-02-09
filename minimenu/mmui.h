@@ -75,7 +75,7 @@ unsigned char ui_show_info ( char *pndrun, pnd_disco_t *p );
 void ui_aboutscreen ( char *textpath );
 void ui_revealscreen ( void );
 void ui_manage_categories ( void );
-int ui_pick_custom_category ( void );
+char *ui_pick_custom_category ( unsigned char include_fd );
 
 /* internal functions follow
  */

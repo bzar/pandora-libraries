@@ -203,6 +203,16 @@ freedesktop_cat_t *freedesktop_category_query ( char *name, char *parentcatname 
   return ( NULL );
 }
 
+unsigned int freedesktop_count ( void ) {
+  unsigned int i = 0;
+
+  while ( freedesktop_complete [ i ].cat ) {
+    i++;
+  }
+
+  return ( i );
+}
+
 #if 0
 int main ( void ) {
 

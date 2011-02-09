@@ -79,7 +79,7 @@ unsigned char mmcustom_setup ( void ) {
 
     } // while
 
-    pnd_log ( pndn_rem, "Found %u custom categories.\n", mmcustom_count );
+    //pnd_log ( pndn_rem, "Found %u custom categories.\n", mmcustom_count );
 
   } // loaded already?
 
@@ -93,6 +93,10 @@ void mmcustom_shutdown ( void ) {
   loaded = 0;
 
   return;
+}
+
+unsigned char mmcustom_is_ready ( void ) {
+  return ( loaded );
 }
 
 unsigned char mmcustom_write ( char *fullpath /* if NULL, uses canonical location */ ) {

@@ -3385,6 +3385,18 @@ void ui_menu_context ( mm_appref_t *a ) {
 	  unsigned char optmax = 0;
 	  unsigned char i;
 
+	  // show custom categories
+	  if ( mmcustom_setup() ) {
+
+	    for ( i = 0; i < mmcustom_count; i++ ) {
+	      if ( mmcustom_complete [ i ].parent_cat == NULL ) {
+		opts [ optmax++ ] = mmcustom_complete [ i ].cat;
+	      }
+	    }
+
+	  }
+
+	  // show FD categories
 	  i = 2; // skip first two - Other and NoParentCategory
 	  while ( 1 ) {
 
@@ -3399,6 +3411,7 @@ void ui_menu_context ( mm_appref_t *a ) {
 	    i++;
 	  } // while
 
+	  // picker
 	  char prompt [ 101 ];
 	  snprintf ( prompt, 100, "Pick category [%s]", a -> ref -> main_category ? a -> ref -> main_category : "NoParentCategory" );
 
@@ -3417,6 +3430,10 @@ void ui_menu_context ( mm_appref_t *a ) {
 
 	  }
 
+	  if ( mmcustom_is_ready() ) {
+	    mmcustom_shutdown();
+	  }
+
 	}
 	break;
 
@@ -3424,22 +3441,34 @@ void ui_menu_context ( mm_appref_t *a ) {
 	{
 	  char *opts [ 250 ];
 	  unsigned char optmax = 0;
-	  unsigned char i;
+	  unsigned char i = 0;
 
-	  i = 0;
+	  char *whichparentarewe;
+	  if ( g_categories [ ui_category ] -> parent_catname ) {
+	    whichparentarewe = g_categories [ ui_category ] -> parent_catname;
+	  } else {
+	    whichparentarewe = g_categories [ ui_category ] -> catname;
+	  }
+
+	  // add NoSubcategory magic one
 	  opts [ optmax++ ] = freedesktop_complete [ 2 ].cat;
 
+	  // add custom categories
+	  if ( mmcustom_setup() ) {
+
+	    for ( i = 0; i < mmcustom_count; i++ ) {
+	      if ( mmcustom_complete [ i ].parent_cat && strcmp ( mmcustom_complete [ i ].parent_cat, whichparentarewe ) == 0  ) {
+		opts [ optmax++ ] = mmcustom_complete [ i ].cat;
+	      }
+	    }
+
+	  }
+
+	  // add FD categories
 	  while ( 1 ) {
 
 	    if ( ! freedesktop_complete [ i ].cat ) {
 	      break;
-	    }
-
-	    char *whichparentarewe;
-	    if ( g_categories [ ui_category ] -> parent_catname ) {
-	      whichparentarewe = g_categories [ ui_category ] -> parent_catname;
-	    } else {
-	      whichparentarewe = g_categories [ ui_category ] -> catname;
 	    }
 
 	    if ( ( freedesktop_complete [ i ].parent_cat ) &&
@@ -3453,7 +3482,8 @@ void ui_menu_context ( mm_appref_t *a ) {
 	  } // while
 
 	  char prompt [ 101 ];
-	  snprintf ( prompt, 100, "Pick subcategory [%s]", a -> ref -> main_category1 ? a -> ref -> main_category1 : "NoSubcategory" );
+	  //snprintf ( prompt, 100, "Currently: %s", a -> ref -> main_category1 ? a -> ref -> main_category1 : "NoSubcategory" );
+	  snprintf ( prompt, 100, "%s [%s]", a -> ref -> main_category1 ? a -> ref -> main_category1 : "NoSubcategory", whichparentarewe );
 
 	  int sel = ui_modal_single_menu ( opts, optmax, prompt /*"Select subcategory"*/, "Enter to select; other to skip." );
 
@@ -3466,6 +3496,10 @@ void ui_menu_context ( mm_appref_t *a ) {
 	      rescan_apps++;
 	    }
 
+	  }
+
+	  if ( mmcustom_is_ready() ) {
+	    mmcustom_shutdown();
 	  }
 
 	}
@@ -3771,7 +3805,7 @@ unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialva
 }
 
 unsigned char ovr_replace_or_add ( mm_appref_t *a, char *keybase, char *newvalue ) {
-  printf ( "setting %s:%u - '%s' to '%s' - %s/%s\n", a -> ref -> title_en, a -> ref -> subapp_number, keybase, newvalue, a -> ref -> object_path, a -> ref -> object_filename );
+  //printf ( "setting %s:%u - '%s' to '%s' - %s/%s\n", a -> ref -> title_en, a -> ref -> subapp_number, keybase, newvalue, a -> ref -> object_path, a -> ref -> object_filename );
 
   char fullpath [ PATH_MAX ];
 
@@ -3780,7 +3814,7 @@ unsigned char ovr_replace_or_add ( mm_appref_t *a, char *keybase, char *newvalue
   if ( dot ) {
     sprintf ( dot, PXML_SAMEPATH_OVERRIDE_FILEEXT );
   } else {
-    fprintf ( stderr, "ERROR: Bad pnd-path in disco_t! %s\n", fullpath );
+    pnd_log ( pndn_error, "ERROR: Bad pnd-path in disco_t! %s\n", fullpath );
     return ( 0 );
   }
 
@@ -3846,7 +3880,7 @@ void ui_manage_categories ( void ) {
 
     case 0: // list custom
       if ( mmcustom_count ) {
-	ui_pick_custom_category();
+	ui_pick_custom_category ( 0 );
       } else {
 	ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
       }
@@ -3855,13 +3889,13 @@ void ui_manage_categories ( void ) {
     case 1: // list custom sub
       if ( mmcustom_count ) {
 
-	int maincat = ui_pick_custom_category();
+	char *maincat = ui_pick_custom_category ( 0 );
 
-	if ( maincat >= 0 ) {
-	  unsigned int subcount = mmcustom_count_subcats ( mmcustom_complete [ maincat ].cat );
+	if ( maincat ) {
+	  unsigned int subcount = mmcustom_count_subcats ( maincat );
 	  char titlebuf [ 201 ];
 
-	  snprintf ( titlebuf, 200, "Category: %s", mmcustom_complete [ maincat ].cat );
+	  snprintf ( titlebuf, 200, "Category: %s", maincat );
 
 	  if ( subcount == 0 ) {
 	    ui_menu_oneby ( titlebuf, "B/Enter to accept", "Category has no subcategories." );
@@ -3872,7 +3906,7 @@ void ui_manage_categories ( void ) {
 	    unsigned int counter = 0;
 
 	    for ( i = 0; i < mmcustom_count; i++ ) {
-	      if ( mmcustom_complete [ i ].parent_cat && strcasecmp ( mmcustom_complete [ i ].parent_cat, mmcustom_complete [ maincat ].cat ) == 0 ) {
+	      if ( mmcustom_complete [ i ].parent_cat && strcasecmp ( mmcustom_complete [ i ].parent_cat, maincat ) == 0 ) {
 		list [ counter++ ] = mmcustom_complete [ i ].cat;
 	      }
 	    }
@@ -3929,12 +3963,12 @@ void ui_manage_categories ( void ) {
     case 3: // register custom sub
       if ( mmcustom_count ) {
 
-	int maincat = ui_pick_custom_category();
+	char *maincat = ui_pick_custom_category ( 1 /* include FD */ );
 
-	if ( maincat >= 0 ) {
+	if ( maincat ) {
 	  char titlebuf [ 201 ];
 
-	  snprintf ( titlebuf, 200, "Subcat of: %s", mmcustom_complete [ maincat ].cat );
+	  snprintf ( titlebuf, 200, "Subcat of: %s", maincat );
 
 	  unsigned char changed;
 	  char namebuf [ 101 ] = "";
@@ -3945,18 +3979,18 @@ void ui_manage_categories ( void ) {
 	  if ( changed ) {
 
 	    // and if so, is it existant already or not?
-	    if ( mmcustom_query ( namebuf, mmcustom_complete [ maincat ].cat ) ) {
+	    if ( mmcustom_query ( namebuf, maincat ) ) {
 	      ui_menu_oneby ( "Warning", "B/Enter to accept", "Already a subcategory." );
-	    } else if ( freedesktop_category_query ( namebuf, mmcustom_complete [ maincat ].cat ) ) {
+	    } else if ( freedesktop_category_query ( namebuf, maincat ) ) {
 	      ui_menu_oneby ( "Warning", "B/Enter to accept", "Already a Standard subcategory." );
 	    } else {
 
 	      char confirm [ 1001 ];
-	      snprintf ( confirm, 1000, "Confirm: %s [%s]", namebuf, mmcustom_complete [ maincat ].cat );
+	      snprintf ( confirm, 1000, "Confirm: %s [%s]", namebuf, maincat );
 
 	      if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm new category", "Do not register" ) == 1 ) {
 		// register, save, recycle the current list
-		mmcustom_register ( namebuf, mmcustom_complete [ maincat ].cat );
+		mmcustom_register ( namebuf, maincat );
 		mmcustom_write ( NULL );
 		mmcustom_shutdown();
 		mmcustom_setup();
@@ -3975,15 +4009,15 @@ void ui_manage_categories ( void ) {
 
     case 4: // unreg custom
       if ( mmcustom_count ) {
-	int maincat = ui_pick_custom_category();
+	char *maincat = ui_pick_custom_category ( 0 );
 
-	if ( maincat >= 0 ) {
+	if ( maincat ) {
 	  char confirm [ 1001 ];
-	  snprintf ( confirm, 1000, "Confirm remove: %s", mmcustom_complete [ maincat ].cat );
+	  snprintf ( confirm, 1000, "Confirm remove: %s", maincat );
 
 	  if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm unregister", "Do not unregister" ) == 1 ) {
 	    // register, save, recycle the current list
-	    mmcustom_unregister ( mmcustom_complete [ maincat ].cat, NULL );
+	    mmcustom_unregister ( maincat, NULL );
 	    mmcustom_write ( NULL );
 	    mmcustom_shutdown();
 	    mmcustom_setup();
@@ -3998,13 +4032,13 @@ void ui_manage_categories ( void ) {
 
     case 5: // unreg custom sub
       if ( mmcustom_count ) {
-	int maincat = ui_pick_custom_category();
+	char *maincat = ui_pick_custom_category ( 0 );
 
-	if ( maincat >= 0 ) {
-	  unsigned int subcount = mmcustom_count_subcats ( mmcustom_complete [ maincat ].cat );
+	if ( maincat ) {
+	  unsigned int subcount = mmcustom_count_subcats ( maincat );
 	  char titlebuf [ 201 ];
 
-	  snprintf ( titlebuf, 200, "Category: %s", mmcustom_complete [ maincat ].cat );
+	  snprintf ( titlebuf, 200, "Category: %s", maincat );
 
 	  if ( subcount == 0 ) {
 	    ui_menu_oneby ( titlebuf, "B/Enter to accept", "Category has no subcategories." );
@@ -4015,7 +4049,7 @@ void ui_manage_categories ( void ) {
 	    unsigned int counter = 0;
 
 	    for ( i = 0; i < mmcustom_count; i++ ) {
-	      if ( mmcustom_complete [ i ].parent_cat && strcasecmp ( mmcustom_complete [ i ].parent_cat, mmcustom_complete [ maincat ].cat ) == 0 ) {
+	      if ( mmcustom_complete [ i ].parent_cat && strcasecmp ( mmcustom_complete [ i ].parent_cat, maincat ) == 0 ) {
 		list [ counter++ ] = mmcustom_complete [ i ].cat;
 	      }
 	    }
@@ -4028,7 +4062,7 @@ void ui_manage_categories ( void ) {
 
 	      if ( ui_menu_twoby ( confirm, "B/enter; other to cancel", "Confirm unregister", "Do not unregister" ) == 1 ) {
 		// register, save, recycle the current list
-		mmcustom_unregister ( list [ sel ], mmcustom_complete [ maincat ].cat );
+		mmcustom_unregister ( list [ sel ], maincat );
 		mmcustom_write ( NULL );
 		mmcustom_shutdown();
 		mmcustom_setup();
@@ -4071,31 +4105,50 @@ void ui_manage_categories ( void ) {
   return;
 }
 
-int ui_pick_custom_category ( void ) {
-  char **list = malloc ( mmcustom_count * sizeof(char*) );
+char *ui_pick_custom_category ( unsigned char include_fd ) {
+  char **list;
   int i;
   unsigned int counter = 0;
 
+  if ( include_fd ) {
+    list = malloc ( (mmcustom_count+freedesktop_count()) * sizeof(char*) );
+  } else {
+    list = malloc ( mmcustom_count * sizeof(char*) );
+  }
+
+  // add custom
   for ( i = 0; i < mmcustom_count; i++ ) {
     if ( mmcustom_complete [ i ].parent_cat == NULL ) {
       list [ counter++ ] = mmcustom_complete [ i ].cat;
     }
   }
 
+  // add FD
+  if ( include_fd ) {
+    i = 3;
+    while ( 1 ) {
+
+      if ( ! freedesktop_complete [ i ].cat ) {
+	break;
+      }
+
+      if ( freedesktop_complete [ i ].parent_cat == NULL ) {
+	list [ counter++ ] = freedesktop_complete [ i ].cat;
+      }
+
+      i++;
+    } // while
+  } // if
+
   int sel = ui_modal_single_menu ( list, counter, "Custom Main Categories", "Any button to exit." );
 
-  counter = 0;
-  for ( i = 0; i < mmcustom_count; i++ ) {
-    if ( mmcustom_complete [ i ].parent_cat == NULL ) {
-      if ( counter == sel ) {
-	free ( list );
-	return ( i );
-      }
-      counter ++;
-    }
+  if ( sel < 0 ) {
+    free ( list );
+    return ( NULL );
   }
 
+  char *foo = list [ sel ];
   free ( list );
 
-  return ( -1 );
+  return ( foo );
 }
