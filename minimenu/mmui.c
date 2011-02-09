@@ -3371,8 +3371,37 @@ void ui_menu_context ( mm_appref_t *a ) {
 	  // write conf, so it will take next time
 	  conf_write ( g_conf, conf_determine_location ( g_conf ) );
 
-	  // request rescan and wrap up
-	  rescan_apps++;
+	  // can we just 'hide' this guy without reloading all apps? (this is for you, EvilDragon)
+	  if ( 0 ) {
+	    //
+	    // DOESN'T WORK YET; other parts of app are still hanging onto some values and blow up
+	    //
+	    char *uid = strdup ( a -> ref -> unique_id );
+	    unsigned int i;
+	    for ( i = 0; i < g_categorycount; i++ ) {
+	      mm_appref_t *p = g_categories [ i ] -> refs;
+	      mm_appref_t *n;
+	      while ( p ) {
+		n = p -> next;
+
+		if ( strcmp ( p -> ref -> unique_id, uid ) == 0 ) {
+		  free ( p );
+		  if ( g_categories [ i ] -> refcount ) {
+		    g_categories [ i ] -> refcount--;
+		  }
+		}
+
+		p = n;
+	      } // while for each appref
+	    } // for each cat/tab
+
+	    free ( uid );
+
+	  } else {
+	    // request rescan and wrap up
+	    rescan_apps++;
+	  }
+
 	  context_alive = 0; // nolonger visible, so lets just get out
 
 	}
