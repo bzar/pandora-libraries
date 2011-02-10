@@ -3779,7 +3779,11 @@ unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialva
 	  r_buffer [ 0 ] = '\0'; // truncate!
 
 	} else if ( event.key.keysym.sym == SDLK_RETURN || event.key.keysym.sym == SDLK_END ) { // return, or "B"
-	  return ( 1 );
+	  // on Enter/Return or B, if the buffer has 1 or more chars, we return it as valid.. otherwise, invalid.
+	  if ( strlen ( r_buffer ) > 0 ) {
+	    return ( 1 );
+	  }
+	  return ( 0 );
 
 	} else if ( event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT ) {
 	  shifted = 1;

@@ -785,6 +785,7 @@ void category_publish ( unsigned int filter_mask, char *param ) {
     } else if ( filter_mask == CFBYNAME ) {
       char *foo = strchr ( param, '*' ) + 1;
       if ( strncasecmp ( iter -> catname, param, strlen ( iter -> catname ) ) == 0 &&
+	   iter -> parent_catname &&
 	   strcasecmp ( iter -> parent_catname, foo ) == 0 )
       {
 	interested = 1;
