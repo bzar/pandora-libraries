@@ -240,12 +240,15 @@ mm_imgcache_t g_imagecache [ IMG_TRUEMAX ] = {
   { IMG_HOURGLASS,            "graphics.IMG_HOURGLASS", },
   { IMG_FOLDER,               "graphics.IMG_FOLDER", },
   { IMG_EXECBIN,              "graphics.IMG_EXECBIN", },
+  { IMG_SUBCATFOLDER,         "graphics.IMG_SUBCATFOLDER", "graphics.IMG_FOLDER", },
+  { IMG_DOTDOTFOLDER,         "graphics.IMG_DOTDOTFOLDER", "graphics.IMG_FOLDER", },
   { IMG_MAX,                  NULL },
 };
 
 unsigned char ui_imagecache ( char *basepath ) {
   unsigned int i;
   char fullpath [ PATH_MAX ];
+  unsigned char try;
 
   // loaded
 
@@ -256,23 +259,39 @@ unsigned char ui_imagecache ( char *basepath ) {
       exit ( -1 );
     }
 
-    char *filename = pnd_conf_get_as_char ( g_conf, g_imagecache [ i ].confname );
+    for ( try = 0; try < 2; try++ ) {
 
-    if ( ! filename ) {
-      pnd_log ( pndn_error, "ERROR: Missing filename in conf for key: %s\n", g_imagecache [ i ].confname );
-      return ( 0 );
-    }
+      char *filename;
 
-    if ( filename [ 0 ] == '/' ) {
-      strncpy ( fullpath, filename, PATH_MAX );
-    } else {
-      sprintf ( fullpath, "%s/%s", basepath, filename );
-    }
+      if ( try == 0 ) {
+	filename = pnd_conf_get_as_char ( g_conf, g_imagecache [ i ].confname );
+      } else {
+	if ( g_imagecache [ i ].alt_confname ) {
+	  filename = pnd_conf_get_as_char ( g_conf, g_imagecache [ i ].alt_confname );
+	} else {
+	  return ( 0 );
+	}
+      }
 
-    if ( ! ( g_imagecache [ i ].i = IMG_Load ( fullpath ) ) ) {
-      pnd_log ( pndn_error, "ERROR: Couldn't load static cache image: %s\n", fullpath );
-      return ( 0 );
-    }
+      if ( ! filename ) {
+	pnd_log ( pndn_error, "ERROR: (Try %u) Missing filename in conf for key: %s\n", try + 1, g_imagecache [ i ].confname );
+	if ( try == 0 ) { continue; } else { return ( 0 ); }
+      }
+
+      if ( filename [ 0 ] == '/' ) {
+	strncpy ( fullpath, filename, PATH_MAX );
+      } else {
+	sprintf ( fullpath, "%s/%s", basepath, filename );
+      }
+
+      if ( ( g_imagecache [ i ].i = IMG_Load ( fullpath ) ) ) {
+	break; // no retry needed
+      } else {
+	pnd_log ( pndn_error, "ERROR: (Try %u) Couldn't load static cache image: %s\n", try + 1, fullpath );
+	if ( try == 0 ) { continue; } else { return ( 0 ); }
+      }
+
+    } // try twice
 
   } // for
 
@@ -704,7 +723,17 @@ void ui_render ( void ) {
 	      // filesystem (file or directory icon)
 	      if ( appiter -> ref -> object_flags & PND_DISCO_GENERATED ) {
 		if ( appiter -> ref -> object_type == pnd_object_type_directory ) {
-		  iconsurface = g_imagecache [ IMG_FOLDER ].i;
+
+		  // is this a subcat, a .., or a filesystem folder?
+		  //iconsurface = g_imagecache [ IMG_FOLDER ].i;
+		  if ( g_categories [ ui_category ] -> fspath ) {
+		    iconsurface = g_imagecache [ IMG_FOLDER ].i;
+		  } else if ( strcmp ( appiter -> ref -> title_en, ".." ) == 0 ) {
+		    iconsurface = g_imagecache [ IMG_DOTDOTFOLDER ].i;
+		  } else {
+		    iconsurface = g_imagecache [ IMG_SUBCATFOLDER ].i;
+		  }
+
 		} else {
 		  iconsurface = g_imagecache [ IMG_EXECBIN ].i;
 		}

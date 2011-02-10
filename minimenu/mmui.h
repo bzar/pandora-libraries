@@ -34,6 +34,8 @@ typedef enum {
   IMG_HOURGLASS,
   IMG_FOLDER,
   IMG_EXECBIN,
+  IMG_SUBCATFOLDER,
+  IMG_DOTDOTFOLDER,
   IMG_MAX, // before this point is loaded; after is generated
   IMG_TRUEMAX
 } mm_imgcache_e;
@@ -41,6 +43,7 @@ typedef enum {
 typedef struct {
   mm_imgcache_e id;
   char *confname;
+  char *alt_confname;
   void /*SDL_Surface*/ *i;
 } mm_imgcache_t;
 
