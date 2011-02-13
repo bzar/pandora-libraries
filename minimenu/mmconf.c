@@ -66,6 +66,8 @@ confitem_t pages[] = {
   { "General Options",           "Miscellaneous handy options",                             NULL /* default */, NULL,                      ct_switch_page, page_general },
   { "Show/Hide Applications",    "Each application can be hidden/revealed",                 NULL /* default */, NULL,                      ct_switch_page, page_appshowhide },
   { "Show/Hide/Order Tabs",      "Each tab can be hidden/revealed or re-ordered",           NULL /* default */, NULL,                      ct_switch_page, page_tabshowhide },
+  { "Manage Custom Categories",  "Can make your own categories/tabs",                       NULL /* default */, NULL,                      ct_go_manage_categories },
+  { "Select a Minimenu Skin",    "Download alternate look and feels!",                      NULL /* default */, NULL,                      ct_go_manage_skins },
   { "",                          "",                                                        NULL,               NULL,                      ct_nil },
   { "Exit configuration",        "Quit and save configuration",                             NULL /* default */, NULL,                      ct_exit },
   { "",                          "",                                                        NULL,               NULL,                      ct_nil },
@@ -224,6 +226,8 @@ unsigned char conf_run_menu ( confitem_t *toplevel ) {
 	    break;
 
 	  case ct_nil:
+	  case ct_go_manage_categories:
+	  case ct_go_manage_skins:
 	  case ct_switch_page:
 	  case ct_reset:
 	  case ct_exit:
@@ -252,6 +256,14 @@ unsigned char conf_run_menu ( confitem_t *toplevel ) {
 	  case ct_switch_page:
 	    page = page [ sel ].newhead;
 	    sel = 0; // should use a stack..
+	    break;
+	  case ct_go_manage_categories:
+	    ui_manage_categories();
+	    break;
+	  case ct_go_manage_skins:
+	    if ( ui_pick_skin() ) {
+	      emit_and_quit ( MM_RESTART );
+	    }
 	    break;
 	  case ct_filename:
 	    break;
@@ -373,6 +385,8 @@ void conf_display_page ( confitem_t *page, unsigned int selitem, unsigned int fi
       break;
     case ct_exit:
       break;
+    case ct_go_manage_categories:
+    case ct_go_manage_skins:
     case ct_nil:
       break;
     } // switch
@@ -409,6 +423,8 @@ void conf_display_page ( confitem_t *page, unsigned int selitem, unsigned int fi
     case ct_reset:
     case ct_exit:
     case ct_visible_tab_list:
+    case ct_go_manage_categories:
+    case ct_go_manage_skins:
       break;
     } // switch
 
@@ -513,6 +529,8 @@ char *conf_format_int ( int v, change_type_e c ) {
   case ct_switch_page:
   case ct_visible_tab_list:
   case ct_nil:
+  case ct_go_manage_categories:
+  case ct_go_manage_skins:
     break;
 
   } // switch

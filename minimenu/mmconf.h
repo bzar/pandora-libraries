@@ -11,6 +11,8 @@ typedef enum {
   ct_boolean,                   // boolean 1/0 value
   ct_exit,                      // save and quit configuring
   ct_filename,                  // pick a filename
+  ct_go_manage_categories,      // go to other menu, manage categories
+  ct_go_manage_skins,           // to to other menu, pick skins
   //ct_category_list
 } change_type_e;
 
