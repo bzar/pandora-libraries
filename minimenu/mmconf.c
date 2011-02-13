@@ -34,7 +34,7 @@ confitem_t page_general[] = {
   { "Show directory browser tabs",   "Show a tab for each SD card?",                            "0",                "filesystem.do_browser",   ct_boolean },
   { "Detail panel on start?",        "Show or hide the detail panel when menu starts",          "1",                "display.show_detail_pane", ct_boolean },
   { "Sub-categories as folders?",    "If no, uses tabs instead of folders within tabs.",        "1",                "tabs.subcat_as_folders",  ct_boolean },
-  { "Sub-category apps in main cat?","If no, apps with subcategories are only in subcategories","1",                "tabs.subcat_to_parent",   ct_boolean },
+  { "Sub-category apps in their main cat?","If no, apps with subcategories are only in subcategories","1",          "tabs.subcat_to_parent",   ct_boolean },
   { "Start with app selected",       "Whethor selection is placed by default or not",           "0",                "minimenu.start_selected", ct_boolean },
   { "Auto discover pnd apps?",       "If no, turn on diectory browser to manually find apps",   "1",                "filesystem.do_pnd_disco", ct_boolean },
   // dropped option -- we now strictly enforce free desktop categories (or user defined, but no more bogus PXML categories)

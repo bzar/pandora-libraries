@@ -677,12 +677,19 @@ void applications_scan ( void ) {
 	// is this app suppressed? if not, show it in whatever categories the user is allowing
 	if ( iter -> unique_id && app_is_visible ( g_conf, iter -> unique_id ) ) {
 
+#if 0
+	  pnd_log ( pndn_rem, "App %s [%s] cat %s %s %s alt %s %s %s\n",
+		    iter -> unique_id, IFNULL(iter->title_en,"n/a"),
+		    IFNULL(iter->main_category,"n/a"), IFNULL(iter->main_category1,"n/a"), IFNULL(iter->main_category2,"n/a"),
+		    IFNULL(iter->alt_category,"n/a"), IFNULL(iter->alt_category1,"n/a"), IFNULL(iter->alt_category2,"n/a") );
+#endif
+
 	  // main categories
 	  category_meta_push ( iter -> main_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category ), 1);
 	  category_meta_push ( iter -> main_category1, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category1 ), 0 );
 	  category_meta_push ( iter -> main_category2, iter -> main_category, iter, ovrh, cat_is_visible ( g_conf, iter -> main_category2 ), 0 );
 	  // alt categories
-	  category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ), 1 );
+	  category_meta_push ( iter -> alt_category, NULL /* no parent cat */, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category ), 2 );
 	  category_meta_push ( iter -> alt_category1, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category1 ), 0 );
 	  category_meta_push ( iter -> alt_category2, iter -> alt_category, iter, ovrh, cat_is_visible ( g_conf, iter -> alt_category2 ), 0 );
 
