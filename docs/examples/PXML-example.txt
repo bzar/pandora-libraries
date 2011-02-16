@@ -1,0 +1,3 @@
+The best and most-current PXML example (if overly comprehensive) is here:
+
+http://pandorawiki.org/PXML_archetype
