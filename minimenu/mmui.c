@@ -4023,7 +4023,7 @@ void ui_manage_categories ( void ) {
       break;
 
     case 3: // register custom sub
-      if ( mmcustom_count ) {
+      if ( 1 /*mmcustom_count -- we allow FD cats now, so this isn't applicable error */ ) {
 
 	char *maincat = ui_pick_custom_category ( 1 /* include FD */ );
 
