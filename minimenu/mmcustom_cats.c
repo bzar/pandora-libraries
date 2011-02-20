@@ -145,6 +145,25 @@ mmcustom_cat_t *mmcustom_query ( char *name, char *parentcatname ) {
   return ( NULL );
 }
 
+unsigned int mmcustom_subcount ( char *parentcatname ) {
+  unsigned int counter = 0;
+
+  int i;
+
+  // search for the cat/parent combination
+  for ( i = 0; i < mmcustom_count; i++ ) {
+
+    if ( mmcustom_complete [ i ].parent_cat &&
+	 strcmp ( mmcustom_complete [ i ].parent_cat, parentcatname ) == 0 )
+    {
+      counter++;
+    }
+
+  } // for
+
+  return ( counter );
+}
+
 mmcustom_cat_t *mmcustom_register ( char *catname, char *parentcatname ) {
   mmcustom_complete [ mmcustom_count ].cat = strdup ( catname );
   if ( parentcatname ) {
@@ -219,10 +238,10 @@ void mmcustom_unregister ( char *catname, char *parentcatname ) {
   } // for
 
   // kill the actual cat itself
-  if ( i >= 0 ) {
+  if ( parent_index >= 0 ) {
     pnd_log ( pndn_warning, "  Removing cat: %s\n", catname );
-    free ( mmcustom_complete [ i ].cat );
-    mmcustom_complete [ i ].cat = NULL;
+    free ( mmcustom_complete [ parent_index ].cat );
+    mmcustom_complete [ parent_index ].cat = NULL;
   }
 
   return;

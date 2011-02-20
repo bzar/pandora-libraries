@@ -25,6 +25,7 @@ unsigned char mmcustom_write ( char *fullpath /* if NULL, uses canonical locatio
 char *mmcustom_determine_path ( void );
 
 mmcustom_cat_t *mmcustom_query ( char *catname, char *parentcatname ); // parentcatname NULL for parents
+unsigned int mmcustom_subcount ( char *parentcatname ); // how many custom subcats of the named cat (FD or custom)
 
 mmcustom_cat_t *mmcustom_register ( char *catname, char *parentcatname );
 void mmcustom_unregister ( char *catname, char *parentcatname );

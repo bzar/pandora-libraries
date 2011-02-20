@@ -3941,17 +3941,13 @@ void ui_manage_categories ( void ) {
     switch ( sel ) {
 
     case 0: // list custom
-      if ( mmcustom_count ) {
-	ui_pick_custom_category ( 0 );
-      } else {
-	ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
-      }
+      ui_pick_custom_category ( 0 );
       break;
 
     case 1: // list custom sub
       if ( mmcustom_count ) {
 
-	char *maincat = ui_pick_custom_category ( 0 );
+	char *maincat = ui_pick_custom_category ( 2 );
 
 	if ( maincat ) {
 	  unsigned int subcount = mmcustom_count_subcats ( maincat );
@@ -4094,7 +4090,7 @@ void ui_manage_categories ( void ) {
 
     case 5: // unreg custom sub
       if ( mmcustom_count ) {
-	char *maincat = ui_pick_custom_category ( 0 );
+	char *maincat = ui_pick_custom_category ( 2 );
 
 	if ( maincat ) {
 	  unsigned int subcount = mmcustom_count_subcats ( maincat );
@@ -4167,42 +4163,62 @@ void ui_manage_categories ( void ) {
   return;
 }
 
-char *ui_pick_custom_category ( unsigned char include_fd ) {
+// mode 0 == custom main only; 1 == custom main + FD main; 2 == custom main + FD mains-with-custom-subs
+char *ui_pick_custom_category ( unsigned char mode ) {
   char **list;
   int i;
   unsigned int counter = 0;
 
-  if ( include_fd ) {
+  // alloc space for list, depending on scope
+  if ( mode > 0 ) {
     list = malloc ( (mmcustom_count+freedesktop_count()) * sizeof(char*) );
   } else {
     list = malloc ( mmcustom_count * sizeof(char*) );
   }
 
-  // add custom
+  // add custom mains
   for ( i = 0; i < mmcustom_count; i++ ) {
     if ( mmcustom_complete [ i ].parent_cat == NULL ) {
       list [ counter++ ] = mmcustom_complete [ i ].cat;
     }
   }
 
-  // add FD
-  if ( include_fd ) {
+  // add FD if needed
+  if ( mode > 0 ) {
     i = 3;
+
     while ( 1 ) {
 
       if ( ! freedesktop_complete [ i ].cat ) {
 	break;
       }
 
+      // if FD main cat
       if ( freedesktop_complete [ i ].parent_cat == NULL ) {
-	list [ counter++ ] = freedesktop_complete [ i ].cat;
-      }
+
+	// mode 1 == include them all
+	// mode 2 == include them if they have a custom subcat
+	if ( ( mode == 1 ) ||
+	     ( mmcustom_subcount ( freedesktop_complete [ i ].cat ) ) )
+	{
+	  list [ counter++ ] = freedesktop_complete [ i ].cat;
+	}
+
+      } // if parent cat
 
       i++;
     } // while
+
   } // if
 
-  int sel = ui_modal_single_menu ( list, counter, "Custom Main Categories", "Any button to exit." );
+  // we actually showing anything?
+  if ( ! counter ) {
+    ui_menu_oneby ( "Warning", "B/Enter to accept", "There are none registered." );
+    return ( NULL );
+  }
+
+  // do it
+  int sel = ui_modal_single_menu ( list, counter, "Custom Categories", "Any button to exit." );
 
   if ( sel < 0 ) {
     free ( list );
