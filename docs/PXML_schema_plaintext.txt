@@ -1,3 +1,23 @@
+
+NOTES:
+
+Note 1) PXML_schema.xsd is overly picky about line-ordering; the line order is not required in practice,
+        but requiring the ordering makes the validator happy; this the validator may reject a valid PXML.xml
+Note 2) libpnd is not (currently) as picky as the validator (since it only consumes some values, and will
+        sometimes 'trust' bad values in hopes things will just work anyway), but many of the online download
+        repositories _will_ use this validator, so it is probably a good idea to make your PXMLs conform!
+Note 3) These points aside -- anything passing the validator should pass into libpnd just fint; PXML.xmls that
+        do not pass the validator may well work with libpnd, depending on the nature of the rejection --
+        if the PXML.xml is just bad, fix it! But if the validator rejects the PXML.xml on grounds of
+        bad categories or line ordering or whatever, then libpnd will 'accept' the application, but may
+        massage things to work.
+Note 4) minimenu and xfce and other Freedesktop Statandard adhering applications may actually be pickier about
+        some things than the validator -- the validator will verify the categories and subcategories are
+        known to the Freedesktop spec, but does not validate that a FD subcategory actually belongs to the
+        listed parent category. 
+
+Now, onto the actual specification:
+
 1) at the root there is *exactly* one PXML block
 2) inside this PXML block are >=1 <application> blocks
         (required) id=DUMBFOLDERNAME
