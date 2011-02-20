@@ -1,0 +1,68 @@
+1) at the root there is *exactly* one PXML block
+2) inside this PXML block are >=1 <application> blocks
+        (required) id=DUMBFOLDERNAME
+        (optional) appdata=DUMBFOLDERNAME
+
+inside each application block:
+1) =1 <exec>
+        (required) command=TOKEN
+        (optional) arguments=TOKEN
+        (optional) background=BOOLEAN
+        (optional) startdir=DUMBPATH
+        (optional) standalone=BOOLEAN
+        (optional) x11=[req|stop|ignore]
+2) >=1 <title>TEXT</title>
+        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
+3) =1 <author>
+        (required) name=TEXT
+        (optional) website=anyURI
+        (optional) email=EMAILADDRESS
+4) =1 <version>
+        (required) major=VERSION_NR
+        (required) minor=VERSION_NR
+        (required) release=VERSION_NR
+        (required) build=VERSION_NR
+5) <=1 <osversion>
+        (required) major=VERSION_NR
+        (required) minor=VERSION_NR
+        (required) release=VERSION_NR
+        (required) build=VERSION_NR
+6) >=0 <description>TEXT</description>
+        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
+7) <=1 <icon>
+        (required) src=DUMBPATH
+8) <=1 <previewpics>
+        (optional) >=0 <pic>
+                        (required) src=DUMBPATH
+9) <=1 <info>
+        (required) name=TEXT
+        (required) type=[text/html|text/plain]
+        (required) src=DUMBPATH
+10)=1 <categories>
+        (required) >=1 <category>
+                        (required) name=fdoCategory
+                        (optional) <subcategory>
+                                  (required) name=fdoSubCategory
+11)<=1 <associations>
+        (required) >=1 <association>
+                        (required) name=TEXT
+                        (required) filetype=TOKEN
+                        (required) arguments=TOKEN
+12)<=1 <clockspeed>
+        (required) frequency=positiveInteger
+
+
+
+Filetype/variable explaination:
+anyURI: should be some URL, no idea what exactly XML accepts there... (XML variable 'anyURI'!)
+BOOLEAN: 0 or 1 or true or false (XML variable 'boolean'!)
+DUMBFOLDERNAME: TEXT without ?>:/
+DUMBPATH: TEXT without ?>:
+EMAILADDRESS: [^@]+@[^\.]+\..+      in normal lang: something with an @ in the middle and some domain like thingie
+LANGCODE: [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})*   example: en, eng, en_US, fur_IT
+TEXT: The normalizedString data type also contains characters, but the XML processor will remove line feeds, carriage returns, and tab characters. (XML variable 'normalizedString'!)
+TOKEN: The token data type also contains characters, but the XML processor will remove line feeds, carriage returns, tabs, leading and trailing spaces, and multiple spaces. (XML variable 'token'!)
+VERSION_NR: [a-zA-Z0-9+-]*   example: 1, a, +svn, -svn, 123456789123456789
+
+fdoCategory=AudioVideo|Audio|Video|Development|Education|Game|Graphics|Network|Office
+fdoSubCategory=Building|Debugger|IDE|GUIDesigner|Profiling|RevisionControl|Translation|Calendar|ContactManagement|Database|Dictionary|Chart|Email|Finance|FlowChart|PDA|ProjectManagement|Presentation|Spreadsheet|WordProcessor|2DGraphics|VectorGraphics|RasterGraphics|3DGraphics|Scanning|OCR|Photography|Publishing|Viewer|TextTools|DesktopSettings|HardwareSettings|Printing|PackageManager|Dialup|InstantMessaging|Chat|IRCClient|FileTransfer|HamRadio|News|P2P|RemoteAccess|Telephony|TelephonyTools|VideoConference|WebBrowser|WebDevelopment|Midi|Mixer|Sequencer|Tuner|TV|AudioVideoEditing|Player|Recorder|DiscBurning|ActionGame|AdventureGame|ArcadeGame|BoardGame|BlocksGame|CardGame|KidsGame|LogicGame|RolePlaying|Simulation|SportsGame|StrategyGame|Art|Construction|Music|Languages|Science|ArtificialIntelligence|Astronomy|Biology|Chemistry|ComputerScience|DataVisualization|Economy|Electricity|Geography|Geology|Geoscience|History|ImageProcessing|Literature|Math|NumericalAnalysis|MedicalSoftware|Physics|Robotics|Sports|ParallelComputing|Amusement|Archiving|Compression|Electronics|Emulator|Engineering|FileTools|FileManager|TerminalEmulator|Filesystem|Monitor|Security|Accessibility|Calculator|Clock|TextEditor|Documentation|Core|KDE|GNOME|GTK|Qt|Motif|Java|ConsoleOnly
