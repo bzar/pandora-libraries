@@ -24,7 +24,7 @@ static int notify_handle;
 #if 1
 #define PND_INOTIFY_MASK     IN_CREATE | IN_DELETE | IN_UNMOUNT \
                              | IN_DELETE_SELF | IN_MOVE_SELF    \
-                             | IN_MOVED_FROM | IN_MOVED_TO | IN_MODIFY
+                             | IN_MOVED_FROM | IN_MOVED_TO | IN_CLOSE_WRITE
 #else
 #define PND_INOTIFY_MASK     IN_ALL_EVENTS
 #endif
