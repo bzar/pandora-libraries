@@ -79,12 +79,22 @@ int main ( int argc, char *argv[] ) {
 
   printf ( "Got back a meaningful list of PXMLs.\n" );
 
-  pnd_pxml_handle h = *pxmlapps;
+  unsigned int appiter = 0;
+  while ( 1 ) {
 
-  while ( h ) {
+    pnd_pxml_handle h = pxmlapps [ appiter ];
+
+    if ( ! h ) {
+      break;
+    }
+
+    // if you want to just go direct to struct - not wise!
+    //pnd_pxml_t *p = pxmlapps [ appiter ];
+    //printf ( "uid %s\n", p -> unique_id );
 
     /* check the content
      */
+    printf ( "Found name: '%s'\n", pnd_pxml_get_app_name_en ( h ) );
 
     // check for required fields
 
@@ -99,13 +109,11 @@ int main ( int argc, char *argv[] ) {
     // free up that particular pxml_handle within the return-list
 
     // next
-    pxmlapps++;
-    h = pxmlapps;
+    appiter++;
   } // while
 
   /* done!
    */
-  pnd_pxml_delete ( pxmlapps );
 
   return ( 0 );
 }
