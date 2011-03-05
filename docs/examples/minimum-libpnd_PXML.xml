@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is a minimum example that will work on the pandora, but is *not* following the schema and lots of information that will be required for repositories based on the PXML specs is not available. -->
+<PXML xmlns="http://openpandora.org/namespaces/PXML">
+  <application id="sample-app">
+    <exec command="run.sh"/>
+    <title lang="en_US">Sample Application</title>
+  </application>
+</PXML>

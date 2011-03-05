@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is an complex example defining a "real" package collection. It offers several applications, all using different features of PXML.-->
+<PXML xmlns="http://openpandora.org/namespaces/PXML">
+  <package id="sample-package">
+    <version major="1" minor="0" release="0" build="0" type="release"/>
+    <author name="packagers name" website="http://www.website.foo" email="user@name.who"/>
+    <titles>
+      <title lang="en_US">Sample Collection</title>
+      <title lang="de_DE">Beispiel Sammlung</title>
+    </titles>
+    <descriptions>
+      <description lang="en_US">This is a really verbose package with a whole lot of stuff from 2 different sources, mixing different things, having stuff in ways sometimes making use of stuff, often not.</description>
+      <description lang="de_DE">Die gleiche Beschreibung wie oben, nur auf deutsch.</description>
+    </descriptions>
+    <icon src="my-icon.png"/>
+  </package>
+  
+  <application id="sample-app1">
+    <exec command="run.sh" x11="req"/>
+    <version major="1" minor="18" release="0" build="0" type="alpha"/>
+    <author name="the authors name" website="http://www.openpandora.org"/>
+    <titles>
+      <title lang="en_US">Sample Application 1</title>
+      <title lang="de_DE">Beispiel Anwendung 1</title>
+    </titles>
+    <title lang="en_US">Sample Application 1</title> <!--Extra block for compatibility with OS versions before HF6-->
+    <descriptions>
+      <description lang="en_US">A really lenghty description for the application.</description>
+      <description lang="de_DE">Die Beschreibung einer Beispielanwendung.</description>
+    </descriptions>
+    <description lang="en_US">A really lenghty description for the application.</description> <!--Extra block for compatibility with OS versions before HF6-->
+    <icon src="my-icon.png"/>
+    <previewpics>
+      <pic src="preview-image.png"/>
+      <pic src="application_1.png"/>
+    </previewpics>
+    <info name="Readme" type="text/html" src="readme.html"/>
+    <licenses>
+      <license name="I do as I please" sourcecodeurl="git://git.openpandora.org/special_project"/>
+    </licenses>
+    <categories>
+      <category name="Game">
+        <subcategory name="Emulator"/>
+      </category>
+      <category name="System">
+        <subcategory name="Emulator"/>
+      </category>
+    </categories>
+  </application>
+  
+  <application id="sample-app2" appdata="sample-app1">
+    <exec command="run2.sh"/>
+    <version major="1" minor="17" release="3" build="4" type="release"/>
+    <author name="the authors name" website="http://www.openpandora.org"/>
+    <titles>
+      <title lang="en_US">Sample Application</title>
+      <title lang="de_DE">Beispiel Anwendung</title>
+    </titles>
+    <title lang="en_US">Sample Application</title> <!--Extra block for compatibility with OS versions before HF6-->
+    <descriptions>
+      <description lang="en_US">A really lenghty description for the application. Just different</description>
+      <description lang="de_DE">Die Beschreibung einer *anderen* Beispielanwendung.</description>
+      <description lang="fr_FR">This is in french!</description>
+    </descriptions>
+    <description lang="en_US">A really lenghty description for the application. Just different</description> <!--Extra block for compatibility with OS versions before HF6-->
+    <info name="Readme (old)" type="text/html" src="readme_old.html"/>
+    <icon src="my-icon2.png"/>
+    <licenses>
+      <license name="other" url="http://openpandora.org/pandora_special.html"/>
+      <license name="Qt-commercial" url="http://url.openpandora.org/commercial_license.html"/>
+      <license name="public domain"/>
+      <license name="GPLv2+" url="http://www.gnu.org/licenses/gpl-2.0.html" sourcecodeurl="http://pandora.org/sources/package.tar.bz2"/>
+    </licenses>
+    <categories>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  </application>
+  
+  <application id="sample-app3">
+    <exec command="bin/tool" standalone="false"/>
+    <version major="1" minor="0" release="0" build="1"/>
+    <author name="completely different author" website="http://www.website.foo" email="user@name.who"/>
+    <titles>
+      <title lang="en_US">Sample Application</title>
+    </titles>
+    <title lang="en_US">Sample Application</title> <!--Extra block for compatibility with OS versions before HF6-->
+    <descriptions>
+      <description lang="en_US">Additional tool description.</description>
+    </descriptions>
+    <description lang="en_US">Additional tool description.</description> <!--Extra block for compatibility with OS versions before HF6-->
+    <icon src="no-real-icon.png"/>
+    <licenses>
+      <license name="GPLv2+" url="http://www.gnu.org/licenses/gpl-2.0.html" sourcecodeurl="http://pandora.org/sources/package.tar.bz2"/>
+    </licenses>
+    <previewpics>
+      <pic src="different-preview-image.png"/>
+    </previewpics>
+    <categories>
+      <category name="System">
+      </category>
+    </categories>
+    <associations>
+      <association name="Deinterlaced Bitmap Image" filetype="image/bmp" exec="-f %s --no-deinterlacing"/>
+      <association name="Style sheet system crasher" filetype="text/css" exec="-f %s --crash-on-success"/>
+    </associations>
+  </application>
+</PXML>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is a minimum example that will validate with the schema but basically offer nothing beside what really is required. This application should work nicely with any pnd repositories based upon the PXML specs.
+     NOTE: This application will not work with pre HF6, for support for OS versions up to HF6 an additional <title> block outside of <titles> is required!-->
+<PXML xmlns="http://openpandora.org/namespaces/PXML">
+  <package id="sample-package">
+    <version major="1" minor="17" release="3" build="4"/>
+    <author name="the authors name"/>
+    <titles>
+      <title lang="en_US">Sample Application</title>
+    </titles>
+  </package>
+  
+  <application id="sample-app">
+    <exec command="run.sh"/>
+    <titles>
+      <title lang="en_US">Sample Application</title>
+    </titles>
+	<!--<title lang="en_US">Sample Application</title>--> <!--Extra block for compatibility with OS versions before HF6-->
+    <author name="the authors name"/>
+    <version major="1" minor="17" release="3" build="4"/>
+    <licenses>
+      <license name="other"/>
+    </licenses>
+    <categories>
+      <category name="Game"/>
+    </categories>
+  </application>
+</PXML>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This is an example how a "common" pnd with just one application could look. Most of the information for the <package> block can in this case directly be copied over from the respective parts in the <application> block.-->
+<PXML xmlns="http://openpandora.org/namespaces/PXML">
+  <package id="sample-app">
+    <version major="1" minor="17" release="3" build="4"/>
+    <author name="the authors name" website="http://www.openpandora.org"/>
+    <titles>
+      <title lang="en_US">Sample Application</title>
+      <title lang="de_DE">Beispiel Anwendung</title>
+    </titles>
+    <descriptions>
+      <description lang="en_US">A really lenghty description for the application.</description>
+      <description lang="de_DE">Die Beschreibung einer Beispielanwendung.</description>
+    </descriptions>
+    <icon src="my-icon.png"/>
+  </package>
+  
+  <application id="sample-app">
+    <exec command="run.sh" x11="req"/>
+    <version major="1" minor="17" release="3" build="4"/>
+    <author name="the authors name" website="http://www.openpandora.org"/>
+    <titles>
+      <title lang="en_US">Sample Application</title>
+      <title lang="de_DE">Beispiel Anwendung</title>
+    </titles>
+    <title lang="en_US">Sample Application</title> <!--Extra block for compatibility with OS versions before HF6-->
+    <descriptions>
+      <description lang="en_US">A really lenghty description for the application.</description>
+      <description lang="de_DE">Die Beschreibung einer Beispielanwendung.</description>
+    </descriptions>
+    <description lang="en_US">A really lenghty description for the application.</description> <!--Extra block for compatibility with OS versions before HF6-->
+    <icon src="my-icon.png"/>
+    <licenses>
+      <license name="GPLv2+" url="http://www.gnu.org/licenses/gpl-2.0.html" sourcecodeurl="http://pandora.org/sources/package.tar.bz2"/>
+    </licenses>
+    <previewpics>
+      <pic src="preview-image.png"/>
+    </previewpics>
+    <info name="Readme" type="text/html" src="readme.html"/>
+    <categories>
+      <category name="Game">
+        <subcategory name="StrategyGame"/>
+      </category>
+    </categories>
+  </application>
+</PXML>

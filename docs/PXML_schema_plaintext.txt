@@ -1,29 +1,67 @@
-
 NOTES:
-
-Note 1) PXML_schema.xsd is overly picky about line-ordering; the line order is not required in practice,
-        but requiring the ordering makes the validator happy; this the validator may reject a valid PXML.xml
-Note 2) libpnd is not (currently) as picky as the validator (since it only consumes some values, and will
+Note 1) libpnd is not (currently) as picky as the validator (since it only consumes some values, and will
         sometimes 'trust' bad values in hopes things will just work anyway), but many of the online download
-        repositories _will_ use this validator, so it is probably a good idea to make your PXMLs conform!
-Note 3) These points aside -- anything passing the validator should pass into libpnd just fint; PXML.xmls that
+        repositories _will_ use this validator, so it is probably a good idea to make your PXMLs conform! For
+        example the <package> block is currently not used/required for libpnd to work.
+Note 2) These points aside -- anything passing the validator should pass into libpnd just fine; PXML.xmls that
         do not pass the validator may well work with libpnd, depending on the nature of the rejection --
         if the PXML.xml is just bad, fix it! But if the validator rejects the PXML.xml on grounds of
         bad categories or line ordering or whatever, then libpnd will 'accept' the application, but may
-        massage things to work.
-Note 4) minimenu and xfce and other Freedesktop Statandard adhering applications may actually be pickier about
+        massage things to work (eg add the application into the category 'Other' or do some more obscure things).
+Note 3) minimenu and xfce and other Freedesktop Standard adhering applications may actually be pickier about
         some things than the validator -- the validator will verify the categories and subcategories are
         known to the Freedesktop spec, but does not validate that a FD subcategory actually belongs to the
         listed parent category. 
 
+How to read this doc:
+* Every entry comes with a cardinality. Here is the meaning of those:
+  =1: this block is required exactly once
+  <=1: up to one of those blocks is allowed (0 or 1)
+  >=1: at least one of those is allowed, more are possible but optional
+  >=0: optional element that can be added in unlimited numbers
+* The actually used 'tag's are always displayed in this form: <tag>.
+* Arguments are always marked either as optional or required and mention what allowed values are. At the bottom
+  of this doc is an explanation of most of those values. If you see [abc|xyz] it means that either 'abc' or
+  'xyz' are valid values.
+* In general 'order' of elements does not matter unless stated otherwise.
+* If a block is used, the content is usually *NOT* allowed to be empty. So if you don't want to use something,
+  don't specify that argument!
+
+
 Now, onto the actual specification:
 
-1) at the root there is *exactly* one PXML block
-2) inside this PXML block are >=1 <application> blocks
+1) at the root there is *exactly* one <PXML> block
+2) inside this PXML block is exactly =1 <package> block
+        (required) id=DUMBFOLDERNAME
+3) inside this PXML block are >=1 <application> blocks
         (required) id=DUMBFOLDERNAME
         (optional) appdata=DUMBFOLDERNAME
 
-inside each application block:
+
+inside the <package> block:
+1) =1 <author>
+        (required) name=TEXT
+        (optional) website=anyURI
+        (optional) email=EMAILADDRESS
+2) =1 <version>
+        (required) major=VERSION_NR
+        (required) minor=VERSION_NR
+        (required) release=VERSION_NR
+        (required) build=VERSION_NR
+        (optional) type=[alpha|beta|release]
+3) =1 <titles> (order matters!)
+        (required) =1 <description lang="en_US">TEXT</description> (enforcing that an en_US string is available, has to be listed first)
+        (optional) >=1 <title>TEXT</title>
+                        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
+4) <=1 <descriptions> (order matters!)
+        (required) =1 <description lang="en_US">TEXT</description> (enforcing that an en_US string is available, has to be listed first)
+        (optional) >=0 <description>TEXT</description>
+                        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
+5) <=1 <icon>
+        (required) src=DUMBPATH
+
+
+inside each <application> block:
 1) =1 <exec>
         (required) command=TOKEN
         (optional) arguments=TOKEN
@@ -31,49 +69,61 @@ inside each application block:
         (optional) startdir=DUMBPATH
         (optional) standalone=BOOLEAN
         (optional) x11=[req|stop|ignore]
-2) >=1 <title>TEXT</title>
-        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
-3) =1 <author>
+2) =1 <author>
         (required) name=TEXT
         (optional) website=anyURI
         (optional) email=EMAILADDRESS
-4) =1 <version>
+3) =1 <version>
         (required) major=VERSION_NR
         (required) minor=VERSION_NR
         (required) release=VERSION_NR
         (required) build=VERSION_NR
-5) <=1 <osversion>
+        (optional) type=[alpha|beta|release] (if not specified 'release' will be assumed)
+4) <=1 <osversion>
         (required) major=VERSION_NR
         (required) minor=VERSION_NR
         (required) release=VERSION_NR
         (required) build=VERSION_NR
-6) >=0 <description>TEXT</description>
-        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
-7) <=1 <icon>
+5) =1 <titles> (order matters!)
+        (required) =1 <title lang="en_US">TEXT</title> (enforcing that an en_US string is available, has to be listed first)
+        (optional) >=0 <title>TEXT</title>
+                        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
+6) <=1 <title lang="en_US">TEXT</title> (meant for compatibility with <=HF6, only en_US supported)
+7) <=1 <descriptions> (order matters!)
+        (required) =1 <description lang="en_US">TEXT</description> (enforcing that an en_US string is available, has to be listed first)
+        (optional) >=0 <description>TEXT</description>
+                        (required) lang=LANGCODE ( [a-zA-Z]{2,3}(_[a-zA-Z0-9]{2,3})* )
+8) <=1 <description lang="en_US">TEXT</description> (meant for compatibility with <=HF6, only en_US supported)
+9) <=1 <icon>
         (required) src=DUMBPATH
-8) <=1 <previewpics>
+10)=1 <licenses>
+        (required) >=1 <license>
+                        (required) name=TEXT
+                        (required) url=anyURI
+                        (required) sourcecodeurl=anyURI
+11)<=1 <previewpics>
         (optional) >=0 <pic>
                         (required) src=DUMBPATH
-9) <=1 <info>
+12)<=1 <info>
         (required) name=TEXT
         (required) type=[text/html|text/plain]
         (required) src=DUMBPATH
-10)=1 <categories>
+13)=1 <categories>
         (required) >=1 <category>
                         (required) name=fdoCategory
                         (optional) <subcategory>
                                   (required) name=fdoSubCategory
-11)<=1 <associations>
+14)<=1 <associations>
         (required) >=1 <association>
                         (required) name=TEXT
                         (required) filetype=TOKEN
                         (required) arguments=TOKEN
-12)<=1 <clockspeed>
+15)<=1 <clockspeed>
         (required) frequency=positiveInteger
 
 
 
-Filetype/variable explaination:
+Filetype/variable explanation:
 anyURI: should be some URL, no idea what exactly XML accepts there... (XML variable 'anyURI'!)
 BOOLEAN: 0 or 1 or true or false (XML variable 'boolean'!)
 DUMBFOLDERNAME: TEXT without ?>:/

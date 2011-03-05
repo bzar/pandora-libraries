@@ -1,43 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PXML xmlns="http://openpandora.org/namespaces/PXML" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="youruniqueID" xsi:noNamespaceSchemaLocation="PXML_schema.xsd">
-  <title lang="en_US">Program Title</title>
-  <title lang="de_DE">German Program Title</title>
+<!-- This is a sample PXML.xml file making use of many different things.-->
+<PXML xmlns="http://openpandora.org/namespaces/PXML">
 
-  <exec background="true" startdir="/usr/share/icons/" standalone="true" command="program.exe"/>
+  <package id="some_unique_package_id">
 
-  <icon src="program.png"/>
+    <version major="1" minor="17" release="3" build="4" type="beta"/>
 
-  <description lang="en_US">This is the English Description of the file.</description>
-  <description lang="de_DE">This would be the German description.</description>
+    <author name="the packagers name" website="http://www.openpandora.org"/>
 
-  <previewpics>
-    <pic src="./preview/pic1.jpg"/>
-    <pic src="./preview/pic2.jpg"/>
-  </previewpics>
+    <titles>
+      <title lang="en_US">Program Title</title>
+      <title lang="de_DE">German Program Title</title>
+    </titles>
 
-  <author name="EvilDragon" website="http://www.openpandora.org"/><!--Optional email and website, name required-->
+    <descriptions>
+      <description lang="en_US">This is the English Description of the file.</description>
+      <description lang="de_DE">This would be the German description.</description>
+    </descriptions>
 
-  <version major="1" minor="1" release="1" build="2"/><!--This program's version-->
-  <osversion major="1" minor="0" release="0" build="0"/><!--The minimum OS version required-->
+    <icon src="my-icon.png"/>
 
-  <categories>
-    <category name="Main category"><!--category like "Games", "Graphics", "Internet" etc-->
-    <subcategory name="Subcategory 1"/><!--subcategory, like "Board Games", "Strategy", "First Person Shooters"-->
-    <subcategory name="Subcategory 2"/>
-    </category>
-    <category name="Alternative category">
-      <subcategory name="Alternative Subcategory 1"/>
-    </category>
-  </categories>
+  </package>
 
-  <associations>
-    <!--File associations, with a short description, an extension, and start params.-->
-    <association name="View Word File" filetype="application/msword" exec="-f %s -t doc"/>
-  </associations>
 
-  <clockspeed frequency="600"/><!--Frequency in Hz-->
+  <application id="youruniqueID">
+    <exec background="true" startdir="/usr/share/icons/" standalone="true" command="program.exe"/>
 
-  <configuration for="gmenupandora">......kfujl........</configuration><!--random data, this is for specific menus-->
-  <configuration for="anothermenu">......qwe......fwer.....</configuration>
+    <version major="1" minor="1" release="1" build="2" type="release"/> <!--This program's version-->
+
+    <osversion major="1" minor="0" release="0" build="0"/> <!--The minimum OS version required-->
+
+    <author name="EvilDragon" website="http://www.openpandora.org"/> <!--Optional email and website, name required-->
+
+    <titles>
+      <title lang="en_US">Program Title</title>
+      <title lang="de_DE">German Program Title</title>
+    </titles>
+    <title lang="en_US">Program Title</title> <!--Extra <title> block for compatibility with OS versions before HF6-->
+
+    <descriptions>
+      <description lang="en_US">This is the English Description of the file.</description>
+      <description lang="de_DE">This would be the German description.</description>
+    </descriptions>
+    <description lang="en_US">This is the English Description of the file.</description> <!--Extra <description> block for compatibility with OS versions before HF6-->
+
+    <icon src="my-icon.png"/>
+
+    <licenses>
+      <license name="GPLv2+" url="http://www.gnu.org/licenses/gpl-2.0.html" sourcecodeurl="http://openpandora.org/sources/package.tar.bz2"/><!--Optional url and sourcecodeurl, mandatory name-->
+    </licenses>
+
+    <previewpics>
+      <pic src="./preview/pic1.jpg"/>
+      <pic src="./preview/pic2.jpg"/>
+    </previewpics>
+
+    <info name="Readme" type="text/html" src="readme.html"/>
+
+    <!--the categories has to conform to the FDO categories, those will be enforced by the schema and libpnd!-->
+    <categories>
+      <category name="Utility"><!--Main category: a category like "Game", "Graphics", "Network", etc-->
+        <subcategory name="FileTools"/><!--Subcategory 1: a subcategory, like "BoardGame", "StrategyGame", "ActionGame"-->
+        <subcategory name="Archiving"/><!--Subcategory2: another subcategory, but make sure to match the main category, too!-->
+      </category>
+	  <category name="System"><!--Alternative category-->
+        <subcategory name="Filesystem"/><!--Alternative Subcategory 1-->
+      </category>
+    </categories>
+
+    <associations>
+      <!--File associations, with a short description, an extension, and start params.-->
+      <association name="View Word File" filetype="application/msword" exec="-f %s -t doc"/>
+    </associations>
+
+    <clockspeed frequency="600"/><!--Frequency in Hz-->
+
+  </application>
+
 </PXML>

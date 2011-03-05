@@ -1,3 +1,8 @@
 The best and most-current PXML example (if overly comprehensive) is here:
 
 http://pandorawiki.org/PXML_archetype
+
+Various stages of PXML.xml files are shown here. They show the minimum that
+still validates with the schema, the minimum that is usable on the pandora, as
+well as some examples of average and "full" case. At the top of each file you
+will find a short summary what this PXML.xml file tries to show.
