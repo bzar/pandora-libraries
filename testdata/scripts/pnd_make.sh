@@ -143,26 +143,23 @@ done
 
 
 # Generate a PXML if the param is set to Guess or it is empty.
-#TODO: make sure this does still work nicely with the latest genpxml that sebt3 is working on!
 if [ ! $PXML ] || [ $PXML = "guess" ] && [ $PNDNAME ] && [ $FOLDER ];
 then
 	if [ -f $FOLDER/PXML.xml ]; # use the already existing PXML.xml file if there is one...
 	then
 		PXML=$FOLDER/PXML.xml
-		PWML_ALREADY_EXISTING="true"
+		PXML_ALREADY_EXISTING="true"
 	else
 		if [ -f $GENPXML_PATH ];
 		then
-			PXMLtxt=$($GENPXML_PATH $FOLDER $ICON)
-			if [ -z $PXMLtxt ];
+			$GENPXML_PATH --src $FOLDER --dest $FOLDER --author $USER
+			if [ -f $FOLDER/PXML.xml ];
 			then
+				PXML_GENERATED="true"
+			else
 				cecho "ERROR: Generating a PXML file using '$GENPXML_PATH' failed.
 Please generate a PXML file manually." $red
 				exit 1
-			else
-				PXML=$FOLDER/PXML.xml
-				echo "$PXMLtxt" > $FOLDER/PXML.xml
-				PXML_GENERATED="true"
 			fi
 		else
 			cecho "ERROR: Could not find '$GENPXML_PATH' for generating a PXML file." $red
@@ -201,7 +198,7 @@ then
 	cecho "ERROR: '$PXML' doesn't exist or is not a file." $red
 	exit 1
 else
-	if [ $PWML_ALREADY_EXISTING ];
+	if [ $PXML_ALREADY_EXISTING ];
 	then
 		echo "You have not explicitly specified a PXML to use, but an existing file was
 found. Will be using this one."
