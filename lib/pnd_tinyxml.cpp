@@ -26,80 +26,169 @@ unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app) {
   app->titles = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->titles_alloc_c);
   if (!app->titles) return (0); //errno = NOMEM
 
-  //Go through all title tags and load them.
-  for (pElem = hRoot.FirstChild(PND_PXML_ENAME_TITLE).Element(); pElem;
-       pElem = pElem->NextSiblingElement(PND_PXML_ENAME_TITLE))
-  {
+  // Go through all title tags and load them.
+  // - Check if newer style titles sub-block exists; if so, use that.
+  //   - if not, fall back to old style
+  //     - failing that, crash earth into sun
+  if ( (pElem = hRoot.FirstChild(PND_PXML_NODENAME_TITLES).Element()) ) {
+    // newer <titles> block
 
-    if ( ! pElem->GetText() ) {
-      continue;
-    }
+    pElem = pElem -> FirstChildElement ( PND_PXML_ENAME_TITLE );
 
-    char *text = strdup(pElem->GetText());
-    if (!text) continue;
+    while ( pElem ) {
 
-    char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_TITLELANG);
-    if (!lang) continue;
+      // handle <title lang="en_US">Program Title</title>
+      //
 
-    app->titles_c++;
-    if (app->titles_c > app->titles_alloc_c) //we don't have enough strings allocated
+      // parse out the text and lang
+      char *text, *lang;
+
+      if ( ! ( text = strdup ( pElem -> GetText() ) ) ) {
+	continue;
+      }
+
+      if ( ! ( lang = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_TITLELANG ) ) ) {
+	continue;
+      }
+
+      // increment counter; if we're running out of buffers, grow to handle the new strings
+      app -> titles_c++;
+
+      if ( app -> titles_c > app -> titles_alloc_c ) {
+	// we don't have enough strings allocated
+	app -> titles_alloc_c <<= 1;
+	app -> titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
+	if (!app->titles) return (0); //errno = ENOMEM
+      }
+
+      // populate the stringbuf
+      pnd_localized_string_t *title = &app->titles[app->titles_c - 1];
+      title->language = lang;
+      title->string = text;
+
+      // next
+      pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_TITLE );
+
+    } // foreach
+
+  } else {
+    // older style <title> entry series
+
+    for ( pElem = hRoot.FirstChild(PND_PXML_ENAME_TITLE).Element(); pElem;
+	  pElem = pElem->NextSiblingElement(PND_PXML_ENAME_TITLE))
     {
-      app->titles_alloc_c <<= 1;
-      app->titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
-      if (!app->titles) return (0); //errno = ENOMEM
-    }
 
-    pnd_localized_string_t *title = &app->titles[app->titles_c - 1];
-    title->language = lang;
-    title->string = text;
+      if ( ! pElem->GetText() ) {
+	continue;
+      }
 
-    //pnd_log ( PND_LOG_DEFAULT, (char*)"    Title/Lang: %s/%s\n", text, lang );
+      char *text = strdup(pElem->GetText());
+      if (!text) continue;
 
-  }
+      char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_TITLELANG);
+      if (!lang) continue;
+
+      app->titles_c++;
+      if (app->titles_c > app->titles_alloc_c) //we don't have enough strings allocated
+      {
+	app->titles_alloc_c <<= 1;
+	app->titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
+	if (!app->titles) return (0); //errno = ENOMEM
+      }
+
+      pnd_localized_string_t *title = &app->titles[app->titles_c - 1];
+      title->language = lang;
+      title->string = text;
+
+      //pnd_log ( PND_LOG_DEFAULT, (char*)"    Title/Lang: %s/%s\n", text, lang );
+
+    } // for
+
+  } // new or old style <title(s)>
 
   return ( 1 );
 }
 
-unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *app)
-{
-	TiXmlElement *pElem;
-	app->descriptions_alloc_c = 4; //TODO: adjust this based on how many descriptions a PXML usually has. Power of 2.
+unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *app) {
+  TiXmlElement *pElem;
+  app->descriptions_alloc_c = 4; //TODO: adjust this based on how many descriptions a PXML usually has. Power of 2.
 
-	app->descriptions = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->descriptions_alloc_c);
-	if (!app->descriptions) 
-	{
-		app->descriptions_alloc_c = 0;
-		return (0); //errno = NOMEM
-	}
+  app->descriptions = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->descriptions_alloc_c);
+  if (!app->descriptions) 
+  {
+    app->descriptions_alloc_c = 0;
+    return (0); //errno = NOMEM
+  }
 
-	for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem; 
-		pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
-	{
+  // similar logic to how <titles> or <title> is parsed
+  // - if <titles> block is found, use that; otherwise fall back to <title> deprecated form
+  if ( (pElem = hRoot.FirstChild ( PND_PXML_NODENAME_DESCRIPTIONS).Element() ) ) {
+    // newer style <descriptions> block
 
-	  if ( ! pElem->GetText() ) {
-	    continue;
-	  }
+    pElem = pElem -> FirstChildElement ( PND_PXML_ENAME_DESCRIPTION );
 
-	  char *text = strdup(pElem->GetText());
-	  if (!text) continue;
+    while ( pElem ) {
 
-	  char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
-	  if (!lang) continue;
+      char *text, *lang;
 
-	  app->descriptions_c++;
-	  if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
-	  {
-	    app->descriptions_alloc_c <<= 1;
-	    app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	    if (!app->descriptions) return (0); //errno = ENOMEM
-	  }
+      if ( ! ( text = strdup ( pElem -> GetText() ) ) ) {
+	continue;
+      }
 
-	  pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
-	  description->language = lang;
-	  description->string = text;
-	}
+      if ( ! ( lang = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_DESCRLANG ) ) ) {
+	continue;
+      }
 
-	return (1);
+      app->descriptions_c++;
+      if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
+      {
+	app->descriptions_alloc_c <<= 1;
+	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
+	if (!app->descriptions) return (0); //errno = ENOMEM
+      }
+
+      pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
+      description->language = lang;
+      description->string = text;
+
+      // next
+      pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_DESCRIPTION );
+
+    } // foreach
+
+  } else {
+    // fallback to older approach
+
+    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem; 
+	 pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
+    {
+
+      if ( ! pElem->GetText() ) {
+	continue;
+      }
+
+      char *text = strdup(pElem->GetText());
+      if (!text) continue;
+
+      char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
+      if (!lang) continue;
+
+      app->descriptions_c++;
+      if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
+      {
+	app->descriptions_alloc_c <<= 1;
+	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
+	if (!app->descriptions) return (0); //errno = ENOMEM
+      }
+
+      pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
+      description->language = lang;
+      description->string = text;
+    } // for
+
+  } // new form or old form?
+
+  return ( 1 );
 }
 
 unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int length, pnd_pxml_t **apps ) {

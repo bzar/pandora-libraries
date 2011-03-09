@@ -13,12 +13,18 @@ extern "C" {
 #define PND_PXML_APP "application"
 
 /* <title lang="..."> */
+// deprecated - Zaxxon firmware through HF5 (supported for backwards compatibility)
 #define PND_PXML_ENAME_TITLE "title"
 #define PND_PXML_ATTRNAME_TITLELANG "lang"
+// Zaxxon firmware from HF6 onwards
+#define PND_PXML_NODENAME_TITLES "titles"
 
 /* <description lang="...">... */
+// deprecated - Zaxxon firmware through HF5 (supported for backwards compatibility)
 #define PND_PXML_ENAME_DESCRIPTION "description"
 #define PND_PXML_ATTRNAME_DESCRLANG "lang"
+// Zaxxon firmware from HF6 onwards
+#define PND_PXML_NODENAME_DESCRIPTIONS "descriptions"
 
 /* <exec background="true" standalone="false" command="..." startdir="..." /> */
 #define PND_PXML_ENAME_EXEC "exec"
