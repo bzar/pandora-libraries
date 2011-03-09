@@ -356,6 +356,10 @@ char *pnd_pxml_get_icon ( pnd_pxml_handle h ) {
   return ( p -> icon );
 }
 
+// this guy's func name is 'out of sync' with the family of functions below; but since it
+// exists, rather than just remove it and break someones code, will add in the appropriate
+// function wrapper; the header only specifies the other guy (always did), so the header
+// was already on the right path.
 char *pnd_pxml_get_app_description ( pnd_pxml_handle h, char *iso_lang ) {
   pnd_pxml_t *p = (pnd_pxml_t *) h;
   return pnd_pxml_get_best_localized_string(p->descriptions, p->descriptions_c, iso_lang);
@@ -375,6 +379,11 @@ char *pnd_pxml_get_description_it ( pnd_pxml_handle h ) {
 
 char *pnd_pxml_get_description_fr ( pnd_pxml_handle h ) {
   return pnd_pxml_get_app_description(h, "fr");
+}
+
+// wrapper added so family of function names is consistent; see comment for pnd_pxml_get_app_description() above
+char *pnd_pxml_get_description ( pnd_pxml_handle h, char *iso_lang) {
+  return ( pnd_pxml_get_app_description ( h, iso_lang ) );
 }
 
 char *pnd_pxml_get_previewpic1 ( pnd_pxml_handle h ) {
