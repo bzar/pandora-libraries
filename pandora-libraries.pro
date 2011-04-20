@@ -4,7 +4,8 @@ SUBDIRS = pnd \
     pndevmapperd \
     pndnotifyd \
     pndrun \
-    pndvalidator
+    pndvalidator \
+	pnd_info
 
 pnd.subdir = pnd
 
@@ -16,6 +17,9 @@ pndnotifyd.depends = pnd
 
 pndrun.subdir = pndrun
 pndrun.depends = pnd
+
+pndinfo.subdir = pndinfo
+pndinfo.depends = pnd
 
 pndvalidator.subdir = pndvalidator
 pndvalidator.depends = pnd

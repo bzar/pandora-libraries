@@ -1,9 +1,9 @@
-#pndrun.pro - The qmake project file for pndrun
+#pnd_run.pro - The qmake project file for pnd_run
 TEMPLATE = app
 QT -= core gui
-TARGET = pndrun
+TARGET = pnd_run
 
 INCLUDEPATH = ../pnd/include
 LIBS += -L../pnd -lpnd
 
-SOURCES += pndrun.c
+SOURCES += pnd_run.c

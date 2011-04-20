@@ -14,169 +14,203 @@
 
 // a Box node is just a key-name and a pointer to the next; the payload is whatever data
 // follows this. The container itself doesn't care.
-struct pnd_box_node_t
-{
-    char *key;
-    struct pnd_box_node_t *next;
-};
+typedef struct _pnd_box_node_t {
+  char *key;
+  struct _pnd_box_node_t *next;
+} pnd_box_node_t;
 
-struct pnd_box_t
-{
-    char *name;             // for when you're using gdb and wondering wtf you're looking at
-    struct pnd_box_node_t *head;   // the first node
-};
+typedef struct {
+  char *name;             // for when you're using gdb and wondering wtf you're looking at
+  pnd_box_node_t *head;   // the first node
+} pnd_box_t;
 
-#define PAYLOAD2NODE(x)((struct pnd_box_node_t*)(((unsigned char *)(x))- sizeof(struct pnd_box_node_t)))
-#define NODE2PAYLOAD(x)(((unsigned char *)(x))+ sizeof(struct pnd_box_node_t))
+#define PAYLOAD2NODE(x) ((pnd_box_node_t*)( ((unsigned char *)(x)) - sizeof(pnd_box_node_t) ))
+#define NODE2PAYLOAD(x) ( ((unsigned char *)(x)) + sizeof(pnd_box_node_t) )
 
-pnd_box_handle pnd_box_new(char *name)
-{
+pnd_box_handle pnd_box_new ( char *name ) {
 
-    struct pnd_box_t *p = malloc(sizeof(struct pnd_box_t));
+  pnd_box_t *p = malloc ( sizeof(pnd_box_t) );
 
-    if (! p)
-    {
-        return(NULL); // youch!
-    }
+  if ( ! p ) {
+    return ( NULL ); // youch!
+  }
 
-    if (name)
-    {
-        p -> name = strdup(name);
-    }
-    else
-    {
-        p -> name = NULL;
-    }
+  if ( name ) {
+    p -> name = strdup ( name );
+  } else {
+    p -> name = NULL;
+  }
 
-    p -> head = NULL;
+  p -> head = NULL;
 
-    return(p);
+  return ( p );
 }
 
-void pnd_box_delete(pnd_box_handle box)
-{
-    struct pnd_box_t *p = (struct pnd_box_t*)box;
-    struct pnd_box_node_t *n, *next;
+void pnd_box_delete ( pnd_box_handle box ) {
+  pnd_box_t *p = (pnd_box_t*) box;
+  pnd_box_node_t *n, *next;
 
-    /* free up the list
-     */
+  /* free up the list
+   */
 
-    n = p -> head;
+  n = p -> head;
 
-    while (n)
-    {
+  while ( n ) {
 
-        if (n -> key)
-        {
-            free(n->key);
-        }
-
-        next = n->next;
-
-        free(n);
-
-        n = next;
-
-    } // while
-
-    /* free up the box itself
-     */
-
-    if (p -> name)
-    {
-        free(p -> name);
+    if ( n -> key ) {
+      free ( n -> key );
     }
 
-    p -> head = (void*)123; // if you're looking at a stale pointer in gdb, this might tip you off
+    next = n -> next;
 
-    free(p);
+    free ( n );
 
-    return;
+    n = next;
+
+  } // while
+
+  /* free up the box itself
+   */
+
+  if ( p -> name ) {
+    free ( p -> name );
+  }
+
+  p -> head = (void*)123; // if you're looking at a stale pointer in gdb, this might tip you off
+
+  free ( p );
+
+  return;
 }
 
-void *pnd_box_allocinsert(pnd_box_handle box, char *key, unsigned int size)
-{
-    struct pnd_box_t *p = (struct pnd_box_t*)box;
+void *pnd_box_allocinsert ( pnd_box_handle box, char *key, unsigned int size ) {
+  pnd_box_t *p = (pnd_box_t*) box;
 
-    struct pnd_box_node_t *n = malloc(sizeof(struct pnd_box_node_t) + size);
+  pnd_box_node_t *n = malloc ( sizeof(pnd_box_node_t) + size );
 
-    if (! n)
-    {
-        return(NULL); // must be getting bloody tight!
+  if ( ! n ) {
+    return ( NULL ); // must be getting bloody tight!
+  }
+
+  memset ( n, '\0', sizeof(pnd_box_node_t) + size );
+
+  if ( key ) {
+    n -> key = strdup ( key );
+  } else {
+    n -> key = NULL;
+  }
+
+  n -> next = p -> head;
+
+  p -> head = n;
+
+  return ( NODE2PAYLOAD(n) );
+}
+
+void *pnd_box_find_by_key ( pnd_box_handle box, char *key ) {
+  pnd_box_t *p = (pnd_box_t*) box;
+  pnd_box_node_t *n;
+
+  n = p -> head;
+
+  while ( n ) {
+
+    if ( strcasecmp ( n -> key, key ) == 0 ) {
+      return ( NODE2PAYLOAD(n) );
     }
 
-    memset(n, '\0', sizeof(struct pnd_box_node_t) + size);
+    n = n -> next;
+  } // while
 
-    if (key)
-    {
-        n -> key = strdup(key);
+  return ( NULL );
+}
+
+char *pnd_box_get_name ( pnd_box_handle box ) {
+  pnd_box_t *p = (pnd_box_t*) box;
+  return ( p -> name );
+}
+
+void *pnd_box_get_head ( pnd_box_handle box ) {
+  pnd_box_t *p = (pnd_box_t*) box;
+  if ( ! p ) {
+    return ( NULL ); // fubar!
+  }
+  if ( ! p -> head ) {
+    return ( NULL );
+  }
+  return ( NODE2PAYLOAD(p -> head) );
+}
+
+void *pnd_box_get_next ( void *node ) {
+  pnd_box_node_t *p = PAYLOAD2NODE(node);
+  p = p -> next;
+  if ( ! p ) {
+    return ( NULL );
+  }
+  return ( NODE2PAYLOAD(p) );
+}
+
+char *pnd_box_get_key ( void *node ) {
+  pnd_box_node_t *p = PAYLOAD2NODE(node);
+  return ( p -> key );
+}
+
+unsigned int pnd_box_get_size ( pnd_box_handle box ) {
+  pnd_box_t *p = (pnd_box_t*) box;
+  pnd_box_node_t *n;
+  unsigned int count = 0;
+
+  if ( ! p ) {
+    return ( 0 );
+  }
+
+  n = p -> head;
+
+  while ( n ) {
+
+    count++;
+
+    n = n -> next;
+  } // while
+
+  return ( count );
+}
+
+unsigned char pnd_box_append ( pnd_box_handle box, pnd_box_handle append ) {
+  pnd_box_t *pbox = (pnd_box_t*) box;
+  pnd_box_t *pappend = (pnd_box_t*) append;
+
+  if ( pbox -> head ) {
+    pnd_box_node_t *n = pbox -> head;
+    while ( n -> next ) {
+      n = n -> next;
     }
-    else
-    {
-        n -> key = NULL;
+    // by now, n -> next == NULL
+    n -> next = pappend -> head;
+  } else {
+    pbox -> head = pappend -> head;
+  }
+
+  return ( 1 );
+}
+
+void pnd_box_delete_node ( pnd_box_handle box, void *value ) {
+  pnd_box_t *pbox = (pnd_box_t*) box;
+  pnd_box_node_t *p = PAYLOAD2NODE(value);
+
+  if ( pbox -> head == p ) {
+    pbox -> head = p -> next;
+    free ( p );
+  } else {
+    pnd_box_node_t *i = pbox -> head;
+    while ( i && i -> next != p ) {
+      i = i -> next;
     }
-
-    n -> next = p -> head;
-
-    p -> head = n;
-
-    return(NODE2PAYLOAD(n));
-}
-
-void *pnd_box_find_by_key(pnd_box_handle box, char *key)
-{
-    struct pnd_box_t *p = (struct pnd_box_t*)box;
-    struct pnd_box_node_t *n;
-
-    n = p -> head;
-
-    while (n)
-    {
-
-        if (strcmp(n -> key, key) == 0)
-        {
-            return(NODE2PAYLOAD(n));
-        }
-
-        n = n -> next;
-    } // while
-
-    return(NULL);
-}
-
-char *pnd_box_get_name(pnd_box_handle box)
-{
-    struct pnd_box_t *p = (struct pnd_box_t*)box;
-    return(p -> name);
-}
-
-void *pnd_box_get_head(pnd_box_handle box)
-{
-    struct pnd_box_t *p = (struct pnd_box_t*)box;
-
-    if (! p -> head)
-    {
-        return(NULL);
+    if ( i -> next == p ) {
+      i -> next = p -> next;
+      free ( p );
     }
+  }
 
-    return(NODE2PAYLOAD(p -> head));
-}
-
-void *pnd_box_get_next(void *node)
-{
-    struct pnd_box_node_t *p = PAYLOAD2NODE(node);
-    p = p -> next;
-
-    if (! p)
-    {
-        return(NULL);
-    }
-
-    return(NODE2PAYLOAD(p));
-}
-
-char *pnd_box_get_key(void *node)
-{
-    struct pnd_box_node_t *p = PAYLOAD2NODE(node);
-    return(p -> key);
+  return;
 }

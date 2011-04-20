@@ -25,6 +25,10 @@ HEADERS += include/pnd_apps.h \
            include/pnd_tinyxml.h \
            include/pnd_utility.h \
            include/pnd_version.h \
+           include/pnd_dbusnotify.h \
+           include/pnd_io_evdev.h \
+           include/pnd_io_ioctl.h \
+           src/pnd_pathiter.h \
            src/pnd_keytype.h \
            src/tinyxml/tinystr.h \
            src/tinyxml/tinyxml.h
@@ -42,6 +46,9 @@ SOURCES += src/pnd_apps.c \
            src/pnd_pxml.c \
            src/pnd_tinyxml.cpp \
            src/pnd_utility.c \
+           src/pnd_dbusnotify.c \
+           src/pnd_io_evdev.c \
+           src/pnd_io_ioctl.c \
            src/tinyxml/tinystr.cpp \
            src/tinyxml/tinyxml.cpp \
            src/tinyxml/tinyxmlerror.cpp \
