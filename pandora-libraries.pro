@@ -3,8 +3,8 @@ TEMPLATE = subdirs
 SUBDIRS = pnd \
     pndevmapperd \
     pndnotifyd \
-    pndrun \
     pndvalidator \
+    pnd_run \
 	pnd_info
 
 pnd.subdir = pnd
@@ -15,11 +15,12 @@ pndevmapperd.depends = pnd
 pndnotifyd.subdir = pndnotifyd
 pndnotifyd.depends = pnd
 
-pndrun.subdir = pndrun
-pndrun.depends = pnd
-
-pndinfo.subdir = pndinfo
-pndinfo.depends = pnd
-
 pndvalidator.subdir = pndvalidator
 pndvalidator.depends = pnd
+
+pnd_run.subdir = pnd_run
+pnd_run.depends = pnd
+
+pnd_info.subdir = pnd_info
+pnd_info.depends = pnd
+

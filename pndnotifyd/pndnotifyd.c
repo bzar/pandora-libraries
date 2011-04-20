@@ -20,7 +20,7 @@
 #include "pnd_container.h"
 #include "pnd_apps.h"
 #include "pnd_notify.h"
-#include "../lib/pnd_pathiter.h"
+#include "src/pnd_pathiter.h"
 #include "pnd_discovery.h"
 #include "pnd_locate.h"
 #include "pnd_pxml.h"
