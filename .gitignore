@@ -23,6 +23,8 @@ pndvalidator/pndvalidator
 pndrun/pndrun
 pndnotifyd/pndnotifyd
 pndevmapperd/pndevmapperd
+pnd_info/pnd_info
+pnd_run/pnd_run
 
 # Ignore project-related user-generated files
 *.user
