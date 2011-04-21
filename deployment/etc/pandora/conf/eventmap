@@ -1,0 +1,18 @@
+
+# Open Pandora
+# Event-to-shscript map configuration
+
+[keys]
+# pass 'hold duration' to the script
+pandora /usr/pandora/scripts/op_menu.sh
+power	/usr/pandora/scripts/op_power.sh
+
+[events]
+# pass 'action code' to the script
+# lid actions are: 1 lid-is-closing, 0 lid-is-opening
+lid-toggle	/usr/pandora/scripts/op_lid.sh
+
+[pndevmapperd]
+# logging level 0 means to include debug; level 1 (regular), 2 (warnings), 3 (errors)
+loglevel	1
+minimum_separation	1	# 1 second minimum between a single event repeating
