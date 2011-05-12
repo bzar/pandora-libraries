@@ -52,8 +52,9 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
 }
 
 static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
-				int typeflag, struct FTW *ftwbuf )
+                                int typeflag, struct FTW *ftwbuf )
 {
+  (void)sb;
   unsigned char valid = pnd_object_type_unknown;
   pnd_pxml_handle pxmlh = 0;
   pnd_pxml_handle *pxmlapps = NULL;
@@ -141,20 +142,20 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
       while ( padtests ) {
 
-	if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
-	  if ( memcmp ( pngbuffer, pngbuffer + 8, 8 ) == 0 ) {
-	    pxml_close_pos = ftell ( f ) - 8;
-	    break;
-	  } // if
-	  fseek ( f, -7, SEEK_CUR ); // seek back 7 (so we're 1 further than we started, since PNG header is 8b)
-	} // if read
+        if ( fread ( pngbuffer + 8, 8, 1, f ) == 1 ) {
+          if ( memcmp ( pngbuffer, pngbuffer + 8, 8 ) == 0 ) {
+            pxml_close_pos = ftell ( f ) - 8;
+            break;
+          } // if
+          fseek ( f, -7, SEEK_CUR ); // seek back 7 (so we're 1 further than we started, since PNG header is 8b)
+        } // if read
 
-	padtests --;
+        padtests --;
       } // while
 
       if ( ! padtests ) {
-	// no icon found, so back to where we started looking
-	fseek ( f, padstart, SEEK_SET );
+        // no icon found, so back to where we started looking
+        fseek ( f, padstart, SEEK_SET );
       }
 
     } // icon
@@ -201,13 +202,13 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       p -> object_path = strdup ( fpath );
 
       if ( ( fixpxml = strcasestr ( p -> object_path, PXML_FILENAME ) ) ) {
-	*fixpxml = '\0'; // if this is not a .pnd, lop off the PXML.xml at the end
+        *fixpxml = '\0'; // if this is not a .pnd, lop off the PXML.xml at the end
       } else if ( ( fixpxml = strrchr ( p -> object_path, '/' ) ) ) {
-	*(fixpxml+1) = '\0'; // for pnd, lop off to last /
+        *(fixpxml+1) = '\0'; // for pnd, lop off to last /
       }
 
       if ( ( fixpxml = strrchr ( fpath, '/' ) ) ) {
-	p -> object_filename = strdup ( fixpxml + 1 );
+        p -> object_filename = strdup ( fixpxml + 1 );
       }
 
       // subapp-number
@@ -221,157 +222,157 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
       // PXML fields
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
-	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
+        p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
       }
       if ( pnd_pxml_get_description_en ( pxmlh ) ) {
-	p -> desc_en = strdup ( pnd_pxml_get_description_en ( pxmlh ) );
+        p -> desc_en = strdup ( pnd_pxml_get_description_en ( pxmlh ) );
       }
       if ( pnd_pxml_get_icon ( pxmlh ) ) {
-	p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
+        p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
       }
       if ( pnd_pxml_get_exec ( pxmlh ) ) {
-	p -> exec = strdup ( pnd_pxml_get_exec ( pxmlh ) );
+        p -> exec = strdup ( pnd_pxml_get_exec ( pxmlh ) );
       }
       if ( pnd_pxml_get_execargs ( pxmlh ) ) {
-	p -> execargs = strdup ( pnd_pxml_get_execargs ( pxmlh ) );
+        p -> execargs = strdup ( pnd_pxml_get_execargs ( pxmlh ) );
       }
       if ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) ) {
-	p -> option_no_x11 = strdup ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) );
+        p -> option_no_x11 = strdup ( pnd_pxml_get_exec_option_no_x11 ( pxmlh ) );
       }
       if ( pnd_pxml_get_unique_id ( pxmlh ) ) {
-	p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
+        p -> unique_id = strdup ( pnd_pxml_get_unique_id ( pxmlh ) );
       }
       if ( pnd_pxml_get_appdata_dirname ( pxmlh ) ) {
-	p -> appdata_dirname = strdup ( pnd_pxml_get_appdata_dirname ( pxmlh ) );
+        p -> appdata_dirname = strdup ( pnd_pxml_get_appdata_dirname ( pxmlh ) );
       }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
-	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 
+        p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) );
       }
       if ( pnd_pxml_get_startdir ( pxmlh ) ) {
-	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) ); 
+        p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) );
       }
       // category kruft
       if ( pnd_pxml_get_main_category ( pxmlh ) ) {
-	p -> main_category = strdup ( pnd_pxml_get_main_category ( pxmlh ) );
+        p -> main_category = strdup ( pnd_pxml_get_main_category ( pxmlh ) );
       }
       if ( pnd_pxml_get_subcategory1 ( pxmlh ) ) {
-	p -> main_category1 = strdup ( pnd_pxml_get_subcategory1 ( pxmlh ) );
+        p -> main_category1 = strdup ( pnd_pxml_get_subcategory1 ( pxmlh ) );
       }
       if ( pnd_pxml_get_subcategory2 ( pxmlh ) ) {
-	p -> main_category2 = strdup ( pnd_pxml_get_subcategory2 ( pxmlh ) );
+        p -> main_category2 = strdup ( pnd_pxml_get_subcategory2 ( pxmlh ) );
       }
       if ( pnd_pxml_get_altcategory ( pxmlh ) ) {
-	p -> alt_category = strdup ( pnd_pxml_get_altcategory ( pxmlh ) );
+        p -> alt_category = strdup ( pnd_pxml_get_altcategory ( pxmlh ) );
       }
       if ( pnd_pxml_get_altsubcategory1 ( pxmlh ) ) {
-	p -> alt_category1 = strdup ( pnd_pxml_get_altsubcategory1 ( pxmlh ) );
+        p -> alt_category1 = strdup ( pnd_pxml_get_altsubcategory1 ( pxmlh ) );
       }
       if ( pnd_pxml_get_altsubcategory2 ( pxmlh ) ) {
-	p -> alt_category2 = strdup ( pnd_pxml_get_altsubcategory2 ( pxmlh ) );
+        p -> alt_category2 = strdup ( pnd_pxml_get_altsubcategory2 ( pxmlh ) );
       }
       // preview pics
       if ( ( z = pnd_pxml_get_previewpic1 ( pxmlh ) ) ) {
-	p -> preview_pic1 = strdup ( z );
+        p -> preview_pic1 = strdup ( z );
       }
       if ( ( z = pnd_pxml_get_previewpic2 ( pxmlh ) ) ) {
-	p -> preview_pic2 = strdup ( z );
+        p -> preview_pic2 = strdup ( z );
       }
       // mkdirs
       if ( pnd_pxml_get_mkdir ( pxmlh ) ) {
-	p -> mkdir_sp = strdup ( pnd_pxml_get_mkdir ( pxmlh ) );
+        p -> mkdir_sp = strdup ( pnd_pxml_get_mkdir ( pxmlh ) );
       }
       // info
       if ( pnd_pxml_get_info_src ( pxmlh ) ) {
-	p -> info_filename = strdup ( pnd_pxml_get_info_src ( pxmlh ) );
+        p -> info_filename = strdup ( pnd_pxml_get_info_src ( pxmlh ) );
       }
       if ( pnd_pxml_get_info_name ( pxmlh ) ) {
-	p -> info_name = strdup ( pnd_pxml_get_info_name ( pxmlh ) );
+        p -> info_name = strdup ( pnd_pxml_get_info_name ( pxmlh ) );
       }
       if ( pnd_pxml_get_info_type ( pxmlh ) ) {
-	p -> info_type = strdup ( pnd_pxml_get_info_type ( pxmlh ) );
+        p -> info_type = strdup ( pnd_pxml_get_info_type ( pxmlh ) );
       }
 
       // look for any PXML overrides, if requested
       if ( disco_overrides ) {
-	pnd_pxml_merge_override ( pxmlh, disco_overrides );
+        pnd_pxml_merge_override ( pxmlh, disco_overrides );
       }
 
       // handle ovr overrides
       // try to load a same-path-as-pnd override file
       if ( ovrh == 0 ) {
-	sprintf ( ovrfile, "%s/%s", p -> object_path, p -> object_filename );
-	fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
-	if ( fixpxml ) {
-	  strcpy ( fixpxml, PXML_SAMEPATH_OVERRIDE_FILEEXT );
-	  struct stat statbuf;
-	  if ( stat ( ovrfile, &statbuf ) == 0 ) {
-	    ovrh = pnd_conf_fetch_by_path ( ovrfile );
+        sprintf ( ovrfile, "%s/%s", p -> object_path, p -> object_filename );
+        fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
+        if ( fixpxml ) {
+          strcpy ( fixpxml, PXML_SAMEPATH_OVERRIDE_FILEEXT );
+          struct stat statbuf;
+          if ( stat ( ovrfile, &statbuf ) == 0 ) {
+            ovrh = pnd_conf_fetch_by_path ( ovrfile );
 
-	    if ( ! ovrh ) {
-	      // couldn't pull conf out of file, so don't try again
-	      ovrh = (void*)(-1);
-	    }
+            if ( ! ovrh ) {
+              // couldn't pull conf out of file, so don't try again
+              ovrh = (void*)(-1);
+            }
 
-	  } else {
-	    ovrh = (void*)(-1); // not found, don't try again
-	  } // stat
-	} // can find .pnd
+          } else {
+            ovrh = (void*)(-1); // not found, don't try again
+          } // stat
+        } // can find .pnd
       } // tried ovr yet?
 
       // is ovr file open?
       if ( ovrh != 0 && ovrh != (void*)(-1) ) {
-	// pull in appropriate values
-	char key [ 100 ];
-	char *v;
+        // pull in appropriate values
+        char key [ 100 ];
+        char *v;
 
-	// set the flag regardless, so its for all subapps
-	p -> object_flags |= PND_DISCO_FLAG_OVR;
+        // set the flag regardless, so its for all subapps
+        p -> object_flags |= PND_DISCO_FLAG_OVR;
 
-	// title
-	snprintf ( key, 100, "Application-%u.title", p -> subapp_number );
-	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
-	  if ( p -> title_en ) {
-	    free ( p -> title_en );
-	  }
-	  p -> title_en = strdup ( v );
-	}
+        // title
+        snprintf ( key, 100, "Application-%u.title", p -> subapp_number );
+        if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+          if ( p -> title_en ) {
+            free ( p -> title_en );
+          }
+          p -> title_en = strdup ( v );
+        }
 
-	// clockspeed
-	snprintf ( key, 100, "Application-%u.clockspeed", p -> subapp_number );
-	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
-	  if ( p -> clockspeed ) {
-	    free ( p -> clockspeed );
-	  }
-	  p -> clockspeed = strdup ( v );
-	}
+        // clockspeed
+        snprintf ( key, 100, "Application-%u.clockspeed", p -> subapp_number );
+        if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+          if ( p -> clockspeed ) {
+            free ( p -> clockspeed );
+          }
+          p -> clockspeed = strdup ( v );
+        }
 
-	// appdata dirname
-	snprintf ( key, 100, "Application-%u.appdata", p -> subapp_number );
-	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
-	  if ( p -> appdata_dirname ) {
-	    free ( p -> appdata_dirname );
-	  }
-	  p -> appdata_dirname = strdup ( v );
-	}
+        // appdata dirname
+        snprintf ( key, 100, "Application-%u.appdata", p -> subapp_number );
+        if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+          if ( p -> appdata_dirname ) {
+            free ( p -> appdata_dirname );
+          }
+          p -> appdata_dirname = strdup ( v );
+        }
 
-	// categories
-	snprintf ( key, 100, "Application-%u.maincategory", p -> subapp_number );
-	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
-	  if ( p -> main_category ) {
-	    free ( p -> main_category );
-	  }
-	  p -> main_category = strdup ( v );
-	}
-	snprintf ( key, 100, "Application-%u.maincategorysub1", p -> subapp_number );
-	if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
-	  if ( p -> main_category1 ) {
-	    free ( p -> main_category1 );
-	    p -> main_category1 = NULL;
-	  }
-	  if ( strcasecmp ( v, "NoSubcategory" ) != 0 ) {
-	    p -> main_category1 = strdup ( v );
-	  }
-	}
+        // categories
+        snprintf ( key, 100, "Application-%u.maincategory", p -> subapp_number );
+        if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+          if ( p -> main_category ) {
+            free ( p -> main_category );
+          }
+          p -> main_category = strdup ( v );
+        }
+        snprintf ( key, 100, "Application-%u.maincategorysub1", p -> subapp_number );
+        if ( ( v = pnd_conf_get_as_char ( ovrh, key ) ) ) {
+          if ( p -> main_category1 ) {
+            free ( p -> main_category1 );
+            p -> main_category1 = NULL;
+          }
+          if ( strcasecmp ( v, "NoSubcategory" ) != 0 ) {
+            p -> main_category1 = strdup ( v );
+          }
+        }
 
       } // got ovr conf loaded?
 
@@ -411,9 +412,9 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath ) {
 
     // invoke the dir walking function; thankfully Linux includes a pretty good one
     nftw ( buffer,               // path to descend
-	   pnd_disco_callback,   // callback to do processing
-	   10,                   // no more than X open fd's at once
-	   FTW_PHYS );           // do not follow symlinks
+           pnd_disco_callback,   // callback to do processing
+           10,                   // no more than X open fd's at once
+           FTW_PHYS );           // do not follow symlinks
 
   }
   SEARCHPATH_POST

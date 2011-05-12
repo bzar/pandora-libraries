@@ -12,11 +12,11 @@ extern "C" {
 
 char *pnd_pxml_get_attribute(TiXmlElement *elem, const char *name)
 {
-	const char *value = elem->Attribute(name);
-	if (value)
-		return strdup(value);
-	else
-		return NULL;
+        const char *value = elem->Attribute(name);
+        if (value)
+                return strdup(value);
+        else
+                return NULL;
 }
 
 unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app) {
@@ -44,21 +44,21 @@ unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app) {
       char *text, *lang;
 
       if ( ! ( text = strdup ( pElem -> GetText() ) ) ) {
-	continue;
+        continue;
       }
 
       if ( ! ( lang = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_TITLELANG ) ) ) {
-	continue;
+        continue;
       }
 
       // increment counter; if we're running out of buffers, grow to handle the new strings
       app -> titles_c++;
 
       if ( app -> titles_c > app -> titles_alloc_c ) {
-	// we don't have enough strings allocated
-	app -> titles_alloc_c <<= 1;
-	app -> titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
-	if (!app->titles) return (0); //errno = ENOMEM
+        // we don't have enough strings allocated
+        app -> titles_alloc_c <<= 1;
+        app -> titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
+        if (!app->titles) return (0); //errno = ENOMEM
       }
 
       // populate the stringbuf
@@ -75,11 +75,11 @@ unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app) {
     // older style <title> entry series
 
     for ( pElem = hRoot.FirstChild(PND_PXML_ENAME_TITLE).Element(); pElem;
-	  pElem = pElem->NextSiblingElement(PND_PXML_ENAME_TITLE))
+          pElem = pElem->NextSiblingElement(PND_PXML_ENAME_TITLE))
     {
 
       if ( ! pElem->GetText() ) {
-	continue;
+        continue;
       }
 
       char *text = strdup(pElem->GetText());
@@ -91,9 +91,9 @@ unsigned char pnd_pxml_parse_titles(const TiXmlHandle hRoot, pnd_pxml_t *app) {
       app->titles_c++;
       if (app->titles_c > app->titles_alloc_c) //we don't have enough strings allocated
       {
-	app->titles_alloc_c <<= 1;
-	app->titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
-	if (!app->titles) return (0); //errno = ENOMEM
+        app->titles_alloc_c <<= 1;
+        app->titles = (pnd_localized_string_t *)realloc((void*)app->titles, app->titles_alloc_c);
+        if (!app->titles) return (0); //errno = ENOMEM
       }
 
       pnd_localized_string_t *title = &app->titles[app->titles_c - 1];
@@ -114,7 +114,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
   app->descriptions_alloc_c = 4; //TODO: adjust this based on how many descriptions a PXML usually has. Power of 2.
 
   app->descriptions = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->descriptions_alloc_c);
-  if (!app->descriptions) 
+  if (!app->descriptions)
   {
     app->descriptions_alloc_c = 0;
     return (0); //errno = NOMEM
@@ -132,19 +132,19 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       char *text, *lang;
 
       if ( ! ( text = strdup ( pElem -> GetText() ) ) ) {
-	continue;
+        continue;
       }
 
       if ( ! ( lang = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_DESCRLANG ) ) ) {
-	continue;
+        continue;
       }
 
       app->descriptions_c++;
       if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
       {
-	app->descriptions_alloc_c <<= 1;
-	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	if (!app->descriptions) return (0); //errno = ENOMEM
+        app->descriptions_alloc_c <<= 1;
+        app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
+        if (!app->descriptions) return (0); //errno = ENOMEM
       }
 
       pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
@@ -159,12 +159,12 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
   } else {
     // fallback to older approach
 
-    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem; 
-	 pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
+    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem;
+         pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
     {
 
       if ( ! pElem->GetText() ) {
-	continue;
+        continue;
       }
 
       char *text = strdup(pElem->GetText());
@@ -176,9 +176,9 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       app->descriptions_c++;
       if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
       {
-	app->descriptions_alloc_c <<= 1;
-	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	if (!app->descriptions) return (0); //errno = ENOMEM
+        app->descriptions_alloc_c <<= 1;
+        app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
+        if (!app->descriptions) return (0); //errno = ENOMEM
       }
 
       pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
@@ -193,6 +193,8 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
 
 unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int length, pnd_pxml_t **apps ) {
 
+  (void)pFilename;
+  (void)length;
   //Load the XML document
   TiXmlDocument doc;
   doc.Parse(buffer);
@@ -290,13 +292,13 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
       //TODO: Change this if pnd_pxml_t gains the feature of more pics than 2.
       if ( (pElem = pElem->FirstChildElement(PND_PXML_ENAME_PREVPIC)) )
       {
-	app->previewpic1 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
+        app->previewpic1 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
 
-	if ( (pElem = pElem->NextSiblingElement(PND_PXML_ENAME_PREVPIC)) )
-	{
-	  app->previewpic2 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
-	}
-      }	
+        if ( (pElem = pElem->NextSiblingElement(PND_PXML_ENAME_PREVPIC)) )
+        {
+          app->previewpic2 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
+        }
+      }
     } //previewpic
 
     //The author info:
@@ -333,46 +335,46 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
       i = 0;
 
       //Goes through all the top-level categories and their sub-categories. i helps limit these to 2.
-      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2; 
-	   pElem = pElem->NextSiblingElement(PND_PXML_ENAME_CAT), i++)
+      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2;
+           pElem = pElem->NextSiblingElement(PND_PXML_ENAME_CAT), i++)
       {
-	//TODO: Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
-	switch (i)
-	{
-	case 0: //first category counts as the main cat for now
-	  app->main_category = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CATNAME);
-	  break;
+        //TODO: Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
+        switch (i)
+        {
+        case 0: //first category counts as the main cat for now
+          app->main_category = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CATNAME);
+          break;
 
-	case 1: //...second as the alternative
-	  app->altcategory = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CATNAME);
-	}
+        case 1: //...second as the alternative
+          app->altcategory = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CATNAME);
+        }
 
-	TiXmlElement *pSubCatElem; //the sub-elements for a main category.
-	int j = 0; //the subcategory index within this category
+        TiXmlElement *pSubCatElem; //the sub-elements for a main category.
+        int j = 0; //the subcategory index within this category
 
-	//Goes through all the subcategories within this category. j helps limit these to 2.
-	for (pSubCatElem = pElem->FirstChildElement(PND_PXML_ENAME_SUBCAT); pSubCatElem && j < 2;
-	     pSubCatElem = pSubCatElem->NextSiblingElement(PND_PXML_ENAME_SUBCAT), j++)
-	{
-	  char *subcat = pnd_pxml_get_attribute(pSubCatElem, PND_PXML_ATTRNAME_SUBCATNAME);
-	  if (!(subcat)) continue;
+        //Goes through all the subcategories within this category. j helps limit these to 2.
+        for (pSubCatElem = pElem->FirstChildElement(PND_PXML_ENAME_SUBCAT); pSubCatElem && j < 2;
+             pSubCatElem = pSubCatElem->NextSiblingElement(PND_PXML_ENAME_SUBCAT), j++)
+        {
+          char *subcat = pnd_pxml_get_attribute(pSubCatElem, PND_PXML_ATTRNAME_SUBCATNAME);
+          if (!(subcat)) continue;
 
-	  //TODO: This is ugly. Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
-	  switch (j | (i << 1))
-	  {
-	  case 0:
-	    app->subcategory1 = subcat;
-	    break;
-	  case 1:
-	    app->subcategory2 = subcat;
-	    break;
-	  case 2:
-	    app->altsubcategory1 = subcat;
-	    break;
-	  case 3:
-	    app->altsubcategory2 = subcat;
-	  }
-	}
+          //TODO: This is ugly. Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
+          switch (j | (i << 1))
+          {
+          case 0:
+            app->subcategory1 = subcat;
+            break;
+          case 1:
+            app->subcategory2 = subcat;
+            break;
+          case 2:
+            app->altsubcategory1 = subcat;
+            break;
+          case 3:
+            app->altsubcategory2 = subcat;
+          }
+        }
       }
     }
 
@@ -382,51 +384,51 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     {
       i = 0;
       //Go through all associations. i serves as index; since the format only supports 3 associations we need to keep track of the number.
-      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3; 
-	   pElem = pElem->NextSiblingElement(PND_PXML_ENAME_ASSOC), i++)
+      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3;
+           pElem = pElem->NextSiblingElement(PND_PXML_ENAME_ASSOC), i++)
       {
-	char *name = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCNAME);
-	char *filetype = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCFTYPE);
-	char *paramter = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCARGS);
+        char *name = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCNAME);
+        char *filetype = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCFTYPE);
+        char *paramter = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCARGS);
 
-	if (!(name && filetype && paramter)) continue;
+        if (!(name && filetype && paramter)) continue;
 
-	switch(i) //TODO: same problem here: only 3 associations supported
-	{
-	case 0:
-	{
-	  app->associationitem1_name      = name;
-	  app->associationitem1_filetype  = filetype;
-	  app->associationitem1_parameter = paramter;
-	  break;
-	}
-	case 1:
-	{
-	  app->associationitem2_name      = name;
-	  app->associationitem2_filetype  = filetype;
-	  app->associationitem2_parameter = paramter;
-	  break;
-	}
-	case 2:
-	{
-	  app->associationitem3_name      = name;
-	  app->associationitem3_filetype  = filetype;
-	  app->associationitem3_parameter = paramter;
-	}
-	}
+        switch(i) //TODO: same problem here: only 3 associations supported
+        {
+        case 0:
+        {
+          app->associationitem1_name      = name;
+          app->associationitem1_filetype  = filetype;
+          app->associationitem1_parameter = paramter;
+          break;
+        }
+        case 1:
+        {
+          app->associationitem2_name      = name;
+          app->associationitem2_filetype  = filetype;
+          app->associationitem2_parameter = paramter;
+          break;
+        }
+        case 2:
+        {
+          app->associationitem3_name      = name;
+          app->associationitem3_filetype  = filetype;
+          app->associationitem3_parameter = paramter;
+        }
+        }
       }
     }
 
     //Performance related things (aka: Clockspeed XD):
     pElem = hRoot.FirstChild(PND_PXML_ENAME_CLOCK).Element();
     if (pElem)
-    {	
+    {
       app->clockspeed = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CLOCKFREQ);
     }
 
     // Package
     pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
-    if ( pElem ) {	
+    if ( pElem ) {
       app -> package_name = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_NAME );
       app -> package_release_date = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_DATE );
     }
@@ -436,33 +438,33 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 
       // seek <dir>
       if ( (pElem = pElem->FirstChildElement(PND_PXML_ENAME_MKDIR)) ) {
-	char *t;
+        char *t;
 
-	if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
-	  // first <dir>, so just replace it wholesale; we use strdup so we can free() easily later, consistently. Mmm, leak seems imminent.
-	  app -> mkdir_sp = strdup ( t );
-	}
+        if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
+          // first <dir>, so just replace it wholesale; we use strdup so we can free() easily later, consistently. Mmm, leak seems imminent.
+          app -> mkdir_sp = strdup ( t );
+        }
 
-	while ( ( pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_MKDIR ) ) ) {
-	      
-	  if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
-	    char *foo = (char*) malloc ( strlen ( app -> mkdir_sp ) + strlen ( t ) + 1 /*:*/ + 1 /*\0*/ );
+        while ( ( pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_MKDIR ) ) ) {
 
-	    if ( foo ) {
-	      sprintf ( foo, "%s:%s", app -> mkdir_sp, t );
-	      free ( app -> mkdir_sp );
-	      app -> mkdir_sp = foo;
-	    } // assuming we got ram, lets cat it all together
+          if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
+            char *foo = (char*) malloc ( strlen ( app -> mkdir_sp ) + strlen ( t ) + 1 /*:*/ + 1 /*\0*/ );
 
-	  } // got another elem?
+            if ( foo ) {
+              sprintf ( foo, "%s:%s", app -> mkdir_sp, t );
+              free ( app -> mkdir_sp );
+              app -> mkdir_sp = foo;
+            } // assuming we got ram, lets cat it all together
 
-	} // while
+          } // got another elem?
+
+        } // while
 
       } // found a <dir>
 
 #if 0
       if ( app -> mkdir_sp ) {
-	printf ( "mkdir: %s\n", app -> mkdir_sp );
+        printf ( "mkdir: %s\n", app -> mkdir_sp );
       }
 #endif
 
@@ -472,8 +474,8 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     if ( appwrappermode ) {
       appElem = appElem -> NextSiblingElement ( PND_PXML_APP );
       if ( ! appElem ) {
-	//pnd_log ( PND_LOG_DEFAULT, (char*)"  No more applications within PXML\n" );
-	break; // no more applications
+        //pnd_log ( PND_LOG_DEFAULT, (char*)"  No more applications within PXML\n" );
+        break; // no more applications
       }
       // got another application..
       //pnd_log ( PND_LOG_DEFAULT, "  Found another applications within PXML\n" );
@@ -483,7 +485,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
       appcount++;
 
       if ( appcount == PXML_MAXAPPS ) {
-	return ( 1 ); // thats all we can handle; we're not going to auto-extend this
+        return ( 1 ); // thats all we can handle; we're not going to auto-extend this
       }
 
     } else {

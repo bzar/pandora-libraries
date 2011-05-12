@@ -20,7 +20,7 @@ char *pnd_apps_exec_runline ( void ) {
 }
 
 unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
-				    unsigned int options, void *reserved )
+                                    unsigned int options, void *reserved )
 {
   char *argv [ 60 ];
   char fullpath [ PATH_MAX ] = "";
@@ -117,12 +117,12 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
 
       // add spacing between args
       if ( i > 0 ) {
-	strncat ( apps_exec_runline, " ", 1000 );
+        strncat ( apps_exec_runline, " ", 1000 );
       }
 
       // quoting
       if ( quotenext ) {
-	strncat ( apps_exec_runline, "\"", 1000 );
+        strncat ( apps_exec_runline, "\"", 1000 );
       }
 
       // arg
@@ -130,33 +130,33 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
 
       // unquoting
       if ( quotenext ) {
-	strncat ( apps_exec_runline, "\"", 1000 );
+        strncat ( apps_exec_runline, "\"", 1000 );
       }
 
       // clear quoting
       if ( quotenext ) {
-	quotenext = 0;
+        quotenext = 0;
       } else {
-	// deprecated; need to handle spaces in some additional args
-	//   if ( strcmp ( argv [ i ], "-a" ) == 0 ) {
-	// if this is for -a, we need to wrap with quotes
-	// ivanovic:
-	// to allow spaces in filenames we have to add quotes around most terms!
-	// terms with quotes:
-	// -a additional arguments
-	// -p fullpath to pnd
-	// -e name of execuatable inside the pnd
-	// -s startdir
-	// -b name for the appdir
+        // deprecated; need to handle spaces in some additional args
+        //   if ( strcmp ( argv [ i ], "-a" ) == 0 ) {
+        // if this is for -a, we need to wrap with quotes
+        // ivanovic:
+        // to allow spaces in filenames we have to add quotes around most terms!
+        // terms with quotes:
+        // -a additional arguments
+        // -p fullpath to pnd
+        // -e name of execuatable inside the pnd
+        // -s startdir
+        // -b name for the appdir
 
-	if ( ( strcmp ( argv [ i ], "-a" ) == 0 ) || 
-	     ( strcmp ( argv [ i ], "-p" ) == 0 ) ||
-	     ( strcmp ( argv [ i ], "-e" ) == 0 ) ||
-	     ( strcmp ( argv [ i ], "-s" ) == 0 ) ||
-	     ( strcmp ( argv [ i ], "-b" ) == 0 ) )
-	{
-	  quotenext = 1;
-	}
+        if ( ( strcmp ( argv [ i ], "-a" ) == 0 ) ||
+             ( strcmp ( argv [ i ], "-p" ) == 0 ) ||
+             ( strcmp ( argv [ i ], "-e" ) == 0 ) ||
+             ( strcmp ( argv [ i ], "-s" ) == 0 ) ||
+             ( strcmp ( argv [ i ], "-b" ) == 0 ) )
+        {
+          quotenext = 1;
+        }
 
       }
 
@@ -181,7 +181,7 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
   } else {
     // child, do it
     execv ( pndrun, argv );
-  } 
+  }
 
   // by definition, either error occurred or we are the original application.
 
@@ -199,9 +199,9 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
 }
 
 unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
-			      char *rel_exec, char *rel_startdir,
-			      char *args,
-			      unsigned int clockspeed, unsigned int options )
+                              char *rel_exec, char *rel_startdir,
+                              char *args,
+                              unsigned int clockspeed, unsigned int options )
 {
   pnd_disco_t d;
   bzero ( &d, sizeof(pnd_disco_t) );
@@ -235,6 +235,7 @@ unsigned char pnd_apps_exec ( char *pndrun, char *fullpath, char *unique_id,
 
 void pnd_get_ro_mountpoint ( char *fullpath, char *unique_id, char *r_mountpoint, unsigned int mountpoint_len ) {
 
+  (void)fullpath;
   if ( ! r_mountpoint ) {
     return; // sillyness
   }

@@ -65,9 +65,11 @@ void pnd_notify_shutdown ( pnd_notify_handle h ) {
 }
 
 static int pnd_notify_callback ( const char *fpath, const struct stat *sb,
-				 int typeflag, struct FTW *ftwbuf )
+                                 int typeflag, struct FTW *ftwbuf )
 {
 
+  (void)sb;
+  (void)ftwbuf;
   // only include directories
   if ( ! ( typeflag & FTW_D ) ) {
     return ( 0 ); // continue the tree walk
@@ -94,9 +96,9 @@ void pnd_notify_watch_path ( pnd_notify_handle h, char *fullpath, unsigned int f
     notify_handle = p -> fd;
 
     nftw ( fullpath,             // path to descend
-	   pnd_notify_callback,  // callback to do processing
-	   10,                   // no more than X open fd's at once
-	   FTW_PHYS );           // do not follow symlinks
+           pnd_notify_callback,  // callback to do processing
+           10,                   // no more than X open fd's at once
+           FTW_PHYS );           // do not follow symlinks
 
     notify_handle = -1;
 
@@ -161,7 +163,7 @@ unsigned char pnd_notify_rediscover_p ( pnd_notify_handle h ) {
   unsigned int i = 0;
   struct inotify_event *e;
 
-  while ( i < actuallen ) {
+  while ( i < (unsigned int)actuallen ) {
     e = (struct inotify_event *) &binbuf [ i ];
 
     /* do it!
@@ -241,7 +243,7 @@ unsigned char pnd_notify_wait_until_ready ( unsigned int secs_timeout ) {
   time_t start = time ( NULL );
 
   while ( ( secs_timeout == 0 ) ||
-	  ( time ( NULL ) - start < secs_timeout ) )
+          ( time ( NULL ) - start < secs_timeout ) )
   {
     if ( _inotify_test_run() ) {
       return ( 1 );

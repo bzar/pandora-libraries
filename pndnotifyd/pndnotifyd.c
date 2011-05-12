@@ -81,7 +81,7 @@ void sigint_handler ( int n );
 void sighup_handler ( int n );
 void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *emiticonpath );
 unsigned char perform_discoveries ( char *appspath, char *overridespath,
-				    char *emitdesktoppath, char *emiticonpath );
+                                    char *emitdesktoppath, char *emiticonpath );
 
 int main ( int argc, char *argv[] ) {
   // behaviour
@@ -105,14 +105,10 @@ int main ( int argc, char *argv[] ) {
     } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'l' ) {
 
       if ( isdigit ( argv [ i ][ 2 ] ) ) {
-	unsigned char x = atoi ( argv [ i ] + 2 );
-	if ( x >= 0 &&
-	     x < pndn_none )
-	{
-	  logall = x;
-	}
+        unsigned char x = atoi ( argv [ i ] + 2 );
+        logall = x;
       } else {
-	logall = 0;
+        logall = 0;
       }
 
     } else {
@@ -121,7 +117,7 @@ int main ( int argc, char *argv[] ) {
       printf ( "-n\tDo not scan on launch; default is to run a scan for apps when %s is invoked.\n", argv [ 0 ] );
       printf ( "-l#\tLog-it; -l is 0-and-up (or all), and -l2 means 2-and-up (not all); l[0-3] for now. Log goes to /tmp/pndnotifyd.log\n" );
       printf ( "##\tA numeric value is interpreted as number of seconds between checking for filesystem changes. Default %u.\n",
-	       interval_secs );
+               interval_secs );
       printf ( "Signal: HUP the process to force reload of configuration and reset the notifier watch paths\n" );
       exit ( 0 );
     }
@@ -197,7 +193,7 @@ int main ( int argc, char *argv[] ) {
 
     // umask
     umask ( 022 ); // emitted files can be rwxr-xr-x
-    
+
   } // set up daemon
 
   // wait for a user to be logged in - we should probably get hupped when a user logs in, so we can handle
@@ -288,24 +284,24 @@ int main ( int argc, char *argv[] ) {
 
       // if this was a forced scan, lets not do that next iteration
       if ( scanonlaunch ) {
-	pnd_log ( pndn_rem, "scan-on-first-launch detected an event\n" );
-	scanonlaunch = 0;
+        pnd_log ( pndn_rem, "scan-on-first-launch detected an event\n" );
+        scanonlaunch = 0;
       }
 
       if ( watch_inotify ) {
-	pnd_log ( pndn_rem, "inotify detected an event\n" );
+        pnd_log ( pndn_rem, "inotify detected an event\n" );
       }
 
       if ( watch_dbus ) {
-	pnd_log ( pndn_rem, "dbusnotify detected an event\n" );
-	pnd_notify_shutdown ( nh );
-	nh = 0;
+        pnd_log ( pndn_rem, "dbusnotify detected an event\n" );
+        pnd_notify_shutdown ( nh );
+        nh = 0;
       }
 
       if ( time ( NULL ) - createtime <= 2 ) {
-	pnd_log ( pndn_rem, "Rediscovery request comes to soon after previous discovery; skipping.\n" );
-	sleep ( interval_secs );
-	continue;
+        pnd_log ( pndn_rem, "Rediscovery request comes to soon after previous discovery; skipping.\n" );
+        sleep ( interval_secs );
+        continue;
       }
 
       pnd_log ( pndn_rem, "------------------------------------------------------\n" );
@@ -317,27 +313,27 @@ int main ( int argc, char *argv[] ) {
 
       pnd_log ( pndn_rem, "  Scanning desktop paths----------------------------\n" );
       if ( ! perform_discoveries ( desktop_appspath, overridespath, desktop_dotdesktoppath, desktop_iconpath ) ) {
-	pnd_log ( pndn_rem, "    No applications found in desktop search path\n" );
+        pnd_log ( pndn_rem, "    No applications found in desktop search path\n" );
       }
 
       if ( menu_appspath && menu_dotdesktoppath && menu_iconpath ) {
-	pnd_log ( pndn_rem, "  Scanning menu paths----------------------------\n" );
-	if ( ! perform_discoveries ( menu_appspath, overridespath, menu_dotdesktoppath, menu_iconpath ) ) {
-	  pnd_log ( pndn_rem, "    No applications found in menu search path\n" );
-	}
+        pnd_log ( pndn_rem, "  Scanning menu paths----------------------------\n" );
+        if ( ! perform_discoveries ( menu_appspath, overridespath, menu_dotdesktoppath, menu_iconpath ) ) {
+          pnd_log ( pndn_rem, "    No applications found in menu search path\n" );
+        }
       }
 
       // if we've got a hup script located, lets invoke it
       if ( pndhup ) {
-	pnd_log ( pndn_rem, "Invoking hup script '%s'.\n", pndhup );
-	pnd_exec_no_wait_1 ( pndhup, NULL );
+        pnd_log ( pndn_rem, "Invoking hup script '%s'.\n", pndhup );
+        pnd_exec_no_wait_1 ( pndhup, NULL );
       }
 
       // since its entirely likely new directories have been found (ie: SD with a directory structure was inserted)
       // we should re-apply watches to catch all these new directories; ie: user might use on-device browser to
       // drop in new applications, or use the shell to juggle them around, or any number of activities.
       if ( watch_dbus ) {
-	setup_notifications();
+        setup_notifications();
       }
 
     } // need to rediscover?
@@ -447,10 +443,10 @@ void consume_configuration ( void ) {
 
     if ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) != PND_CONF_BADNUM ) {
       if ( pnd_log_do_buried_logging() == 0 ) {
-	pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
-	pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
+        pnd_log_set_filter ( pnd_conf_get_as_int ( apph, PNDNOTIFYD_LOGLEVEL ) );
+        pnd_log ( pndn_rem, "config file causes loglevel to change to %u", pnd_log_get_filter() );
       } else {
-	pnd_log ( pndn_rem, "-l command line suppresses log level change in config file\n" );
+        pnd_log ( pndn_rem, "-l command line suppresses log level change in config file\n" );
       }
     }
 
@@ -478,7 +474,7 @@ void consume_configuration ( void ) {
       pndhup = pnd_locate_filename ( run_searchpath, t );
 
       if ( pndhup ) {
-	pndhup = strdup ( pndhup ); // so we don't just use the built in buffer; next locate will overwrite it
+        pndhup = strdup ( pndhup ); // so we don't just use the built in buffer; next locate will overwrite it
       }
 
 #if 0 // don't enable this; if no key in config, we don't want to bother hupping
@@ -520,9 +516,9 @@ void consume_configuration ( void ) {
 
       // and its a dir?
       if ( S_ISDIR(homedir.st_mode) ) {
-	pnd_log ( pndn_rem, "  User [%s] matches path [%s], going with '%s'\n", g_username, path, path );
-	setenv ( "HOME", path, 1 /* overwrite */ );
-	got_user_homedir = 1;
+        pnd_log ( pndn_rem, "  User [%s] matches path [%s], going with '%s'\n", g_username, path, path );
+        setenv ( "HOME", path, 1 /* overwrite */ );
+        got_user_homedir = 1;
       } // and its a dir?
 
     } // guessing a homedirname..
@@ -537,21 +533,21 @@ void consume_configuration ( void ) {
       struct dirent *dirent;
 
       while ( ( dirent = readdir ( dir ) ) ) {
-	pnd_log ( pndn_rem, "  Scanning user homedir '%s'\n", dirent -> d_name );
+        pnd_log ( pndn_rem, "  Scanning user homedir '%s'\n", dirent -> d_name );
 
-	// file is a .desktop?
-	if ( dirent -> d_name [ 0 ] == '.' ) {
-	  continue;
-	} else if ( strcmp ( dirent -> d_name, "root" ) == 0 ) {
-	  continue;
-	}
+        // file is a .desktop?
+        if ( dirent -> d_name [ 0 ] == '.' ) {
+          continue;
+        } else if ( strcmp ( dirent -> d_name, "root" ) == 0 ) {
+          continue;
+        }
 
-	// a non-root user is found
-	char buffer [ 200 ];
-	sprintf ( buffer, "/home/%s", dirent -> d_name );
-	pnd_log ( pndn_rem, "  Going with '%s'\n", buffer );
-	setenv ( "HOME", buffer, 1 /* overwrite */ );
-	break;
+        // a non-root user is found
+        char buffer [ 200 ];
+        sprintf ( buffer, "/home/%s", dirent -> d_name );
+        pnd_log ( pndn_rem, "  Going with '%s'\n", buffer );
+        setenv ( "HOME", buffer, 1 /* overwrite */ );
+        break;
 
       } // while iterating through dir listing
 
@@ -636,7 +632,7 @@ void setup_notifications ( void ) {
 }
 
 void sighup_handler ( int n ) {
-
+  (void)n;
   pnd_log ( pndn_rem, "---[ SIGHUP received ]---\n" );
 
   // reparse config files
@@ -649,7 +645,7 @@ void sighup_handler ( int n ) {
 }
 
 void sigint_handler ( int n ) {
-
+  (void)n;
   pnd_log ( pndn_rem, "---[ SIGINT received ]---\n" );
 
   if ( dbh ) {
@@ -685,7 +681,7 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
       pnd_log ( pndn_rem, "  Found icon already existed, so reusing it! %s\n", existingpath );
 
       if ( d -> icon ) {
-	free ( d -> icon );
+        free ( d -> icon );
       }
       d -> icon = strdup ( existingpath );
 
@@ -700,29 +696,29 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
       sprintf ( ovrfile, "%s/%s", d -> object_path, d -> object_filename );
       fixpxml = strcasestr ( ovrfile, PND_PACKAGE_FILEEXT );
       if ( fixpxml ) {
-	strcpy ( fixpxml, ".png" );
-	fixpxml = NULL;
-	struct stat statbuf;
-	if ( stat ( ovrfile, &statbuf ) == 0 ) {
-	  d -> icon = strdup ( ovrfile );
-	  fixpxml = ovrfile; // !NULL will be the trigger to skip emittinf desktop from .pnd
-	} // stat
+        strcpy ( fixpxml, ".png" );
+        fixpxml = NULL;
+        struct stat statbuf;
+        if ( stat ( ovrfile, &statbuf ) == 0 ) {
+          d -> icon = strdup ( ovrfile );
+          fixpxml = ovrfile; // !NULL will be the trigger to skip emittinf desktop from .pnd
+        } // stat
       } // ovr?
 
       // attempt to create icon files; if successful, alter the disco struct to contain new
       // path, otherwise leave it alone (since it could be a generic icon reference..)
       if ( fixpxml == NULL ) {
-	// don't have an same-path override icon, so go fetch something from pnd file
+        // don't have an same-path override icon, so go fetch something from pnd file
 
-	if ( pnd_emit_icon ( emiticonpath, d ) ) {
-	  // success; fix up icon path to new one..
-	  if ( d -> icon ) {
-	    free ( d -> icon );
-	  }
-	  d -> icon = strdup ( existingpath );
-	} else {
-	  pnd_log ( pndn_debug, "  WARN: Couldn't write out icon %s\n", existingpath );
-	}
+        if ( pnd_emit_icon ( emiticonpath, d ) ) {
+          // success; fix up icon path to new one..
+          if ( d -> icon ) {
+            free ( d -> icon );
+          }
+          d -> icon = strdup ( existingpath );
+        } else {
+          pnd_log ( pndn_debug, "  WARN: Couldn't write out icon %s\n", existingpath );
+        }
 
       } // got ovr icon already?
 
@@ -743,9 +739,9 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
     // info .desktop
     if ( g_info_p && info_dotdesktoppath ) {
       if ( pnd_emit_dotinfo ( info_dotdesktoppath, pndrun, d ) ) {
-	// nada
+        // nada
       } else {
-	pnd_log ( pndn_rem, "ERROR: Error creating info .desktop file for app: %s\n", pnd_box_get_key ( d ) );
+        pnd_log ( pndn_rem, "ERROR: Error creating info .desktop file for app: %s\n", pnd_box_get_key ( d ) );
       }
     }
 
@@ -760,38 +756,38 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
 
       SEARCHCHUNK_PRE
       {
-	/* "buffer" now holds each chunk of the searchpath, expanded */
+        /* "buffer" now holds each chunk of the searchpath, expanded */
 
-	// WARN: This whole concept could be flawed; what if they represent '..' in some other obscure way (unicode?)
-	// and we end up allowing mkdir's all over the place? The risk really is limited -- once the pnd is here,
-	// if the user _runs it_, it can go nuts, so creating a few dirs isn't all that dangerous...
-	//   HMRF :/
-	// Perhaps I should have a config setting for pndnotifyd to suppress this whole mkdir behaviour?
+        // WARN: This whole concept could be flawed; what if they represent '..' in some other obscure way (unicode?)
+        // and we end up allowing mkdir's all over the place? The risk really is limited -- once the pnd is here,
+        // if the user _runs it_, it can go nuts, so creating a few dirs isn't all that dangerous...
+        //   HMRF :/
+        // Perhaps I should have a config setting for pndnotifyd to suppress this whole mkdir behaviour?
 
-	// if not containing ".." we allow it
-	if ( strstr ( buffer, ".." )  == NULL ) {
+        // if not containing ".." we allow it
+        if ( strstr ( buffer, ".." )  == NULL ) {
 
-	  // determine mountpoint for the file
-	  // - we could deduce this from the path (somewhat risky if we assume leading /media/mmcblk1p1 type notation .. could
-	  //   be other distributions entirely
-	  // - better to scan through mount-list and figure it out.. *sucks*
-	  char mountpoint [ PATH_MAX ];
-	  if ( pnd_determine_mountpoint ( d -> object_path, mountpoint, PATH_MAX - strlen ( buffer ) - 1 ) == 1 ) {
+          // determine mountpoint for the file
+          // - we could deduce this from the path (somewhat risky if we assume leading /media/mmcblk1p1 type notation .. could
+          //   be other distributions entirely
+          // - better to scan through mount-list and figure it out.. *sucks*
+          char mountpoint [ PATH_MAX ];
+          if ( pnd_determine_mountpoint ( d -> object_path, mountpoint, PATH_MAX - strlen ( buffer ) - 1 ) == 1 ) {
 
-	    strcat ( mountpoint, "/" );
-	    strcat ( mountpoint, buffer );
+            strcat ( mountpoint, "/" );
+            strcat ( mountpoint, buffer );
 
-	    struct stat t;
-	    if ( stat ( mountpoint, &t ) == 0 ) {
-	      pnd_log ( pndn_rem, "    Skipping existing mkdir: %s\n", mountpoint );
-	    } else {
-	      pnd_log ( pndn_rem, "    Attempting create of non-existant path: %s\n", mountpoint );
-	      mkdir ( mountpoint, 0777 );
-	    }
+            struct stat t;
+            if ( stat ( mountpoint, &t ) == 0 ) {
+              pnd_log ( pndn_rem, "    Skipping existing mkdir: %s\n", mountpoint );
+            } else {
+              pnd_log ( pndn_rem, "    Attempting create of non-existant path: %s\n", mountpoint );
+              mkdir ( mountpoint, 0777 );
+            }
 
-	  } // if figured out the mountpoint
+          } // if figured out the mountpoint
 
-	} // if valid path
+        } // if valid path
 
       }
       SEARCHCHUNK_POST
@@ -808,7 +804,7 @@ void process_discoveries ( pnd_box_handle applist, char *emitdesktoppath, char *
 
 // returns true if any applications were found
 unsigned char perform_discoveries ( char *appspath, char *overridespath,              // args to do discovery
-				    char *emitdesktoppath, char *emiticonpath )       // args to do emitting
+                                    char *emitdesktoppath, char *emiticonpath )       // args to do emitting
 {
   pnd_box_handle applist;
 
@@ -841,58 +837,58 @@ unsigned char perform_discoveries ( char *appspath, char *overridespath,        
 
       while ( ( dirent = readdir ( dir ) ) ) {
 
-	// file is a .desktop?
-	if ( strstr ( dirent -> d_name, ".desktop" ) == NULL ) {
-	  continue;
-	}
+        // file is a .desktop?
+        if ( strstr ( dirent -> d_name, ".desktop" ) == NULL ) {
+          continue;
+        }
 
-	// figure out full path
-	sprintf ( buffer, "%s/%s", emitdesktoppath, dirent -> d_name );
+        // figure out full path
+        sprintf ( buffer, "%s/%s", emitdesktoppath, dirent -> d_name );
 
-	// file was previously created by libpnd; check Source= line
-	// logic: default to 'yes' (in case we can't open the file for some reason)
-	//        if we can open the file, default to no and look for the source flag we added; if
-	//          that matches then we know its libpnd created, otherwise assume not.
-	unsigned char source_libpnd = 1;
-	{
-	  char line [ 256 ];
-	  FILE *grep = fopen ( buffer, "r" );
-	  if ( grep ) {
-	    source_libpnd = 0;
-	    while ( fgets ( line, 255, grep ) ) {
-	      if ( strcasestr ( line, PND_DOTDESKTOP_SOURCE ) ) {
-		source_libpnd = 2;
-	      }
-	    } // while
-	    fclose ( grep );
-	  }
-	}
-	if ( source_libpnd ) {
+        // file was previously created by libpnd; check Source= line
+        // logic: default to 'yes' (in case we can't open the file for some reason)
+        //        if we can open the file, default to no and look for the source flag we added; if
+        //          that matches then we know its libpnd created, otherwise assume not.
+        unsigned char source_libpnd = 1;
+        {
+          char line [ 256 ];
+          FILE *grep = fopen ( buffer, "r" );
+          if ( grep ) {
+            source_libpnd = 0;
+            while ( fgets ( line, 255, grep ) ) {
+              if ( strcasestr ( line, PND_DOTDESKTOP_SOURCE ) ) {
+                source_libpnd = 2;
+              }
+            } // while
+            fclose ( grep );
+          }
+        }
+        if ( source_libpnd ) {
 #if 1
-	  pnd_log ( pndn_debug,
-		    "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
+          pnd_log ( pndn_debug,
+                    "File '%s' appears to have been created by libpnd so candidate for delete: %u\n", buffer, source_libpnd );
 #endif
-	} else {
+        } else {
 #if 0
-	  pnd_log ( pndn_debug, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
+          pnd_log ( pndn_debug, "File '%s' appears NOT to have been created by libpnd, so leave it alone\n", buffer );
 #endif
-	  continue; // skip deleting it
-	}
+          continue; // skip deleting it
+        }
 
-	// file is 'new'?
-	if ( stat ( buffer, &dirs ) == 0 ) {
-	  if ( dirs.st_mtime >= createtime ) {
+        // file is 'new'?
+        if ( stat ( buffer, &dirs ) == 0 ) {
+          if ( dirs.st_mtime >= createtime ) {
 #if 1
-	    pnd_log ( pndn_debug, "File '%s' seems 'new', so leave it alone.\n", buffer );
+            pnd_log ( pndn_debug, "File '%s' seems 'new', so leave it alone.\n", buffer );
 #endif
-	    continue; // skip deleting it
-	  }
-	}
+            continue; // skip deleting it
+          }
+        }
 
-	// by this point, the .desktop file must be 'old' and created by pndnotifyd
-	// previously, so can remove it
-	pnd_log ( pndn_rem, "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
-	unlink ( buffer );
+        // by this point, the .desktop file must be 'old' and created by pndnotifyd
+        // previously, so can remove it
+        pnd_log ( pndn_rem, "File '%s' seems nolonger relevent; removing it.\n", dirent -> d_name );
+        unlink ( buffer );
 
       } // while getting filenames from dir
 

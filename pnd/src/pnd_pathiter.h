@@ -48,7 +48,7 @@
     struct stat statbuf;                          \
     wordexp_t _p;                                 \
     char **_w;                                    \
-    int _i;                                       \
+    unsigned int _i;                              \
     char buffer [ FILENAME_MAX ];                 \
                                                   \
     if ( wordexp ( chunk, &_p, 0 ) != 0 ) {       \
@@ -58,9 +58,9 @@
                                                   \
       for ( _i=0; _i < _p.we_wordc; _i++ ) {      \
         strcpy ( buffer, _w [ _i ] );             \
-	/*fprintf ( stderr, "glob %s\n", buffer );*/	\
-	if ( ( stat ( buffer, &statbuf ) == 0 )   \
-	  && ( S_ISDIR(statbuf.st_mode) ) )	  \
+        /*fprintf ( stderr, "glob %s\n", buffer );*/	\
+        if ( ( stat ( buffer, &statbuf ) == 0 )   \
+          && ( S_ISDIR(statbuf.st_mode) ) )	  \
         { /* user code */
 
 #define SEARCHPATH_POST                           \

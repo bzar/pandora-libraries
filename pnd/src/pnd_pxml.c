@@ -186,7 +186,7 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
 }
 
 void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v ) {
-  /* 
+  /*
    * Please do not use this function if it can be avoided; it is only here for compatibility.
    * The function might fail on low memory, and there's no way for the user to know when this happens.
    */
@@ -223,6 +223,7 @@ void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v ) {
 }
 
 unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ) {
+  (void)h;
   //pnd_pxml_t *p = (pnd_pxml_t*) h; //unused atm
 
   // for now, lets just verify the exec-path is valid
@@ -244,6 +245,8 @@ unsigned char pnd_is_pxml_valid_app ( pnd_pxml_handle h ) {
 }
 
 signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
+  (void)h;
+  (void)searchpath;
   // the pxml includes a unique-id; use this value to attempt to find an
   // override in the given searchpath
   signed char retval = 0;
@@ -271,7 +274,7 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath ) {
 
       // TODO: handle all the various data bits
       if ( pnd_pxml_get_app_name_en ( mergeh ) ) {
-	pnd_pxml_set_app_name ( h, pnd_pxml_get_app_name_en ( mergeh ) );
+        pnd_pxml_set_app_name ( h, pnd_pxml_get_app_name_en ( mergeh ) );
       }
 
       pnd_pxml_delete ( mergeh );

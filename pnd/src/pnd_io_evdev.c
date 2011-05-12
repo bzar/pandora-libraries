@@ -158,7 +158,7 @@ unsigned char pnd_evdev_catchup ( unsigned char blockp ) {
       FD_SET( evmap [ i ].fd, &fdset );
       // select(2) needs to know the highest fd
       if ( evmap [ i ].fd > maxfd ) {
-	maxfd = evmap [ i ].fd;
+        maxfd = evmap [ i ].fd;
       } // if
     } // if
   } // for
@@ -171,7 +171,7 @@ unsigned char pnd_evdev_catchup ( unsigned char blockp ) {
 
   ret = select ( maxfd + 1, &fdset, NULL, NULL, ptv );
 
-  if ( ret < 0 ) { 
+  if ( ret < 0 ) {
     return ( 0 ); // something bad
   } else if ( ret == 0 ) {
     return ( 1 ); // all good, nothing here
@@ -184,98 +184,98 @@ unsigned char pnd_evdev_catchup ( unsigned char blockp ) {
       // if pending in the queue
       if ( FD_ISSET ( evmap [ i ].fd, &fdset ) ) {
 
-	int rd, fd;
-	int j;
-	struct input_event ev[64];
+        int rd, fd;
+        int j;
+        struct input_event ev[64];
 
-	fd = evmap [ i ].fd;
+        fd = evmap [ i ].fd;
 
-	// pull events from the queue; max 64 events
-	rd = read ( fd, ev, sizeof(struct input_event) * 64 );
-	if ( rd < (int) sizeof(struct input_event) ) {
-	  // less than a whole event-struct? bad!
-	  break;
-	}
+        // pull events from the queue; max 64 events
+        rd = read ( fd, ev, sizeof(struct input_event) * 64 );
+        if ( rd < (int) sizeof(struct input_event) ) {
+          // less than a whole event-struct? bad!
+          break;
+        }
 
-	// for each event in the pulled events, parse it
-	for (j = 0; j < rd / sizeof(struct input_event); j++ ) {
+        // for each event in the pulled events, parse it
+        for (j = 0; j < (int) (rd / sizeof(struct input_event)); j++ ) {
 
-	  // SYN, ignore
-	  if ( ev[j].type == EV_SYN ) {
-	    continue;
+          // SYN, ignore
+          if ( ev[j].type == EV_SYN ) {
+            continue;
 
-	  } else if ( ev[j].type == EV_KEY ) {
-	    // KEY event -- including dpads
+          } else if ( ev[j].type == EV_KEY ) {
+            // KEY event -- including dpads
 
-	    // store val for key
-	    // keycode: ev[j].code -> keycode, see linux/input.h
-	    // state val: ev[j].value -> 0keyup, 1keydown
+            // store val for key
+            // keycode: ev[j].code -> keycode, see linux/input.h
+            // state val: ev[j].value -> 0keyup, 1keydown
 
 #if 0 // as of mid-March; notaz did a recent keycode change so had to refigure it out
-	    printf ( "evdev\tkey %d\tvalue %d\n", ev[j].code, ev[j].value );
-	    // a 102    b 107    x 109     y 104
-	    // ltrigger 54           rtrigger 97
-	    // start  56      select 29    pandora 139
+            printf ( "evdev\tkey %d\tvalue %d\n", ev[j].code, ev[j].value );
+            // a 102    b 107    x 109     y 104
+            // ltrigger 54           rtrigger 97
+            // start  56      select 29    pandora 139
 #endif
 
-	    unsigned int state = evmap [ pnd_evdev_dpads ].state.buttons;
+            unsigned int state = evmap [ pnd_evdev_dpads ].state.buttons;
 
-	    switch ( ev[j].code ) {
+            switch ( ev[j].code ) {
 
-	    case KEY_UP:     state &= ~pnd_evdev_up; if ( ev[j].value ) state |= pnd_evdev_up; break;
-	    case KEY_DOWN:   state &= ~pnd_evdev_down; if ( ev[j].value ) state |= pnd_evdev_down; break;
-	    case KEY_LEFT:   state &= ~pnd_evdev_left; if ( ev[j].value ) state |= pnd_evdev_left; break;
-	    case KEY_RIGHT:  state &= ~pnd_evdev_right; if ( ev[j].value ) state |= pnd_evdev_right; break;
-	    case KEY_PAGEDOWN: /*KEY_X*/     state &= ~pnd_evdev_x; if ( ev[j].value ) state |= pnd_evdev_x; break;
-	    case KEY_PAGEUP: /*KEY_Y*/       state &= ~pnd_evdev_y; if ( ev[j].value ) state |= pnd_evdev_y; break;
-	    case KEY_HOME: /*KEY_A*/         state &= ~pnd_evdev_a; if ( ev[j].value ) state |= pnd_evdev_a; break;
-	    case KEY_END: /*KEY_B*/          state &= ~pnd_evdev_b; if ( ev[j].value ) state |= pnd_evdev_b; break;
+            case KEY_UP:     state &= ~pnd_evdev_up; if ( ev[j].value ) state |= pnd_evdev_up; break;
+            case KEY_DOWN:   state &= ~pnd_evdev_down; if ( ev[j].value ) state |= pnd_evdev_down; break;
+            case KEY_LEFT:   state &= ~pnd_evdev_left; if ( ev[j].value ) state |= pnd_evdev_left; break;
+            case KEY_RIGHT:  state &= ~pnd_evdev_right; if ( ev[j].value ) state |= pnd_evdev_right; break;
+            case KEY_PAGEDOWN: /*KEY_X*/     state &= ~pnd_evdev_x; if ( ev[j].value ) state |= pnd_evdev_x; break;
+            case KEY_PAGEUP: /*KEY_Y*/       state &= ~pnd_evdev_y; if ( ev[j].value ) state |= pnd_evdev_y; break;
+            case KEY_HOME: /*KEY_A*/         state &= ~pnd_evdev_a; if ( ev[j].value ) state |= pnd_evdev_a; break;
+            case KEY_END: /*KEY_B*/          state &= ~pnd_evdev_b; if ( ev[j].value ) state |= pnd_evdev_b; break;
 
-	    case KEY_RIGHTSHIFT: // ltrigger
-	      state &= ~pnd_evdev_ltrigger; if ( ev[j].value ) state |= pnd_evdev_ltrigger; break;
-	    case KEY_RIGHTCTRL: // rtrigger
-	      state &= ~pnd_evdev_rtrigger; if ( ev[j].value ) state |= pnd_evdev_rtrigger; break;
+            case KEY_RIGHTSHIFT: // ltrigger
+              state &= ~pnd_evdev_ltrigger; if ( ev[j].value ) state |= pnd_evdev_ltrigger; break;
+            case KEY_RIGHTCTRL: // rtrigger
+              state &= ~pnd_evdev_rtrigger; if ( ev[j].value ) state |= pnd_evdev_rtrigger; break;
 
-	      // start
-	      // select
-	      // pandora
-	    case KEY_LEFTALT:     state &= ~pnd_evdev_start; if ( ev[j].value ) state |= pnd_evdev_start; break;
-	    case KEY_LEFTCTRL:     state &= ~pnd_evdev_select; if ( ev[j].value ) state |= pnd_evdev_select; break;
-	    case KEY_MENU:     state &= ~pnd_evdev_pandora; if ( ev[j].value ) state |= pnd_evdev_pandora; break;
+              // start
+              // select
+              // pandora
+            case KEY_LEFTALT:     state &= ~pnd_evdev_start; if ( ev[j].value ) state |= pnd_evdev_start; break;
+            case KEY_LEFTCTRL:     state &= ~pnd_evdev_select; if ( ev[j].value ) state |= pnd_evdev_select; break;
+            case KEY_MENU:     state &= ~pnd_evdev_pandora; if ( ev[j].value ) state |= pnd_evdev_pandora; break;
 
-	    } // switch
+            } // switch
 
-	    evmap [ pnd_evdev_dpads ].state.buttons = state;
+            evmap [ pnd_evdev_dpads ].state.buttons = state;
 
-	  } else if ( ev[j].type == EV_SW ) {
-	    // SWITCH event
+          } else if ( ev[j].type == EV_SW ) {
+            // SWITCH event
 
-	  } else if ( ev[j].type == EV_ABS ) {
-	    // ABS .. ie: nub
+          } else if ( ev[j].type == EV_ABS ) {
+            // ABS .. ie: nub
 
-	    // vsense66 -> nub1 (left)
-	    // vsense67 -> nub2 (right)
-	    pnd_nubstate_t *pn = NULL;
-	    if ( evmapback [ fd ] == pnd_evdev_nub1 ) {
-	      pn = &( evmap [ pnd_evdev_nub1 ].state.nub );
-	    } else {
-	      pn = &( evmap [ pnd_evdev_nub2 ].state.nub );
-	    }
+            // vsense66 -> nub1 (left)
+            // vsense67 -> nub2 (right)
+            pnd_nubstate_t *pn = NULL;
+            if ( evmapback [ fd ] == pnd_evdev_nub1 ) {
+              pn = &( evmap [ pnd_evdev_nub1 ].state.nub );
+            } else {
+              pn = &( evmap [ pnd_evdev_nub2 ].state.nub );
+            }
 
-	    if ( ev[j].code == ABS_X ) {
-	      pn -> x = ev[j].value;
-	    } else if ( ev[j].code == ABS_Y ) {
-	      pn -> y = ev[j].value;
-	    } else {
-	      //printf("unexpected EV_ABS code: %i\n", ev[i].code);
-	    }
+            if ( ev[j].code == ABS_X ) {
+              pn -> x = ev[j].value;
+            } else if ( ev[j].code == ABS_Y ) {
+              pn -> y = ev[j].value;
+            } else {
+              //printf("unexpected EV_ABS code: %i\n", ev[i].code);
+            }
 
-	  } else {
-	    // unknown?
-	    continue;
-	  } // event type?
+          } else {
+            // unknown?
+            continue;
+          } // event type?
 
-	} // for each pulled event
+        } // for each pulled event
 
       } // if pending
     } // if open

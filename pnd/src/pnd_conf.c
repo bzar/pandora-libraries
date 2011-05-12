@@ -162,9 +162,9 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
       memset ( section, '\0', 256 );
 
       if ( tail == head + 1 ) {
-	section [ 0 ] = '\0';
+        section [ 0 ] = '\0';
       } else {
-	strncpy ( section, head + 1, tail - head - 1 );
+        strncpy ( section, head + 1, tail - head - 1 );
       }
 
       //printf ( " -> section '%s'\n", section );
@@ -174,14 +174,14 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
       // must be a key (and likely a value) .. find the division
       mid = head;
       while ( *mid && ! isspace ( *mid ) ) {
-	mid++;
+        mid++;
       }
       *mid = '\0';
       mid++;
 
       // skip past any heading space for the key
       while ( *mid && isspace ( *mid ) ) {
-	mid++;
+        mid++;
       }
 
       //printf ( "key head: '%s'\n", head );
@@ -189,51 +189,51 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
 
       // is thjis a key/value pair, or just a key?
       if ( mid [ 0 ] ) {
-	// key/value pairing
-	char *v;
+        // key/value pairing
+        char *v;
 
-	// form the actual new key
-	if ( section [ 0 ] ) {
-	  snprintf ( buffer, FILENAME_MAX - 1, "%s.%s", section, head );
-	} else {
-	  strncpy ( buffer, head, FILENAME_MAX - 1 );
-	}
+        // form the actual new key
+        if ( section [ 0 ] ) {
+          snprintf ( buffer, FILENAME_MAX - 1, "%s.%s", section, head );
+        } else {
+          strncpy ( buffer, head, FILENAME_MAX - 1 );
+        }
 
-	//printf ( "Found key '%s' in config file\n", buffer );
+        //printf ( "Found key '%s' in config file\n", buffer );
 
-	// alloc node into the box
-	v = pnd_box_allocinsert ( h, buffer, strlen ( mid ) + 1 ); // allow for trailing null
+        // alloc node into the box
+        v = pnd_box_allocinsert ( h, buffer, strlen ( mid ) + 1 ); // allow for trailing null
 
-	if ( v ) {
-	  strcpy ( v, mid );
-	} else {
-	  return ( NULL ); // OOM while reading conf is either sad, or really scary conf (also sad.)
-	}
+        if ( v ) {
+          strcpy ( v, mid );
+        } else {
+          return ( NULL ); // OOM while reading conf is either sad, or really scary conf (also sad.)
+        }
 
       } else {
-	// key only
-	char *v;
+        // key only
+        char *v;
 
-	// form the actual new key
-	if ( section [ 0 ] ) {
-	  snprintf ( buffer, FILENAME_MAX - 1, "%s.%s", section, head );
-	} else {
-	  strncpy ( buffer, head, FILENAME_MAX - 1 );
-	}
+        // form the actual new key
+        if ( section [ 0 ] ) {
+          snprintf ( buffer, FILENAME_MAX - 1, "%s.%s", section, head );
+        } else {
+          strncpy ( buffer, head, FILENAME_MAX - 1 );
+        }
 
-	//printf ( "Found key with no value '%s' in config file\n", buffer );
+        //printf ( "Found key with no value '%s' in config file\n", buffer );
 
-	// alloc node into the box
-	v = pnd_box_allocinsert ( h, buffer, 0 ); // zero b/c of no payload
+        // alloc node into the box
+        v = pnd_box_allocinsert ( h, buffer, 0 ); // zero b/c of no payload
 
-	if ( ! v ) {
-	  return ( NULL ); // OOM while reading conf is either sad, or really scary conf (also sad.)
-	}
+        if ( ! v ) {
+          return ( NULL ); // OOM while reading conf is either sad, or really scary conf (also sad.)
+        }
 
       } // key or key/value?
 
     } // section or key/value line?
-    
+
   } // while
 
   // clean up a trifle
@@ -331,15 +331,15 @@ unsigned char pnd_conf_write ( pnd_conf_handle c, char *fullpath ) {
 
     if ( c ) {
       if ( strncmp ( k, lastcategory, c - k ) == 0 ) {
-	// same category
+        // same category
       } else {
-	strncpy ( lastcategory, k, c - k );
-	fprintf ( f, "[%s]\n", lastcategory );
+        strncpy ( lastcategory, k, c - k );
+        fprintf ( f, "[%s]\n", lastcategory );
       }
       fprintf ( f, "%s\t%s\n", c + 1, p );
     } else {
       if ( lastcategory [ 0 ] ) {
-	fprintf ( f, "[]\n" );
+        fprintf ( f, "[]\n" );
       }
       lastcategory [ 0 ] = '\0';
       fprintf ( f, "%s\t%s\n", k, p );

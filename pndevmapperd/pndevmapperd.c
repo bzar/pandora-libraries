@@ -154,14 +154,10 @@ int main ( int argc, char *argv[] ) {
     } else if ( argv [ i ][ 0 ] == '-' && argv [ i ][ 1 ] == 'l' ) {
 
       if ( isdigit ( argv [ i ][ 2 ] ) ) {
-	unsigned char x = atoi ( argv [ i ] + 2 );
-	if ( x >= 0 &&
-	     x < pndn_none )
-	{
-	  logall = x;
-	}
+        unsigned char x = atoi ( argv [ i ] + 2 );
+        logall = x;
       } else {
-	logall = 0;
+        logall = 0;
       }
     } else {
       usage ( argv );
@@ -225,7 +221,7 @@ int main ( int argc, char *argv[] ) {
 
     // umask
     umask ( 022 ); // emitted files can be rwxr-xr-x
-    
+
   } // set up daemon
 
   /* hmm, seems to not like working right after boot.. do we depend on another daemon or
@@ -258,7 +254,7 @@ int main ( int argc, char *argv[] ) {
     char tmp_username [ 128 ];
     while ( 1 ) {
       if ( pnd_check_login ( tmp_username, 127 ) ) {
-	break;
+        break;
       }
       pnd_log ( pndn_debug, "  No one logged in yet .. spinning.\n" );
       sleep ( 2 );
@@ -302,34 +298,34 @@ int main ( int argc, char *argv[] ) {
       // figure out which keycode we're talking about
       keycode_t *p = keycodes;
       while ( p -> keycode != -1 ) {
-	if ( strcasecmp ( p -> keyname, k ) == 0 ) {
-	  break;
-	}
-	p++;
+        if ( strcasecmp ( p -> keyname, k ) == 0 ) {
+          break;
+        }
+        p++;
       }
 
       if ( p -> keycode != -1 ) {
-	g_evmap [ g_evmap_max ].key_p = 1;    // its a key, not an event
-	g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
+        g_evmap [ g_evmap_max ].key_p = 1;    // its a key, not an event
+        g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
 
-	// note the script to activate in response
-	if ( strchr ( n, ' ' ) ) {
-	  char *foo = strdup ( n );
-	  char *t = strchr ( foo, ' ' );
-	  *t = '\0';
-	  g_evmap [ g_evmap_max ].script = foo;
-	  g_evmap [ g_evmap_max ].maxhold = atoi ( t + 1 );
-	} else {
-	  g_evmap [ g_evmap_max ].script = n;
-	  g_evmap [ g_evmap_max ].maxhold = 0;
-	}
+        // note the script to activate in response
+        if ( strchr ( n, ' ' ) ) {
+          char *foo = strdup ( n );
+          char *t = strchr ( foo, ' ' );
+          *t = '\0';
+          g_evmap [ g_evmap_max ].script = foo;
+          g_evmap [ g_evmap_max ].maxhold = atoi ( t + 1 );
+        } else {
+          g_evmap [ g_evmap_max ].script = n;
+          g_evmap [ g_evmap_max ].maxhold = 0;
+        }
 
-	pnd_log ( pndn_rem, "Registered key %s [%d] to script %s with maxhold %d\n",
-		  p -> keyname, p -> keycode, (char*) n, g_evmap [ g_evmap_max ].maxhold );
+        pnd_log ( pndn_rem, "Registered key %s [%d] to script %s with maxhold %d\n",
+                  p -> keyname, p -> keycode, (char*) n, g_evmap [ g_evmap_max ].maxhold );
 
-	g_evmap_max++;
+        g_evmap_max++;
       } else {
-	pnd_log ( pndn_warning, "WARNING! Key '%s' is not handled by pndevmapperd yet! Skipping.", k );
+        pnd_log ( pndn_warning, "WARNING! Key '%s' is not handled by pndevmapperd yet! Skipping.", k );
       }
 
     } else if ( strncmp ( k, "events.", 7 ) == 0 ) {
@@ -345,20 +341,20 @@ int main ( int argc, char *argv[] ) {
       // figure out which keycode we're talking about
       generic_event_t *p = generics;
       while ( p -> code != -1 ) {
-	if ( strcasecmp ( p -> name, k ) == 0 ) {
-	  break;
-	}
-	p++;
+        if ( strcasecmp ( p -> name, k ) == 0 ) {
+          break;
+        }
+        p++;
       }
 
       if ( p -> code != -1 ) {
-	g_evmap [ g_evmap_max ].key_p = 0;    // its an event, not a key
-	g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
-	g_evmap [ g_evmap_max ].script = n;   // note the script to activate in response
-	pnd_log ( pndn_rem, "Registered generic event %s [%d] to script %s\n", p -> name, p -> code, (char*) n );
-	g_evmap_max++;
+        g_evmap [ g_evmap_max ].key_p = 0;    // its an event, not a key
+        g_evmap [ g_evmap_max ].reqs = p;     // note the keycode
+        g_evmap [ g_evmap_max ].script = n;   // note the script to activate in response
+        pnd_log ( pndn_rem, "Registered generic event %s [%d] to script %s\n", p -> name, p -> code, (char*) n );
+        g_evmap_max++;
       } else {
-	pnd_log ( pndn_warning, "WARNING! Generic event '%s' is not handled by pndevmapperd yet! Skipping.", k );
+        pnd_log ( pndn_warning, "WARNING! Generic event '%s' is not handled by pndevmapperd yet! Skipping.", k );
       }
 
     } else if ( strncmp ( k, "pndevmapperd.", 7 ) == 0 ) {
@@ -529,13 +525,13 @@ int main ( int argc, char *argv[] ) {
     FD_ZERO ( &fdset );
 
     imaxfd = 0;
-    for (i = 0; i < max_fd /*imaxfd*/; i++) {
+    for (i = 0; i < (int)max_fd /*imaxfd*/; i++) {
       if ( fds [ i ] != -1 ) {
-	FD_SET( fds [ i ], &fdset );
+        FD_SET( fds [ i ], &fdset );
 
-	if ( fds [ i ] > imaxfd ) {
-	  imaxfd = fds [ i ];
-	}
+        if ( fds [ i ] > imaxfd ) {
+          imaxfd = fds [ i ];
+        }
 
       }
     }
@@ -546,10 +542,10 @@ int main ( int argc, char *argv[] ) {
     tv.tv_usec = 0;
     tv.tv_sec = 1;
 
-    for ( i = i; i < g_evmap_max; i++ ) {
+    for ( i = i; i < (int)g_evmap_max; i++ ) {
       if ( g_evmap [ i ].keydown_time && g_evmap [ i ].maxhold ) {
-	do_block = 0;
-	break;
+        do_block = 0;
+        break;
       }
     }
 
@@ -566,87 +562,87 @@ int main ( int argc, char *argv[] ) {
       // they're "maxhold" keys, so we have to see if their timer has passed
       unsigned int now = time ( NULL );
 
-      for ( i = i; i < g_evmap_max; i++ ) {
+      for ( i = i; i < (int)g_evmap_max; i++ ) {
 
-	if ( g_evmap [ i ].keydown_time &&
-	     g_evmap [ i ].maxhold &&
-	     now - g_evmap [ i ].keydown_time >= g_evmap [ i ].maxhold )
-	{
-	  keycode_t *k = (keycode_t*) g_evmap [ i ].reqs;
-	  dispatch_key ( k -> keycode, 0 /* key up */ );
-	}
+        if ( g_evmap [ i ].keydown_time &&
+             g_evmap [ i ].maxhold &&
+             now - g_evmap [ i ].keydown_time >= g_evmap [ i ].maxhold )
+        {
+          keycode_t *k = (keycode_t*) g_evmap [ i ].reqs;
+          dispatch_key ( k -> keycode, 0 /* key up */ );
+        }
 
       } // for
 
     } else { // an fd was fiddled with
 
-      for ( i = 0; i < max_fd; i++ ) {
-	if ( fds [ i ] != -1 && FD_ISSET ( fds [ i ], &fdset ) ) {
-	  fd = fds [ i ];
-	} // fd is set?
+      for ( i = 0; i < (int)max_fd; i++ ) {
+        if ( fds [ i ] != -1 && FD_ISSET ( fds [ i ], &fdset ) ) {
+          fd = fds [ i ];
+        } // fd is set?
       } // for
 
       /* buttons or keypad */
       rd = read ( fd, ev, sizeof(struct input_event) * 64 );
       if ( rd < (int) sizeof(struct input_event) ) {
-	pnd_log ( pndn_error, "ERROR! read(2) input_event failed with: %s\n", strerror ( errno ) );
-	break;
+        pnd_log ( pndn_error, "ERROR! read(2) input_event failed with: %s\n", strerror ( errno ) );
+        break;
       }
 
-      for (i = 0; i < rd / sizeof(struct input_event); i++ ) {
+      for (i = 0; i < (int)(rd / sizeof(struct input_event)); i++ ) {
 
-	if ( ev[i].type == EV_SYN ) {
-	  continue;
-	} else if ( ev[i].type == EV_KEY ) {
+        if ( ev[i].type == EV_SYN ) {
+          continue;
+        } else if ( ev[i].type == EV_KEY ) {
 
-	  // do we even know about this key at all?
-	  keycode_t *p = keycodes;
-	  while ( p -> keycode != -1 ) {
-	    if ( p -> keycode == ev [ i ].code ) {
-	      break;
-	    }
-	    p++;
-	  }
+          // do we even know about this key at all?
+          keycode_t *p = keycodes;
+          while ( p -> keycode != -1 ) {
+            if ( p -> keycode == ev [ i ].code ) {
+              break;
+            }
+            p++;
+          }
 
-	  // if we do, hand it off to dispatcher to look up if we actually do something with it
-	  if ( p -> keycode != -1 ) {
-	    if ( logall >= 0 ) {
-	      pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
-	    }
-	    dispatch_key ( p -> keycode, ev [ i ].value );
-	  } else {
-	    if ( logall >= 0 ) {
-	      pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
-	    }
-	  }
+          // if we do, hand it off to dispatcher to look up if we actually do something with it
+          if ( p -> keycode != -1 ) {
+            if ( logall >= 0 ) {
+              pnd_log ( pndn_debug, "Key Event: key %s [%d] value %d\n", p -> keyname, p -> keycode, ev [ i ].value );
+            }
+            dispatch_key ( p -> keycode, ev [ i ].value );
+          } else {
+            if ( logall >= 0 ) {
+              pnd_log ( pndn_warning, "Unknown Key Event: keycode %d value %d\n",  ev [ i ].code, ev [ i ].value );
+            }
+          }
 
-	} else if ( ev[i].type == EV_SW ) {
+        } else if ( ev[i].type == EV_SW ) {
 
-	  // do we even know about this event at all?
-	  generic_event_t *p = generics;
-	  while ( p -> code != -1 ) {
-	    if ( p -> code == ev [ i ].code ) {
-	      break;
-	    }
-	    p++;
-	  }
+          // do we even know about this event at all?
+          generic_event_t *p = generics;
+          while ( p -> code != -1 ) {
+            if ( p -> code == ev [ i ].code ) {
+              break;
+            }
+            p++;
+          }
 
-	  // if we do, hand it off to dispatcher to look up if we actually do something with it
-	  if ( p -> code != -1 ) {
-	    if ( logall >= 0 ) {
-	      pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
-	    }
-	    dispatch_event ( p -> code, ev [ i ].value );
-	  } else {
-	    if ( logall >= 0 ) {
-	      pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
-	    }
-	  }
+          // if we do, hand it off to dispatcher to look up if we actually do something with it
+          if ( p -> code != -1 ) {
+            if ( logall >= 0 ) {
+              pnd_log ( pndn_debug, "Generic Event: event %s [%d] value %d\n", p -> name, p -> code, ev [ i ].value );
+            }
+            dispatch_event ( p -> code, ev [ i ].value );
+          } else {
+            if ( logall >= 0 ) {
+              pnd_log ( pndn_warning, "Unknown Generic Event: code %d value %d\n",  ev [ i ].code, ev [ i ].value );
+            }
+          }
 
-	} else {
-	  pnd_log ( pndn_debug, "DEBUG: Unexpected event type %i received\n", ev[i].type );
-	  continue;
-	} // type?
+        } else {
+          pnd_log ( pndn_debug, "DEBUG: Unexpected event type %i received\n", ev[i].type );
+          continue;
+        } // type?
 
       } // for
 
@@ -676,59 +672,59 @@ void dispatch_key ( int keycode, int val ) {
   for ( i = 0; i < g_evmap_max; i++ ) {
 
     if ( ( g_evmap [ i ].key_p ) &&
-	 ( ((keycode_t*) (g_evmap [ i ].reqs)) -> keycode == keycode ) &&
-	 ( g_evmap [ i ].script ) )
+         ( ((keycode_t*) (g_evmap [ i ].reqs)) -> keycode == keycode ) &&
+         ( g_evmap [ i ].script ) )
     {
       unsigned char invoke_it = 0;
 
       // is this a keydown or a keyup?
       if ( val == 1 ) {
-	// keydown
-	g_evmap [ i ].keydown_time = time ( NULL );
+        // keydown
+        g_evmap [ i ].keydown_time = time ( NULL );
 
       } else if ( val == 2 && g_evmap [ i ].keydown_time ) {
-	// key is being held; we should check if max-hold is set
+        // key is being held; we should check if max-hold is set
 
-	if ( g_evmap [ i ].maxhold &&
-	     time ( NULL ) - g_evmap [ i ].keydown_time >= g_evmap [ i ].maxhold )
-	{
-	  invoke_it = 1;
-	}
+        if ( g_evmap [ i ].maxhold &&
+             time ( NULL ) - g_evmap [ i ].keydown_time >= g_evmap [ i ].maxhold )
+        {
+          invoke_it = 1;
+        }
 
       } else if ( val == 0 && g_evmap [ i ].keydown_time ) {
-	// keyup (while key is down)
+        // keyup (while key is down)
 
-	if ( time ( NULL ) - g_evmap [ i ].last_trigger_time >= g_minimum_separation ) {
-	  invoke_it = 1;
-	} else {
-	  pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
-	}
+        if ( time ( NULL ) - g_evmap [ i ].last_trigger_time >= g_minimum_separation ) {
+          invoke_it = 1;
+        } else {
+          pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
+        }
 
       } // key up or down?
 
       if ( invoke_it ) {
 
-	char holdtime [ 128 ];
-	sprintf ( holdtime, "%d", (int)( time(NULL) - g_evmap [ i ].keydown_time ) );
-	pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, holdtime );
+        char holdtime [ 128 ];
+        sprintf ( holdtime, "%d", (int)( time(NULL) - g_evmap [ i ].keydown_time ) );
+        pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, holdtime );
 
-	// state
-	g_evmap [ i ].keydown_time = 0; // clear the keydown-ness
-	g_evmap [ i ].last_trigger_time = time ( NULL );
+        // state
+        g_evmap [ i ].keydown_time = 0; // clear the keydown-ness
+        g_evmap [ i ].last_trigger_time = time ( NULL );
 
-	// invocation
-	int x;
+        // invocation
+        int x;
 
-	if ( ( x = fork() ) < 0 ) {
-	  pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-	  exit ( -3 );
-	}
+        if ( ( x = fork() ) < 0 ) {
+          pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+          exit ( -3 );
+        }
 
-	if ( x == 0 ) {
-	  execl ( g_evmap [ i ].script, g_evmap [ i ].script, holdtime, (char*)NULL );
-	  pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
-	  exit ( -4 );
-	}
+        if ( x == 0 ) {
+          execl ( g_evmap [ i ].script, g_evmap [ i ].script, holdtime, (char*)NULL );
+          pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
+          exit ( -4 );
+        }
 
       } // invoke the script!
 
@@ -752,34 +748,34 @@ void dispatch_event ( int code, int val ) {
   for ( i = 0; i < g_evmap_max; i++ ) {
 
     if ( ( g_evmap [ i ].key_p == 0 ) &&
-	 ( ((generic_event_t*) (g_evmap [ i ].reqs)) -> code == code ) &&
-	 ( g_evmap [ i ].script ) )
+         ( ((generic_event_t*) (g_evmap [ i ].reqs)) -> code == code ) &&
+         ( g_evmap [ i ].script ) )
     {
 
       // just hand the code to the script (ie: 0 or 1 to script)
       if ( time ( NULL ) - g_evmap [ i ].last_trigger_time >= g_minimum_separation ) {
-	int x;
-	char value [ 100 ];
+        int x;
+        char value [ 100 ];
 
-	sprintf ( value, "%d", val );
+        sprintf ( value, "%d", val );
 
-	g_evmap [ i ].last_trigger_time = time ( NULL );
+        g_evmap [ i ].last_trigger_time = time ( NULL );
 
-	pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, value );
+        pnd_log ( pndn_rem, "Will attempt to invoke: %s %s\n", g_evmap [ i ].script, value );
 
-	if ( ( x = fork() ) < 0 ) {
-	  pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-	  exit ( -3 );
-	}
+        if ( ( x = fork() ) < 0 ) {
+          pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+          exit ( -3 );
+        }
 
-	if ( x == 0 ) {
-	  execl ( g_evmap [ i ].script, g_evmap [ i ].script, value, (char*)NULL );
-	  pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
-	  exit ( -4 );
-	}
+        if ( x == 0 ) {
+          execl ( g_evmap [ i ].script, g_evmap [ i ].script, value, (char*)NULL );
+          pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", g_evmap [ i ].script );
+          exit ( -4 );
+        }
 
       } else {
-	pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
+        pnd_log ( pndn_rem, "Skipping invokation.. falls within minimum_separation threshold\n" );
       }
 
       return;
@@ -792,6 +788,7 @@ void dispatch_event ( int code, int val ) {
 
 void sigchld_handler ( int n ) {
 
+  (void)n;
   pnd_log ( pndn_rem, "---[ SIGCHLD received ]---\n" );
 
   int status;
@@ -833,11 +830,12 @@ unsigned char set_next_alarm ( unsigned int secs, unsigned int usecs ) {
     // sucks
     return ( 0 );
   }
-  
+
   return ( 1 );
 }
 
 void sigalrm_handler ( int n ) {
+  (void)n;
 
   pnd_log ( pndn_debug, "---[ SIGALRM ]---\n" );
 
@@ -867,19 +865,19 @@ void sigalrm_handler ( int n ) {
           int x;
           pnd_log ( pndn_error, "Battery Current: %d\n", mamps );
           pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n",
-	      	b_shutdown_script );
+                b_shutdown_script );
 
           if ( ( x = fork() ) < 0 ) {
-	        pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
-    	    exit ( -3 );
+                pnd_log ( pndn_error, "ERROR: Couldn't fork()\n" );
+            exit ( -3 );
           }
 
          if ( x == 0 ) {
            char value [ 100 ];
            sprintf ( value, "%d", b_shutdelay );
-	   execl ( b_shutdown_script, b_shutdown_script, value, (char*)NULL );
-	   pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
-	   exit ( -4 );
+           execl ( b_shutdown_script, b_shutdown_script, value, (char*)NULL );
+           pnd_log ( pndn_error, "ERROR: Couldn't exec(%s)\n", b_shutdown_script );
+           exit ( -4 );
          }
       }
     } // charging

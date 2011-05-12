@@ -17,7 +17,7 @@ unsigned char pnd_device_open_write_close ( char *name, char *v ) {
     return ( 0 );
   }
 
-  if ( write ( f, v, strlen ( v ) ) < strlen ( v ) ) {
+  if ( write ( f, v, strlen ( v ) ) < (int)strlen ( v ) ) {
     close ( f );
     return ( 0 );
   }

@@ -88,10 +88,13 @@ unsigned char pnd_log_to_stream ( FILE *f ) {
 }
 
 unsigned char pnd_log_to_syslog ( char *facility ) {
+  (void)facility;
   return ( 0 ); // NYI
 }
 
 unsigned char pnd_log_to_callback ( pnd_log_callback_f f, void *userdata ) {
+  (void)f;
+  (void)userdata;
   return ( 0 ); // NYI
 }
 
@@ -122,19 +125,19 @@ static void pnd_log_emit ( unsigned char level, char *message ) {
     case pndl_stream:
       // pretext
       if ( log_pretext ) {
-	fprintf ( log_targets [ i ].stream, "%s ", log_pretext );
+        fprintf ( log_targets [ i ].stream, "%s ", log_pretext );
       }
       // log level
       fprintf ( log_targets [ i ].stream, "%u %u\t", level, (unsigned int) (time ( NULL ) - log_first) );
       // message
       if ( message ) {
-	fprintf ( log_targets [ i ].stream, "%s", message );
-	if ( strchr ( message, '\n' ) == NULL ) {
-	  fprintf ( log_targets [ i ].stream, "\n" );
-	}
-	if ( log_flushafter ) {
-	  fflush ( log_targets [ i ].stream );
-	}
+        fprintf ( log_targets [ i ].stream, "%s", message );
+        if ( strchr ( message, '\n' ) == NULL ) {
+          fprintf ( log_targets [ i ].stream, "\n" );
+        }
+        if ( log_flushafter ) {
+          fflush ( log_targets [ i ].stream );
+        }
       }
       break;
 

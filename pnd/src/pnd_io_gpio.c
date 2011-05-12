@@ -86,11 +86,11 @@ void PND_ReadEvents ( int fd, int device ) {
     rd = read ( fd, ev, sizeof(struct input_event) * 64 );
 
     if ( rd > (int) sizeof(struct input_event) ) {
-      for (i = 0; i < rd / sizeof(struct input_event); i++) {
-	PND_CheckEvent ( &ev[i], device );
+      for (i = 0; i < (int) (rd / sizeof(struct input_event)); i++) {
+        PND_CheckEvent ( &ev[i], device );
       }
     }
-  
+
   } // got fd?
 
   return;
@@ -110,42 +110,42 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
     switch( event->code ) {
 
     case KEY_UP:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_up] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_up] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_up] = 0;
+        GLES2D_Pad[pke_pad_up] = 0;
       }
       break;
 
     case KEY_DOWN:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_down] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_down] = 1;
       } else {
-	GLES2D_Pad[pke_pad_down] = 0;
+        GLES2D_Pad[pke_pad_down] = 0;
       }
       break;
 
     case KEY_LEFT:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_left] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_left] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_left] = 0;
+        GLES2D_Pad[pke_pad_left] = 0;
       }
       break;
 
     case KEY_RIGHT:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_right] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_right] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_right] = 0;
+        GLES2D_Pad[pke_pad_right] = 0;
       }
       break;
 
     case KEY_MENU:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_menu] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_menu] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_menu] = 0;
+        GLES2D_Pad[pke_pad_menu] = 0;
       }
       break;
 
@@ -158,50 +158,50 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_X:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_x] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_x] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_x] = 0;
+        GLES2D_Pad[pke_pad_x] = 0;
       }
       break;
 
     case BTN_Y:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_y] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_y] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_y] = 0;
+        GLES2D_Pad[pke_pad_y] = 0;
       }
       break;
 
     case BTN_A:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_a] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_a] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_a] = 0;
+        GLES2D_Pad[pke_pad_a] = 0;
       }
       break;
 
     case BTN_B:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_b] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_b] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_b] = 0;
+        GLES2D_Pad[pke_pad_b] = 0;
       }
       break;
 
     case BTN_TL:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_l] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_l] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_l] = 0;
+        GLES2D_Pad[pke_pad_l] = 0;
       }
       break;
 
     case BTN_TR:
-      if ( event->value ) {	
-	GLES2D_Pad[pke_pad_r] = 1;
+      if ( event->value ) {
+        GLES2D_Pad[pke_pad_r] = 1;
       }	else {
-	GLES2D_Pad[pke_pad_r] = 0;
+        GLES2D_Pad[pke_pad_r] = 0;
       }
       break;
 
@@ -209,60 +209,60 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
     }
     break;
-    
+
   case EV_ABS:
 
     switch ( device ) {
 
     case DEV_NUB1:
       if ( event->code == ABS_X ) {
-	//printf( "nub1 x %3d\n", value );
-	if( abs(value) > NUB1_CUTOFF ) {
-	  if( value > 0 ) {
-	    value = 1;
-	  } else if( value < 0 ) {
-	    value = 1;						    
-	  }
-	} else {
-	}
+        //printf( "nub1 x %3d\n", value );
+        if( abs(value) > NUB1_CUTOFF ) {
+          if( value > 0 ) {
+            value = 1;
+          } else if( value < 0 ) {
+            value = 1;
+          }
+        } else {
+        }
       }
-	
+
       if( event->code == ABS_Y ) {
-	//printf( "nub1 y %3d\n", value );
-	if( abs(value) > NUB1_CUTOFF ) {
-	  if( value > 0 ) {
-	    value = 1;
-	  } else if( value < 0 ) {
-	    value = 1;
-	  }
-	} else {
-	}
+        //printf( "nub1 y %3d\n", value );
+        if( abs(value) > NUB1_CUTOFF ) {
+          if( value > 0 ) {
+            value = 1;
+          } else if( value < 0 ) {
+            value = 1;
+          }
+        } else {
+        }
       }
       break;
 
     case DEV_NUB2:
       if(event->code == ABS_X) {
-	//printf( "nub2 x %3d\n", value );
-	if( abs(value) > NUB2_CUTOFF ) {
-	  if( value > 0 ) {
-	    value = 1;
-	  } else if( value < 0 ) {
-	    value = 1;						    
-	  }
-	} else {
-	}
+        //printf( "nub2 x %3d\n", value );
+        if( abs(value) > NUB2_CUTOFF ) {
+          if( value > 0 ) {
+            value = 1;
+          } else if( value < 0 ) {
+            value = 1;
+          }
+        } else {
+        }
       }
-	
+
       if(event->code == ABS_Y) {
-	//printf( "nub2 y %3d\n", value );
-	if( abs(value) > NUB2_CUTOFF ) {
-	  if( value > 0 ) {
-	    value = 1;
-	  } else if( value < 0 ) {
-	    value = 1;
-	  }
-	} else {
-	}
+        //printf( "nub2 y %3d\n", value );
+        if( abs(value) > NUB2_CUTOFF ) {
+          if( value > 0 ) {
+            value = 1;
+          } else if( value < 0 ) {
+            value = 1;
+          }
+        } else {
+        }
       }
       break;
 
@@ -289,11 +289,11 @@ int PND_OpenEventDeviceByID ( int event_id ) {
   }
 
   printf("Input driver version is %d.%d.%d\n",
-	 version >> 16, (version >> 8) & 0xff, version & 0xff);
+         version >> 16, (version >> 8) & 0xff, version & 0xff);
 
   ioctl(fd, EVIOCGID, id);
   printf("Input device ID: bus 0x%x vendor 0x%x product 0x%x version 0x%x\n",
-	 id[ID_BUS], id[ID_VENDOR], id[ID_PRODUCT], id[ID_VERSION]);
+         id[ID_BUS], id[ID_VENDOR], id[ID_PRODUCT], id[ID_VERSION]);
 
   ioctl(fd, EVIOCGNAME(sizeof(dev_name)), dev_name);
   printf("Input device name: \"%s\"\n", dev_name);
@@ -319,20 +319,20 @@ int PND_OpenEventDeviceByName ( char device_name[] ) {
     if (strcmp(dev_name, device_name) == 0) {
 
       if (ioctl(fd, EVIOCGVERSION, &version)) {
-	perror("evtest: can't get version");
-	return 0;
+        perror("evtest: can't get version");
+        return 0;
       }
 
       printf("Input driver version is %d.%d.%d\n",
-	     version >> 16, (version >> 8) & 0xff, version & 0xff);
+             version >> 16, (version >> 8) & 0xff, version & 0xff);
 
       ioctl(fd, EVIOCGID, id);
       printf("Input device ID: bus 0x%x vendor 0x%x product 0x%x version 0x%x\n",
-	     id[ID_BUS], id[ID_VENDOR], id[ID_PRODUCT], id[ID_VERSION]);
+             id[ID_BUS], id[ID_VENDOR], id[ID_PRODUCT], id[ID_VERSION]);
 
       ioctl(fd, EVIOCGNAME(sizeof(dev_name)), dev_name);
       printf("Input device name: \"%s\"\n", dev_name);
-		  
+
       return fd;
     }
 
