@@ -542,7 +542,7 @@ int main ( int argc, char *argv[] ) {
     tv.tv_usec = 0;
     tv.tv_sec = 1;
 
-    for ( i = i; i < (int)g_evmap_max; i++ ) {
+    for ( ; i < (int)g_evmap_max; i++ ) {
       if ( g_evmap [ i ].keydown_time && g_evmap [ i ].maxhold ) {
         do_block = 0;
         break;
@@ -562,7 +562,7 @@ int main ( int argc, char *argv[] ) {
       // they're "maxhold" keys, so we have to see if their timer has passed
       unsigned int now = time ( NULL );
 
-      for ( i = i; i < (int)g_evmap_max; i++ ) {
+      for ( ; i < (int)g_evmap_max; i++ ) {
 
         if ( g_evmap [ i ].keydown_time &&
              g_evmap [ i ].maxhold &&
