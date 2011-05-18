@@ -13,11 +13,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctype.h> // for isdigit()
 
 // this really should be replaced by a function pair .. one to
 // start a new search and one to go to next, bailing when done. Maybe
 // a state struct. Like we have time. OR perhaps just a single
 // func with a callback. Whatever.
+
+
+// will be set to 0xFFFF for no limit currently set, or a smaller number
+// if that is the depth limit
+unsigned int pathiter_depthlimit;
 
 
 #if 1 // globbing is performed
@@ -29,6 +35,7 @@
   char *end, *colon;                              \
   char *head = searchpath;                        \
   char chunk [ FILENAME_MAX ];                    \
+  char *lt;                                       \
                                                   \
   /*fprintf ( stderr, "sp %s\n", searchpath );*/  \
                                                   \
@@ -43,7 +50,16 @@
       strncpy ( chunk, head, FILENAME_MAX - 1 );  \
     }                                             \
                                                   \
-    /*fprintf ( stderr, "-> %s\n", chunk ); */    \
+    pathiter_depthlimit = 0xFFFF;		  \
+                                                  \
+    if ( ( lt = strchr ( chunk, '<' ) ) ) {       \
+      if ( isdigit ( *(lt+1) ) ) {                \
+        pathiter_depthlimit = atoi ( lt + 1 );    \
+      }                                           \
+      *lt = '\0';                                 \
+    }                                             \
+                                                  \
+    /*fprintf ( stderr, "-> chunk %s limit %d\n", chunk, pathiter_depthlimit );*/ \
                                                   \
     struct stat statbuf;                          \
     wordexp_t _p;                                 \

@@ -11,6 +11,7 @@
 
 #define _XOPEN_SOURCE 500
 #define __USE_XOPEN_EXTENDED
+#define _GNU_SOURCE
 #include <ftw.h> /* for nftw, tree walker */
 
 #include "pnd_container.h"
@@ -70,7 +71,10 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     if ( logit ) {
       pnd_log ( PND_LOG_DEFAULT, " .. is dir, skipping\n" );
     }
-    return ( 0 ); // skip directories and other non-regular files
+    if ( ftwbuf -> level >= pathiter_depthlimit ) {
+      return ( FTW_SKIP_SUBTREE );
+    }
+    return ( FTW_CONTINUE ); // skip directories and other non-regular files
   }
 
   // PND/PNZ file and others may be valid as well .. but lets leave that for now
@@ -86,7 +90,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     if ( logit ) {
       pnd_log ( PND_LOG_DEFAULT, " .. bad filename, skipping\n" );
     }
-    return ( 0 );
+    return ( FTW_CONTINUE );
   }
 
   // potentially a valid application
@@ -114,13 +118,13 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
     // try to locate the PXML portion
     if ( ! pnd_pnd_seek_pxml ( f ) ) {
       fclose ( f );
-      return ( 0 ); // pnd or not, but not to spec. Pwn'd the pnd?
+      return ( FTW_CONTINUE ); // pnd or not, but not to spec. Pwn'd the pnd?
     }
 
     // accrue it into a buffer
     if ( ! pnd_pnd_accrue_pxml ( f, pxmlbuf, 32 * 1024 ) ) {
       fclose ( f );
-      return ( 0 );
+      return ( FTW_CONTINUE );
     }
 
     //printf ( "buffer is %s\n", pxmlbuf );
@@ -170,7 +174,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 
   // pxmlh is useful?
   if ( ! pxmlapps ) {
-    return ( 0 ); // continue tree walk
+    return ( FTW_CONTINUE ); // continue tree walk
   }
 
   // for ovr-file
@@ -392,7 +396,7 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
   // free up the applist
   free ( pxmlapps );
 
-  return ( 0 ); // continue the tree walk
+  return ( FTW_CONTINUE ); // continue the tree walk
 }
 
 pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath ) {
@@ -413,7 +417,7 @@ pnd_box_handle pnd_disco_search ( char *searchpath, char *overridespath ) {
     nftw ( buffer,               // path to descend
 	   pnd_disco_callback,   // callback to do processing
 	   10,                   // no more than X open fd's at once
-	   FTW_PHYS );           // do not follow symlinks
+	   FTW_PHYS | FTW_ACTIONRETVAL );   // do not follow symlinks
 
   }
   SEARCHPATH_POST
