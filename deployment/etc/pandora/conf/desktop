@@ -2,13 +2,17 @@
 # Open Pandora
 # Desktop configuration
 
+# searchpaths (desktop.searchpath and menu.searchpath for instance) are a list of directories, separated by colon:
+# - default is to recursively scan allsubdirs of the named piece
+# - if you append <#> (where # is 0-n) then that numebr of subdirs will be permitted; ie: /media/*/<1> means to scan root and one subdir of root
+
 [desktop]
 searchpath	/media/*/pandora/desktop:/media/*/pandora/apps	# path to depth-search for PXMLs and pnd-files
 dotdesktoppath	~/Desktop/	# path for pndnotifyd to spit .desktop files into (run as root)
 iconpath	/tmp/iconcache	# path for pndnotifyd to drop icons into (can be same as dotdesktoppath if WM permits)
 
 [menu]
-searchpath	/media/*/pandora/menu:/media/*/pandora/apps:/usr/pandora/apps	# path to depth-search for PXMLs and pnd-files
+searchpath	/media/*/<1>:/media/*/pandora/menu:/media/*/pandora/apps:/usr/pandora/apps	# path to depth-search for PXMLs and pnd-files
 dotdesktoppath	/usr/share/applications		# path for pndnotifyd to spit .desktop files into
 iconpath	/tmp/iconcache	# path for pndnotifyd to drop icons into (can be same as dotdesktoppath if WM permits)
 
