@@ -28,7 +28,7 @@ static pnd_box_handle disco_box;
 static char *disco_overrides = NULL;
 
 void pnd_disco_destroy ( pnd_disco_t *p ) {
-
+  if ( p -> package_id ) {     free ( p -> package_id);   }
   if ( p -> title_en ) {       free ( p -> title_en );    }
   if ( p -> unique_id ) {      free ( p -> unique_id );   }
   if ( p -> appdata_dirname ) { free ( p -> appdata_dirname );   }
@@ -224,6 +224,9 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       p -> object_type = valid;
 
       // PXML fields
+      if ( pnd_pxml_get_package_id ( pxmlh ) ) {
+	p -> package_id = strdup ( pnd_pxml_get_package_id ( pxmlh ) );
+      }
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
 	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
       }

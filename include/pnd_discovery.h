@@ -57,6 +57,7 @@ typedef struct {
   unsigned char subapp_number; // # of app within PXML (ie: 0, 1, 2, 3, up to the number of apps within the PXML)
   unsigned int object_flags;   // see PND_DISCO_ bitmasks above
   // strdup'd from PXML -- hey, who was the idiot who thought it was a reat idea not to just re-use the pxml-struct?
+  char *package_id;
   char *title_en;
   char *desc_en;
   char *unique_id;

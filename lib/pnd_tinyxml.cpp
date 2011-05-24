@@ -221,6 +221,15 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
   // is present in PXML line or not; if not, assume application mode?
   hRoot = TiXmlHandle(pElem);
 
+  // workaround for package ID's used by some package managers
+  // get the package ID and store it for each application
+  char* package_id = NULL;
+  pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
+  if ( pElem ) {
+	package_id = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_ID );
+  }
+
+  // move to applications element then
   if ( hRoot.FirstChild(PND_PXML_APP).Element() != NULL ) {
     appwrappermode = 1;
     appElem = hRoot.FirstChild(PND_PXML_APP).Element();
@@ -243,6 +252,9 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     } else {
       app -> subapp_number = 0;
     }
+    
+    // give application the package id, if there is one
+    app -> package_id = package_id;
 
     //Get unique ID first.
     if ( appwrappermode ) {

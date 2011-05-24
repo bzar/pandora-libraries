@@ -315,6 +315,11 @@ char *pnd_pxml_get_best_localized_string(pnd_localized_string_t strings[], int s
   return ( NULL );
 }
 
+char *pnd_pxml_get_package_id ( pnd_pxml_handle h ) {
+  pnd_pxml_t *p = (pnd_pxml_t*) h;
+  return ( p -> package_id );
+}
+
 char *pnd_pxml_get_app_name ( pnd_pxml_handle h, char *iso_lang ) {
   pnd_pxml_t *p = (pnd_pxml_t *) h;
   return pnd_pxml_get_best_localized_string(p->titles, p->titles_c, iso_lang);
@@ -335,7 +340,6 @@ char *pnd_pxml_get_app_name_it ( pnd_pxml_handle h ) {
 char *pnd_pxml_get_app_name_fr ( pnd_pxml_handle h ) {
   return pnd_pxml_get_app_name(h, "fr");
 }
-
 char *pnd_pxml_get_unique_id ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> unique_id );

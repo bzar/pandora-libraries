@@ -43,6 +43,8 @@ signed char pnd_pxml_merge_override ( pnd_pxml_handle h, char *searchpath );
 
 /* these accessor functions will return READ ONLY char*s; do not free them or modify them.
  */
+
+char *pnd_pxml_get_package_id ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_en ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_de ( pnd_pxml_handle h );
 char *pnd_pxml_get_app_name_it ( pnd_pxml_handle h );
@@ -162,6 +164,7 @@ typedef struct
 	char *background;
 	char *startdir;
 	char *exec_no_x11;
+	char *package_id;
 	char *package_name;
 	char *package_release_date;
         char *mkdir_sp; // a colon separated list of paths to be mkdir'd (silently fail) when pnd is autodiscovered. path is always relative to the root of the hosting device.

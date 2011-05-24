@@ -93,8 +93,9 @@ extern "C" {
 #define PND_PXML_ENAME_CLOCK "clockspeed"
 #define PND_PXML_ATTRNAME_CLOCKFREQ "frequency"
 
-/* <package name="foo" released="1/1/0001"/> */
+/* <package id="foo-package" name="foo" released="1/1/0001"/> */
 #define PND_PXML_ENAME_PACKAGE "package"
+#define PND_PXML_ATTRNAME_PACKAGE_ID "id"
 #define PND_PXML_ATTRNAME_PACKAGE_NAME "name"
 #define PND_PXML_ATTRNAME_PACKAGE_DATE "released"
 
