@@ -139,6 +139,21 @@ int main ( int argc, char *argv[] ) {
       if ( d -> unique_id ) {
 	printf ( "  Unique ID: %s\n", d -> unique_id );
       }
+      if ( d -> package_id ) {
+   printf ( "  Package ID: %s\n", d -> unique_id );
+      }
+      if ( d -> version_major ) {
+   printf ( "  Major : %s\n", d -> version_major );
+      }
+      if ( d -> version_minor ) {
+   printf ( "  Minor : %s\n", d -> version_minor );
+      }
+      if ( d -> version_release ) {
+   printf ( "  Release : %s\n", d -> version_release );
+      }
+      if ( d -> version_build ) {
+   printf ( "  Build : %s\n", d -> version_build );
+      }
       if ( d -> main_category ) {
 	printf ( "  Category: %s\n", d -> main_category );
       }

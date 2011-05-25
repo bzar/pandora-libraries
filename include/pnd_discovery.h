@@ -76,6 +76,10 @@ typedef struct {
   char *alt_category2;
   char *preview_pic1;
   char *preview_pic2;
+  char *version_minor;
+  char *version_major;
+  char *version_release;
+  char *version_build;
   char *mkdir_sp;
   char *info_name;      // should be a struct..
   char *info_filename;
