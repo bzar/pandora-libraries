@@ -58,6 +58,10 @@ typedef struct {
   unsigned int object_flags;   // see PND_DISCO_ bitmasks above
   // strdup'd from PXML -- hey, who was the idiot who thought it was a reat idea not to just re-use the pxml-struct?
   char *package_id;
+  char *package_version_major;
+  char *package_version_minor;
+  char *package_version_release;
+  char *package_version_build;
   char *title_en;
   char *desc_en;
   char *unique_id;

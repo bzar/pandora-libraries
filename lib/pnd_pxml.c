@@ -324,6 +324,26 @@ char *pnd_pxml_get_package_id ( pnd_pxml_handle h ) {
   return ( p -> package_id );
 }
 
+char *pnd_pxml_get_package_version_major ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_major );
+}
+
+char *pnd_pxml_get_package_version_minor ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_minor );
+}    
+
+char *pnd_pxml_get_package_version_release ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_release );
+}    
+
+char *pnd_pxml_get_package_version_build ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_build );
+}    
+
 char *pnd_pxml_get_app_name ( pnd_pxml_handle h, char *iso_lang ) {
   pnd_pxml_t *p = (pnd_pxml_t *) h;
   return pnd_pxml_get_best_localized_string(p->titles, p->titles_c, iso_lang);

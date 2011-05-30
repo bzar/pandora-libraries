@@ -37,6 +37,10 @@ int main (int argc, char **argv)
 	  if ( (data = pnd_pxml_get_unique_id(h)) ) printf("UID: %s\n", data);
      
      if ( (data = pnd_pxml_get_package_id(h)) ) printf("PID: %s\n", data);
+	  if ( (data = pnd_pxml_get_package_version_major(h)) ) printf("Package version major: %s\n", data);
+	  if ( (data = pnd_pxml_get_package_version_minor(h)) ) printf("Package version minor: %s\n", data);
+	  if ( (data = pnd_pxml_get_package_version_release(h)) ) printf("Package version release: %s\n", data);
+	  if ( (data = pnd_pxml_get_package_version_build(h)) ) printf("Package version build: %s\n", data);      
 
 	  if ( (data = pnd_pxml_get_standalone(h)) ) printf("Standalone: %s\n", data);
 

@@ -29,6 +29,10 @@ static char *disco_overrides = NULL;
 
 void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> package_id ) {     free ( p -> package_id);   }
+  if ( p -> package_version_major ) { free ( p -> package_version_major ); }
+  if ( p -> package_version_minor ) { free ( p -> package_version_minor ); }  
+  if ( p -> package_version_release ) { free ( p -> package_version_release ); }  
+  if ( p -> package_version_build ) { free ( p -> package_version_build ); }    
   if ( p -> title_en ) {       free ( p -> title_en );    }
   if ( p -> unique_id ) {      free ( p -> unique_id );   }
   if ( p -> appdata_dirname ) { free ( p -> appdata_dirname );   }
@@ -230,6 +234,18 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( pnd_pxml_get_package_id ( pxmlh ) ) {
 	p -> package_id = strdup ( pnd_pxml_get_package_id ( pxmlh ) );
       }
+      if ( pnd_pxml_get_package_version_major ( pxmlh ) ) {
+	p -> package_version_major = strdup ( pnd_pxml_get_package_version_major ( pxmlh ) );
+      }     
+      if ( pnd_pxml_get_package_version_minor ( pxmlh ) ) {
+   p -> package_version_minor = strdup ( pnd_pxml_get_package_version_minor ( pxmlh ) );
+      } 
+      if ( pnd_pxml_get_package_version_release ( pxmlh ) ) {
+   p -> package_version_release = strdup ( pnd_pxml_get_package_version_release ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_build ( pxmlh ) ) {
+   p -> package_version_build = strdup ( pnd_pxml_get_package_version_build ( pxmlh ) );
+      }          
       if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
 	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
       }
