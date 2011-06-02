@@ -284,7 +284,7 @@ noMoreProcessUnion() {
 }
 
 mountPnd() {
-	MOUNT_TARGET=${1:-$PND_MOUNT_DIR}
+	MOUNT_TARGET="${1:-$PND_MOUNT_DIR}"
 	if ! is_pnd_mounted;then
 		#check if pnd is already attached to loop 
 		LOOP=$(losetup -a | grep "$PND" | tail -n1 | awk -F: '{print $1}')
@@ -458,18 +458,22 @@ cleanups() {
 }
 
 umountPnd() {
+	MOUNT_TARGET="${1:-$PND_MOUNT_DIR}"
 	if is_pnd_mounted;then
 		PND_WaitFor noMoreProcessPnd "Waiting the PND mount dir to be free"
-		umount "$PND_MOUNT_DIR/$PND_NAME"
+		umount "$MOUNT_TARGET/$PND_NAME"
 	fi
 	if is_pnd_mounted; then
 		echo WARNING umount PND failed, didnt clean up. Process still using this FS :
-		list_using_fs "$PND_MOUNT_DIR/$PND_NAME"
+		list_using_fs "$MOUNT_TARGET/$PND_NAME"
 		show_mounted_info
 	else
 		# removing the now useless mountpoint
-		if [ -d $PND_MOUNT_DIR/$PND_NAME ];then
-			rmdir "$PND_MOUNT_DIR/$PND_NAME"
+		if [ -d "$MOUNT_TARGET/$PND_NAME" ];then
+			rmdir "$MOUNT_TARGET/$PND_NAME"
+		fi
+		if [ -h "$PND_MOUNT_DIR/$PND_NAME" ];then
+			rm "$PND_MOUNT_DIR/$PND_NAME"
 		fi
 
 		# All went well, cleaning
@@ -504,7 +508,7 @@ umountUnion() {
 			fi
 		fi
 		# Try umounting the PND
-		umountPnd
+		umountPnd $UNION_MOUNT_DIR
 	fi
 }
 
@@ -538,6 +542,7 @@ runApp() {
 		"$EXENAME" $ARGUMENTS
 	else
 		"./$EXENAME" $ARGUMENTS
+	fi
 	RC=$?
 
 	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
