@@ -15,8 +15,7 @@
 #. $SCRIPT_DIR/pnd_loging
 #PND_LogDateFormat=PND_Time
 
-#PND_MOUNT_DIR="/mnt/pnd"
-PND_MOUNT_DIR="/mnt/utmp"
+PND_MOUNT_DIR="/mnt/pnd"
 UNION_MOUNT_DIR="/mnt/utmp"
 CPUSPEEDSCRIPT=/usr/pandora/scripts/op_cpuspeed.sh
 
@@ -35,7 +34,7 @@ PND_Start() {
 		printf "%-15s : %s\n" "$v"  "$(eval "echo \${$v:-'<unset>'}")"
 	done
 	echo "======================================================================================="
-	}>$PND_LOG
+	}>"$PND_LOG"
 }
 
 PND_checkLog() {
@@ -43,7 +42,7 @@ awk 'BEGIN{R=0}END{exit R}
 /cannot open display/||/unary operator expected/||/No such file or directory/||/command not found/{R=R+1}
 {IGNORECASE=1}
 !/gpg-error/&&/ERROR/||/FAILED/{R=R+1}
-{IGNORECASE=0}' < $PND_LOG
+{IGNORECASE=0}' < "$PND_LOG"
 }
 
 PND_Stop() {
@@ -53,7 +52,7 @@ PND_Stop() {
 	{
 	echo "======================================================================================="
 	echo "Return code is : $RC"
-	}>>$PND_LOG
+	}>>"$PND_LOG"
 	return $RC
 }
 
@@ -272,7 +271,8 @@ is_union_mounted() {
 }
 
 is_pnd_mounted() {
-	mount |grep -v aufs | grep -q "on $PND_MOUNT_DIR/${PND_NAME} type"
+	mount |grep -v aufs | grep -q "on $PND_MOUNT_DIR/${PND_NAME} type" || \
+	mount |grep -v aufs | grep -q "on $UNION_MOUNT_DIR/${PND_NAME} type"
 }
 
 noMoreProcessPnd() {
@@ -284,6 +284,7 @@ noMoreProcessUnion() {
 }
 
 mountPnd() {
+	MOUNT_TARGET=${1:-$PND_MOUNT_DIR}
 	if ! is_pnd_mounted;then
 		#check if pnd is already attached to loop 
 		LOOP=$(losetup -a | grep "$PND" | tail -n1 | awk -F: '{print $1}')
@@ -332,14 +333,14 @@ mountPnd() {
 				echo "ERROR Unknown filesystem type : $PND_FSTYPE"
 				exit 1;;
 			esac
-			echo "Mounting : $mntline \"$mntdev\" \"$PND_MOUNT_DIR/${PND_NAME}\""
-			$mntline "$mntdev" "$PND_MOUNT_DIR/${PND_NAME}" #mount the pnd/folder
+			echo "Mounting : $mntline \"$mntdev\" \"$MOUNT_TARGET/${PND_NAME}\""
+			$mntline "$mntdev" "$MOUNT_TARGET/${PND_NAME}" #mount the pnd/folder
 
 			if ! is_pnd_mounted ;then
 				sleep 1
 				echo "WARNING : mount faild, re-tring"
 				sleep 1
-				$mntline "$mntdev" "$PND_MOUNT_DIR/${PND_NAME}" #mount the pnd/folder
+				$mntline "$mntdev" "$MOUNT_TARGET/${PND_NAME}" #mount the pnd/folder
 				if ! is_pnd_mounted ;then
 					echo "ERROR The PND File-system is not mounted !"
 					show_mounted_info
@@ -351,6 +352,18 @@ mountPnd() {
 		      #this is bullshit
 		      rmdir "$UNION_MOUNT_DIR/$PND_NAME"
 		      ln -s $loopmountedon "$UNION_MOUNT_DIR/$PND_NAME" 
+		fi
+	fi
+
+	# For backward compatibility
+	if [[ "$MOUNT_TARGET" != "$PND_MOUNT_DIR" ]];then
+		if [ -d "$PND_MOUNT_DIR/$PND_NAME" ];then
+			rmdir "$PND_MOUNT_DIR/$PND_NAME"
+		else
+			rm "$PND_MOUNT_DIR/$PND_NAME"
+		fi
+		if [ ! -e "$PND_MOUNT_DIR/$PND_NAME" ];then
+			ln -s "$MOUNT_TARGET/$PND_NAME" "$PND_MOUNT_DIR/$PND_NAME"
 		fi
 	fi
 }
@@ -381,7 +394,7 @@ mountUnion() {
 	#is the union already mounted? if not mount evrything, else launch the stuff
 	if ! is_union_mounted;then
 		if ! is_pnd_mounted;then
-			mountPnd || return 2; # quit mounting the union if the PND first didnt mount
+			mountPnd "$UNION_MOUNT_DIR"|| return 2; # quit mounting the union if the PND first didnt mount
 		else
 			echo "WARNING The PND is already mounted, using it"
 			show_mounted_info
@@ -505,23 +518,26 @@ runApp() {
 		cd "$STARTDIR";			# cd to folder specified by the optional arg -s
 	fi
 
-	if [ -d $UNION_MOUNT_DIR/$PND_NAME/lib ];then
+	if [ -d "$UNION_MOUNT_DIR/$PND_NAME/lib" ];then
 		export LD_LIBRARY_PATH="$UNION_MOUNT_DIR/$PND_NAME/lib:${LD_LIBRARY_PATH:-"/usr/lib:/lib"}"
 	else
 		export LD_LIBRARY_PATH="$UNION_MOUNT_DIR/$PND_NAME:${LD_LIBRARY_PATH:-"/usr/lib:/lib"}"
 	fi
 
-	if [ -d $UNION_MOUNT_DIR/$PND_NAME/bin ];then
+	if [ -d "$UNION_MOUNT_DIR/$PND_NAME/bin" ];then
 		export PATH="$UNION_MOUNT_DIR/$PND_NAME/bin:${PATH:-"/usr/bin:/bin:/usr/local/bin"}"
 	fi
 
-	if [ -d $UNION_MOUNT_DIR/$PND_NAME/share ];then
+	if [ -d "$UNION_MOUNT_DIR/$PND_NAME/share" ];then
 	        export XDG_DATA_DIRS="$UNION_MOUNT_DIR/$PND_NAME/share:$XDG_DATA_DIRS:/usr/share"
 	fi
 
 	export XDG_CONFIG_HOME="$UNION_MOUNT_DIR/$PND_NAME"
 
-	"./$EXENAME" $ARGUMENTS
+	if echo "$EXENAME"|grep -q ^\.\/;then
+		"$EXENAME" $ARGUMENTS
+	else
+		"./$EXENAME" $ARGUMENTS
 	RC=$?
 
 	#the app could have exited now, OR it went into bg, we still need to wait in that case till it really quits!
@@ -629,12 +645,15 @@ while [ "$#" -gt 0 ];do
 	fi
 done
 
+# getting the real full path to the file
+PND="$(readlink -f $PND)"
+
 #PND_NAME really should be something sensible and somewhat unique
 #if -b is set use that as pnd_name, else generate it from PND
 #get basename (strip extension if file) for union mountpoints etc, maybe  this should be changed to something specified inside the xml
 #this should probably be changed to .... something more sensible
 #currently only everything up to the first '.' inside the filenames is used.
-PND_NAME=${PND_NAME:-"$(basename $PND | cut -d'.' -f1)"}
+PND_NAME="${PND_NAME:-"$(basename $PND | cut -d'.' -f1)"}"
 
 PND_LOG="/tmp/pndrun_${PND_NAME}.out"
 PND_HEADER="PND PND_FSTYPE APPDATADIR APPDD_FSTYPE PND_CPUSPEED EXENAME ARGUMENTS"
@@ -677,7 +696,7 @@ if [[ "$ACTION" == "run" ]];then
 	else
 		main 2>&1
 	fi
-	}>>$PND_LOG
+	}>>"$PND_LOG"
 	PND_Stop
 else
 	main
