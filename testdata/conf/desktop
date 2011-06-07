@@ -19,5 +19,5 @@ hupscript	pnd_hup.sh
 emit_info	1			# 0->no info .desktop; !0->yes to info .desktop
 dotdesktoppath	./testdata/menu		# path for pndnotifyd to spit .desktop files into
 viewer		links			# sh-script or prog to run. Use wrapper sh if needed.
-viewer_args	-a			# args. <- plus filename will be passed. ie: "-a filename.html"
+viewer_args				# args. <- plus filename will be passed. ie: "-a filename.html"
 category	Documentation		# freedesktop standard category to use

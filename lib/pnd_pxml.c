@@ -29,7 +29,11 @@ pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
 
   fseek ( f, 0, SEEK_SET );
 
-  b = (char*) malloc ( len );
+  if ( ! len ) {
+    return ( NULL );
+  }
+
+  b = (char*) malloc ( len + 1 );
 
   if ( ! b ) {
     fclose ( f );
