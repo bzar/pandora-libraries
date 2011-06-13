@@ -259,7 +259,7 @@ PND_RestartX(){
 show_mounted_info(){
 	echo "+++++++"
 	echo "Loopback devices :"
-	sudo losetup -a
+	sudo /sbin/losetup -a
 	echo "Are mounted on :"
 	mount|grep loop
 	echo "For these Union :"
@@ -287,7 +287,7 @@ mountPnd() {
 	MOUNT_TARGET="${1:-$PND_MOUNT_DIR}"
 	if ! is_pnd_mounted;then
 		#check if pnd is already attached to loop 
-		LOOP=$(losetup -a | grep "$PND" | tail -n1 | awk -F: '{print $1}')
+		LOOP=$(/sbin/losetup -a | grep "$PND" | tail -n1 | awk -F: '{print $1}')
 		#check if the loop device is already mounted
 		if ! [ -z "$LOOP" ];then
 			echo "Found a loop ($LOOP), using it"
@@ -443,11 +443,11 @@ cleanups() {
 
 	# Clean the loopback device
 	if [ $PND_FSTYPE = ISO ] || [ $PND_FSTYPE = Squashfs ]; then # check if we where running an iso, clean up loop device if we did
-		LOOP=$(losetup -a | grep "$(basename $PND)" | tail -n1 | awk -F: '{print $1}')
+		LOOP=$(/sbin/losetup -a | grep "$(basename $PND)" | tail -n1 | awk -F: '{print $1}')
 		/sbin/losetup -d $LOOP
 		#rm $LOOP
 	fi
-	losetup -a|cut -d':' -f 1|while read l;do
+	/sbin/losetup -a|cut -d':' -f 1|while read l;do
 		if ! mount|grep -q $l;then
 			echo "WARNING Found $l loop as unused. flushing"
 			/sbin/losetup -d $l
