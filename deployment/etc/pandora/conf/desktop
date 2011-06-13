@@ -25,6 +25,6 @@ iconpath	/tmp/iconcache	# path for pndnotifyd to drop icons into (can be same as
 [info]
 emit_info	1			# 0->no info .desktop; !0->yes to info .desktop
 dotdesktoppath	/usr/share/applications	# path for pndnotifyd to spit .desktop files into
-viewer		../../../usr/bin/arora	# sh-script or prog to run. Use wrapper sh if needed.
-viewer_args				# args. <- plus filename will be passed. ie: "-a filename.html"
+viewer		../../../usr/bin/links	# sh-script or prog to run. Use wrapper sh if needed.
+viewer_args	-g -mode 800x480	# args. <- plus filename will be passed. ie: "-a filename.html"
 category	Documentation		# freedesktop standard category to use

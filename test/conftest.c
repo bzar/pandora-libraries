@@ -1,12 +1,29 @@
 
 #include <stdio.h> /* for printf, NULL */
 #include <stdlib.h> /* for free */
+#include <string.h> /* for strlen */
 
 #include "pnd_conf.h"
 #include "pnd_container.h"
 #include "pnd_apps.h"
 
-int main ( void ) {
+int main ( int argc, char *argv[] ) {
+
+  // if an argument specified, try to load that one instead
+  if ( argc > 1 ) {
+    pnd_conf_handle h;
+    h = pnd_conf_fetch_by_path ( argv [ 1 ] );
+    char *i = pnd_box_get_head ( h );
+    printf ( "%s -> %s [%p:%d]\n", pnd_box_get_key ( i ), i, i, strlen ( i ) );
+    while ( ( i = pnd_box_get_next ( i ) ) ) {
+      printf ( "%s -> %s [%p:%d]\n", pnd_box_get_key ( i ), i, i, strlen ( i ) );
+    }
+
+    char *poop = pnd_conf_get_as_char ( h, "info.viewer_args" );
+    printf ( "info.viewer_args test: %s [%p:%d]\n", poop, poop, strlen ( poop ) );
+
+    exit ( 0 );
+  }
 
   // attempt to fetch a sensible default searchpath for configs
   char *configpath = pnd_conf_query_searchpath();

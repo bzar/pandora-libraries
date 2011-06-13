@@ -298,7 +298,8 @@ unsigned char pnd_emit_dotinfo ( char *targetpath, char *pndrun, pnd_disco_t *p 
   // exec line
   char args [ 1001 ];
   char *pargs = args;
-  if ( pnd_conf_get_as_char ( desktoph, "info.viewer_args" ) ) {
+  char *viewerargs = pnd_conf_get_as_char ( desktoph, "info.viewer_args" );
+  if ( viewerargs && viewerargs [ 0 ] ) {
     snprintf ( pargs, 1001, "%s %s",
 	       pnd_conf_get_as_char ( desktoph, "info.viewer_args" ), p -> info_filename );
   } else {
