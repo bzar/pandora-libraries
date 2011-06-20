@@ -28,3 +28,10 @@ blink_interval	   2		# frequency of blink
 blink_duration	   50000	# how long a blink lasts, in uSecs
 shutdown_threshold 5		# battery %age we force a shutdown (to save the SD!)
 shutdown_script	   /usr/pandora/scripts/op_battlow.sh
+
+[battery_charge]
+enable             1            # enable charger control?
+stop_capacity      99           # battery capacity threshold as stop condition 1
+stop_current       80000        # charge current threshold as stop condition 2, in uA
+start_capacity     95           # battery capacity threshold to resume charging
+device             twl4030_bci_battery
