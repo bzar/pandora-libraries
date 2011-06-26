@@ -21,6 +21,7 @@ extern "C" {
 #define PND_DEVICE_FRAMEBUFFER "/dev/fb0"
 #define PND_DEVICE_NUB1 "/dev/input/js1"
 #define PND_DEVICE_NUB2 "/dev/input/js2"
+#define PND_DEVICE_POWER_BASE "/sys/class/power_supply"
 #define PND_DEVICE_BATTERY_GAUGE_PERC "/sys/class/power_supply/bq27500-0/capacity"
 #define PND_DEVICE_CHARGE_CURRENT "/sys/class/power_supply/bq27500-0/current_now"
 
@@ -57,6 +58,12 @@ unsigned int pnd_device_get_clock ( void );
  */
 int pnd_device_get_battery_gauge_perc ( void );
 unsigned char pnd_device_get_charge_current ( int *result ); // returns + - current; if charging, current is +ve.
+
+/* return the battery charger enable state; 1 or 0
+ * On error, returns value < 0
+ */
+int pnd_device_get_charger_enable ( const char *device );
+unsigned char pnd_device_set_charger_enable ( const char *device, unsigned char v );
 
 // LCD to set on/off
 

@@ -126,6 +126,11 @@ unsigned char b_shutdown = 1;     // %age battery to force a shutdown!
 unsigned int  b_shutdelay = 30;   // delay for shutdown script
 unsigned char b_warned = 0;       // Shutdown attempted
 char *b_shutdown_script = NULL;
+unsigned char bc_enable = 1;      // enable charger control
+unsigned char bc_stopcap = 99;    // battery capacity threshold as stop condition 1
+unsigned int bc_stopcur = 80000;  // charge current threshold as stop condition 2, in uA
+unsigned char bc_startcap = 95;   // battery capacity threshold to resume charging
+char *bc_charge_device = NULL;    // charger /sys/class/power_supply/ device, changes between kernel versions
 
 /* get to it
  */
@@ -367,6 +372,9 @@ int main ( int argc, char *argv[] ) {
     } else if ( strncmp ( k, "battery.", 8 ) == 0 ) {
       // not consumed here, skip silently
 
+    } else if ( strncmp ( k, "battery_charge.", 15 ) == 0 ) {
+      // not consumed here, skip silently
+
     } else {
       // uhhh
       pnd_log ( pndn_warning, "Unknown config key '%s'; skipping.\n", k );
@@ -414,6 +422,26 @@ int main ( int argc, char *argv[] ) {
   if ( pnd_conf_get_as_char ( evmaph, "battery.shutdown_script" ) != NULL ) {
     b_shutdown_script = strdup ( pnd_conf_get_as_char ( evmaph, "battery.shutdown_script" ) );
     pnd_log ( pndn_rem, "Battery shutdown script set to %s", b_shutdown_script );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery_charge.enable" ) != PND_CONF_BADNUM ) {
+    bc_enable = pnd_conf_get_as_int ( evmaph, "battery_charge.enable" );
+    pnd_log ( pndn_rem, "Battery charge enable set to %u", bc_enable );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery_charge.stop_capacity" ) != PND_CONF_BADNUM ) {
+    bc_stopcap = pnd_conf_get_as_int ( evmaph, "battery_charge.stop_capacity" );
+    pnd_log ( pndn_rem, "Battery charge stop capacity set to %u", bc_stopcap );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery_charge.stop_current" ) != PND_CONF_BADNUM ) {
+    bc_stopcur = pnd_conf_get_as_int ( evmaph, "battery_charge.stop_current" );
+    pnd_log ( pndn_rem, "Battery charge stop current set to %u", bc_stopcur );
+  }
+  if ( pnd_conf_get_as_int ( evmaph, "battery_charge.start_capacity" ) != PND_CONF_BADNUM ) {
+    bc_startcap = pnd_conf_get_as_int ( evmaph, "battery_charge.start_capacity" );
+    pnd_log ( pndn_rem, "Battery charge start capacity set to %u", bc_startcap );
+  }
+  if ( pnd_conf_get_as_char ( evmaph, "battery_charge.device" ) != NULL ) {
+    bc_charge_device = strdup ( pnd_conf_get_as_char ( evmaph, "battery_charge.device" ) );
+    pnd_log ( pndn_rem, "Battery charge device set to %s", bc_charge_device );
   }
 
   /* do we have anything to do?
@@ -842,6 +870,8 @@ void sigalrm_handler ( int n ) {
   pnd_log ( pndn_debug, "---[ SIGALRM ]---\n" );
 
   int batlevel = pnd_device_get_battery_gauge_perc();
+  int uamps = 0;
+  pnd_device_get_charge_current ( &uamps );
 
   if ( batlevel < 0 ) {
 #if 0
@@ -855,9 +885,8 @@ void sigalrm_handler ( int n ) {
 
   // first -- are we critical yet? if so, shut down!
   if ( batlevel <= b_shutdown && b_shutdown_script) {
-    int mamps = 0;
 
-    if ( pnd_device_get_charge_current ( &mamps ) && mamps > 100 ) {
+    if ( uamps > 100 ) {
         // critical battery, but charging, so relax.
         b_warned = 0;
     } else {
@@ -865,7 +894,7 @@ void sigalrm_handler ( int n ) {
           // Avoid warning again till re-powered
           b_warned = 1;
           int x;
-          pnd_log ( pndn_error, "Battery Current: %d\n", mamps );
+          pnd_log ( pndn_error, "Battery Current: %d\n", uamps );
           pnd_log ( pndn_error, "CRITICAL BATTERY LEVEL -- shutdown the system down! Invoke: %s\n",
 	      	b_shutdown_script );
 
@@ -884,6 +913,25 @@ void sigalrm_handler ( int n ) {
       }
     } // charging
 
+  }
+
+  // charge monitoring
+  if ( bc_enable && bc_charge_device != NULL ) {
+
+    int charge_enabled = pnd_device_get_charger_enable ( bc_charge_device );
+    if ( charge_enabled < 0 )
+      pnd_log ( pndn_error, "ERROR: Couldn't read charger enable control\n" );
+    else {
+
+      if ( charge_enabled && batlevel >= bc_stopcap && 0 < uamps && uamps < bc_stopcur ) {
+        pnd_log ( pndn_debug, "Charge stop conditions reached, disabling charging\n" );
+        pnd_device_set_charger_enable ( bc_charge_device, 0 );
+      }
+      else if ( !charge_enabled && batlevel <= bc_startcap ) {
+        pnd_log ( pndn_debug, "Charge start conditions reached, enabling charging\n" );
+        pnd_device_set_charger_enable ( bc_charge_device, 1 );
+      }
+    }
   }
 
   // is battery warning already active?

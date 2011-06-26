@@ -103,6 +103,29 @@ unsigned char pnd_device_get_charge_current ( int *result ) {
   return ( 0 );
 }
 
+int pnd_device_get_charger_enable ( const char *device ) {
+  char fullname [ 100 ];
+  char buffer [ 100 ];
+
+  snprintf ( fullname, sizeof ( fullname ), PND_DEVICE_POWER_BASE "/%s/enable", device );
+
+  if ( pnd_device_open_read_close ( fullname, buffer, 100 ) ) {
+    return ( atoi ( buffer ) );
+  }
+
+  return ( -1 );
+}
+
+unsigned char pnd_device_set_charger_enable ( const char *device, unsigned char v ) {
+  char fullname [ 100 ];
+  char buffer [ 100 ];
+
+  snprintf ( fullname, sizeof ( fullname ), PND_DEVICE_POWER_BASE "/%s/enable", device );
+  sprintf ( buffer, "%u", v );
+
+  return ( pnd_device_open_write_close ( fullname, buffer ) );
+}
+
 unsigned char pnd_device_set_led_power_brightness ( unsigned char v ) {
   char buffer [ 100 ];
 
