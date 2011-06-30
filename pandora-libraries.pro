@@ -3,6 +3,7 @@
 TARGET = pnd
 TEMPLATE = lib
 CONFIG += dll
+DESTDIR = ../target/lib
 QT -= core gui
 VERSION = 1.0.1
 
