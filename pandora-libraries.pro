@@ -2,7 +2,7 @@
 
 TARGET = pnd
 TEMPLATE = lib
-CONFIG += staticlib
+CONFIG += dll
 QT -= core gui
 VERSION = 1.0.1
 
