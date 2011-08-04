@@ -940,7 +940,7 @@ void sigalrm_handler ( int n ) {
 
     // is user charging up? if so, stop blinking.
     // perhaps we shoudl check if charger is connected, and not blink at all in that case..
-    if ( batlevel > b_threshold + 1 /* allow for error in read */ ) {
+    if ( uamps > 0 ) {
       //Re-arm warning
       b_warned = 0;
       pnd_log ( pndn_debug, "Battery is high again, flipping to non-blinker mode\n" );
@@ -970,7 +970,7 @@ void sigalrm_handler ( int n ) {
   }
 
   // warning is off..
-  if ( batlevel <= b_threshold ) {
+  if ( batlevel <= b_threshold && uamps < 0 ) {
     // battery seems low, go to active mode
     pnd_log ( pndn_debug, "Battery is low, flipping to blinker mode\n" );
     b_active = 1;
