@@ -869,8 +869,11 @@ void sigalrm_handler ( int n ) {
 
   pnd_log ( pndn_debug, "---[ SIGALRM ]---\n" );
 
+  static time_t last_charge_check;
   int batlevel = pnd_device_get_battery_gauge_perc();
   int uamps = 0;
+  time_t now;
+
   pnd_device_get_charge_current ( &uamps );
 
   if ( batlevel < 0 ) {
@@ -916,7 +919,8 @@ void sigalrm_handler ( int n ) {
   }
 
   // charge monitoring
-  if ( bc_enable && bc_charge_device != NULL ) {
+  now = time(NULL);
+  if ( bc_enable && bc_charge_device != NULL && (unsigned int)(now - last_charge_check) > 60 ) {
 
     int charge_enabled = pnd_device_get_charger_enable ( bc_charge_device );
     if ( charge_enabled < 0 )
@@ -932,6 +936,7 @@ void sigalrm_handler ( int n ) {
         pnd_device_set_charger_enable ( bc_charge_device, 1 );
       }
     }
+    last_charge_check = now;
   }
 
   // is battery warning already active?
