@@ -136,6 +136,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       }
 
       if ( ! ( lang = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_DESCRLANG ) ) ) {
+       if(text) free(text); text = NULL;
 	continue;
       }
 
@@ -144,7 +145,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       {
 	app->descriptions_alloc_c <<= 1;
 	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	if (!app->descriptions) return (0); //errno = ENOMEM
+	if (!app->descriptions) { if(text) free(text); if(lang) free(lang); return (0); } //errno = ENOMEM
       }
 
       pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
@@ -159,7 +160,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
   } else {
     // fallback to older approach
 
-    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem; 
+    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem;
 	 pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
     {
 
@@ -171,14 +172,14 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       if (!text) continue;
 
       char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
-      if (!lang) continue;
+      if (!lang) { if(text) free(text); text = NULL;  continue; }
 
       app->descriptions_c++;
       if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
       {
 	app->descriptions_alloc_c <<= 1;
 	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	if (!app->descriptions) return (0); //errno = ENOMEM
+	if (!app->descriptions) { if(text) free(text); if(lang) free(lang); return (0); } //errno = ENOMEM
       }
 
       pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
@@ -252,9 +253,10 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     } else {
       app -> subapp_number = 0;
     }
-    
+
     // give application the package id, if there is one
-    app -> package_id = package_id;
+    if( package_id )
+      app -> package_id               = strdup(package_id);
 
     //Get unique ID first.
     if ( appwrappermode ) {
@@ -503,6 +505,9 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     }
 
   } // while finding apps
+
+  if( package_id )
+     free(package_id);
 
   return (1);
 }

@@ -81,6 +81,12 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
     free(p->descriptions);
   }
 
+  if ( p -> unique_id ) {
+     free ( p -> unique_id );
+  }
+  if ( p -> package_id ) {
+     free ( p -> package_id );
+  }
   if ( p -> standalone ) {
     free ( p -> standalone );
   }
@@ -182,6 +188,21 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
   }
   if ( p -> appdata_dirname ) {
     free ( p -> appdata_dirname );
+  }
+  if ( p -> info_name ) {
+    free ( p -> info_name );
+  }
+  if ( p -> info_filename ) {
+    free ( p -> info_filename );
+  }
+  if ( p -> info_type ) {
+    free ( p -> info_type );
+  }
+  if ( p -> exec_no_x11 ) {
+    free ( p -> exec_no_x11 );
+  }
+  if ( p -> execargs ) {
+    free ( p -> execargs );
   }
 
   free(p); /*very important!*/

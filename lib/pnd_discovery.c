@@ -30,6 +30,7 @@ static char *disco_overrides = NULL;
 void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> package_id ) {     free ( p -> package_id);   }
   if ( p -> title_en ) {       free ( p -> title_en );    }
+  if ( p -> desc_en ) {        free ( p -> desc_en );    }
   if ( p -> unique_id ) {      free ( p -> unique_id );   }
   if ( p -> appdata_dirname ) { free ( p -> appdata_dirname );   }
   if ( p -> icon )     {       free ( p -> icon );        }
@@ -44,11 +45,14 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> alt_category ) {   free ( p -> alt_category );   }
   if ( p -> alt_category1 ) {  free ( p -> alt_category1 );  }
   if ( p -> alt_category2 ) {  free ( p -> alt_category2 );  }
+  if ( p -> object_filename ) { free ( p -> object_filename ); }
+  if ( p -> object_path )     { free ( p -> object_path ); }
   if ( p -> mkdir_sp )      {  free ( p -> mkdir_sp );       }
   if ( p -> info_name )     {  free ( p -> info_name );       }
   if ( p -> info_type )     {  free ( p -> info_type );       }
   if ( p -> info_filename ) {  free ( p -> info_filename );       }
-
+  if ( p -> preview_pic1 )  {  free ( p -> preview_pic1 );     }
+  if ( p -> preview_pic2 )  {  free ( p -> preview_pic2 );     }
   return;
 }
 
@@ -227,11 +231,13 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( pnd_pxml_get_package_id ( pxmlh ) ) {
 	p -> package_id = strdup ( pnd_pxml_get_package_id ( pxmlh ) );
       }
-      if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
-	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
+      char *name_en = pnd_pxml_get_app_name_en ( pxmlh );
+      if (name_en) {
+	p -> title_en = name_en; /* already strdupped */
       }
-      if ( pnd_pxml_get_description_en ( pxmlh ) ) {
-	p -> desc_en = strdup ( pnd_pxml_get_description_en ( pxmlh ) );
+      char *desc_en = pnd_pxml_get_description_en ( pxmlh );
+      if ( desc_en ) {
+	p -> desc_en = desc_en; /* already strdupped */
       }
       if ( pnd_pxml_get_icon ( pxmlh ) ) {
 	p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
