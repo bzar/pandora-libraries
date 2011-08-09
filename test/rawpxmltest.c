@@ -35,8 +35,6 @@ int main (int argc, char **argv)
 	  if ( (data = pnd_pxml_get_app_name_fr(h)) ) printf("Appname(fr): %s\n", data);
 
 	  if ( (data = pnd_pxml_get_unique_id(h)) ) printf("UID: %s\n", data);
-     
-     if ( (data = pnd_pxml_get_package_id(h)) ) printf("PID: %s\n", data);
 
 	  if ( (data = pnd_pxml_get_standalone(h)) ) printf("Standalone: %s\n", data);
 

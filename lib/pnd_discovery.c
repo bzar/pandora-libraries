@@ -48,10 +48,7 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> info_name )     {  free ( p -> info_name );       }
   if ( p -> info_type )     {  free ( p -> info_type );       }
   if ( p -> info_filename ) {  free ( p -> info_filename );       }
-  if ( p -> version_major ) {  free ( p -> version_major );    }
-  if ( p -> version_minor ) {  free ( p -> version_minor );    } 
-  if ( p -> version_release ) {free ( p -> version_release );  }
-  if ( p -> version_build ) {  free ( p -> version_build );    } 
+
   return;
 }
 
@@ -286,19 +283,6 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( ( z = pnd_pxml_get_previewpic2 ( pxmlh ) ) ) {
 	p -> preview_pic2 = strdup ( z );
       }
-      // version
-      if ( pnd_pxml_get_version_major ( pxmlh ) ) {
-   p -> version_major = strdup ( pnd_pxml_get_version_major ( pxmlh ) );
-      }
-      if ( pnd_pxml_get_version_minor ( pxmlh ) ) {
-   p -> version_minor = strdup ( pnd_pxml_get_version_minor ( pxmlh ) );
-      }     
-      if ( pnd_pxml_get_version_release ( pxmlh ) ) {
-   p -> version_release = strdup ( pnd_pxml_get_version_release ( pxmlh ) );
-      }   
-      if ( pnd_pxml_get_version_build ( pxmlh ) ) {
-   p -> version_build = strdup ( pnd_pxml_get_version_build ( pxmlh ) );
-      }   
       // mkdirs
       if ( pnd_pxml_get_mkdir ( pxmlh ) ) {
 	p -> mkdir_sp = strdup ( pnd_pxml_get_mkdir ( pxmlh ) );
