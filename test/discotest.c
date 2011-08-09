@@ -142,18 +142,6 @@ int main ( int argc, char *argv[] ) {
       if ( d -> package_id ) {
    printf ( "  Package ID: %s\n", d -> unique_id );
       }
-      if ( d -> package_version_major ) {
-   printf ( "  Package Major : %s\n", d -> package_version_major );
-      }
-      if ( d -> package_version_minor ) {
-   printf ( "  Package Minor : %s\n", d -> package_version_minor );
-      }
-      if ( d -> package_version_release ) {
-   printf ( "  Package Release : %s\n", d -> package_version_release );
-      }
-      if ( d -> package_version_build ) {
-   printf ( "  Package Build : %s\n", d -> package_version_build );
-      }    
       if ( d -> version_major ) {
    printf ( "  Major : %s\n", d -> version_major );
       }
