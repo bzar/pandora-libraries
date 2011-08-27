@@ -171,7 +171,7 @@ unsigned char pnd_evdev_catchup ( unsigned char blockp ) {
 
   ret = select ( maxfd + 1, &fdset, NULL, NULL, ptv );
 
-  if ( ret < 0 ) { 
+  if ( ret < 0 ) {
     return ( 0 ); // something bad
   } else if ( ret == 0 ) {
     return ( 1 ); // all good, nothing here

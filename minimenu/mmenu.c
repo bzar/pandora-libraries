@@ -448,7 +448,7 @@ static unsigned int is_dir_empty ( char *fullpath ) {
     } else {
       // something else came in, so dir must not be empty
       closedir ( d );
-      return ( 0 ); 
+      return ( 0 );
     }
 
     de = readdir ( d );
@@ -663,7 +663,7 @@ void applications_scan ( void ) {
 	 ( pnd_pxml_get_x11 ( iter -> option_no_x11 ) == pnd_pxml_x11_required && g_x11_present == 1 )
        )
     {
- 
+
       if ( iter -> title_en == NULL || iter -> title_en [ 0 ] == '\0' ) {
 	// null title; just skip it.
       } else {
@@ -836,7 +836,7 @@ void emit_and_run ( char *buffer ) {
   } else {
     // child, do it
     execl ( "/bin/sh", "/bin/sh", "-c", buffer + strlen(MM_RUN) + 1, (char*) NULL );
-  } 
+  }
 
   return;
 }

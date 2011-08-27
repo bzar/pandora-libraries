@@ -258,10 +258,10 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	p -> appdata_dirname = strdup ( pnd_pxml_get_appdata_dirname ( pxmlh ) );
       }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
-	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 
+	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) );
       }
       if ( pnd_pxml_get_startdir ( pxmlh ) ) {
-	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) ); 
+	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) );
       }
       // category kruft
       if ( pnd_pxml_get_main_category ( pxmlh ) ) {

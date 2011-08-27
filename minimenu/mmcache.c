@@ -158,9 +158,9 @@ unsigned char cache_preview ( pnd_disco_t *app, unsigned int maxwidth, unsigned 
       }
       // set up target filename to copy
       snprintf ( buffer, PATH_MAX, "%s/%s/%s.png", cacheoutpath, cache_path, app -> unique_id );
-      pnd_log ( pndn_debug, "Found free space to cache preview to here: %s", buffer );   
+      pnd_log ( pndn_debug, "Found free space to cache preview to here: %s", buffer );
       if ( ! pnd_filecopy ( filepath, buffer ) ) {
-	pnd_log ( pndn_error, "ERROR: Copying preview from %s to %s", filepath, buffer );   
+	pnd_log ( pndn_error, "ERROR: Copying preview from %s to %s", filepath, buffer );
       }
     } else {
       pnd_log ( pndn_warning, "WARN: Couldn't find a device to cache preview to.\n" );

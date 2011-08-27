@@ -230,7 +230,7 @@ int main ( int argc, char *argv[] ) {
 
     // umask
     umask ( 022 ); // emitted files can be rwxr-xr-x
-    
+
   } // set up daemon
 
   /* hmm, seems to not like working right after boot.. do we depend on another daemon or
@@ -861,7 +861,7 @@ unsigned char set_next_alarm ( unsigned int secs, unsigned int usecs ) {
     // sucks
     return ( 0 );
   }
-  
+
   return ( 1 );
 }
 

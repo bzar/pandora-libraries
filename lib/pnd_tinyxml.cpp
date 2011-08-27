@@ -114,7 +114,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
   app->descriptions_alloc_c = 4; //TODO: adjust this based on how many descriptions a PXML usually has. Power of 2.
 
   app->descriptions = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->descriptions_alloc_c);
-  if (!app->descriptions) 
+  if (!app->descriptions)
   {
     app->descriptions_alloc_c = 0;
     return (0); //errno = NOMEM
@@ -310,7 +310,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	{
 	  app->previewpic2 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
 	}
-      }	
+      }
     } //previewpic
 
     //The author info:
@@ -347,7 +347,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
       i = 0;
 
       //Goes through all the top-level categories and their sub-categories. i helps limit these to 2.
-      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2; 
+      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2;
 	   pElem = pElem->NextSiblingElement(PND_PXML_ENAME_CAT), i++)
       {
 	//TODO: Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
@@ -396,7 +396,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     {
       i = 0;
       //Go through all associations. i serves as index; since the format only supports 3 associations we need to keep track of the number.
-      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3; 
+      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3;
 	   pElem = pElem->NextSiblingElement(PND_PXML_ENAME_ASSOC), i++)
       {
 	char *name = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCNAME);
@@ -434,13 +434,13 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     //Performance related things (aka: Clockspeed XD):
     pElem = hRoot.FirstChild(PND_PXML_ENAME_CLOCK).Element();
     if (pElem)
-    {	
+    {
       app->clockspeed = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CLOCKFREQ);
     }
 
     // Package
     pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
-    if ( pElem ) {	
+    if ( pElem ) {
       app -> package_name = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_NAME );
       app -> package_release_date = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_DATE );
     }
@@ -458,7 +458,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	}
 
 	while ( ( pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_MKDIR ) ) ) {
-	      
+
 	  if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
 	    char *foo = (char*) malloc ( strlen ( app -> mkdir_sp ) + strlen ( t ) + 1 /*:*/ + 1 /*\0*/ );
 

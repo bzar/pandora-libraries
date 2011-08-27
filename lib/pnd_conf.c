@@ -233,7 +233,7 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
       } // key or key/value?
 
     } // section or key/value line?
-    
+
   } // while
 
   // clean up a trifle

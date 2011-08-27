@@ -90,7 +90,7 @@ void PND_ReadEvents ( int fd, int device ) {
 	PND_CheckEvent ( &ev[i], device );
       }
     }
-  
+
   } // got fd?
 
   return;
@@ -110,7 +110,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
     switch( event->code ) {
 
     case KEY_UP:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_up] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_up] = 0;
@@ -118,7 +118,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case KEY_DOWN:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_down] = 1;
       } else {
 	GLES2D_Pad[pke_pad_down] = 0;
@@ -126,7 +126,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case KEY_LEFT:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_left] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_left] = 0;
@@ -134,7 +134,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case KEY_RIGHT:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_right] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_right] = 0;
@@ -142,7 +142,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case KEY_MENU:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_menu] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_menu] = 0;
@@ -158,7 +158,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_X:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_x] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_x] = 0;
@@ -166,7 +166,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_Y:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_y] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_y] = 0;
@@ -174,7 +174,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_A:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_a] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_a] = 0;
@@ -182,7 +182,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_B:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_b] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_b] = 0;
@@ -190,7 +190,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_TL:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_l] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_l] = 0;
@@ -198,7 +198,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
 
     case BTN_TR:
-      if ( event->value ) {	
+      if ( event->value ) {
 	GLES2D_Pad[pke_pad_r] = 1;
       }	else {
 	GLES2D_Pad[pke_pad_r] = 0;
@@ -209,7 +209,7 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
       break;
     }
     break;
-    
+
   case EV_ABS:
 
     switch ( device ) {
@@ -221,12 +221,12 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
 	  if( value > 0 ) {
 	    value = 1;
 	  } else if( value < 0 ) {
-	    value = 1;						    
+	    value = 1;
 	  }
 	} else {
 	}
       }
-	
+
       if( event->code == ABS_Y ) {
 	//printf( "nub1 y %3d\n", value );
 	if( abs(value) > NUB1_CUTOFF ) {
@@ -247,12 +247,12 @@ void PND_CheckEvent ( struct input_event *event, int device ) {
 	  if( value > 0 ) {
 	    value = 1;
 	  } else if( value < 0 ) {
-	    value = 1;						    
+	    value = 1;
 	  }
 	} else {
 	}
       }
-	
+
       if(event->code == ABS_Y) {
 	//printf( "nub2 y %3d\n", value );
 	if( abs(value) > NUB2_CUTOFF ) {
@@ -332,7 +332,7 @@ int PND_OpenEventDeviceByName ( char device_name[] ) {
 
       ioctl(fd, EVIOCGNAME(sizeof(dev_name)), dev_name);
       printf("Input device name: \"%s\"\n", dev_name);
-		  
+
       return fd;
     }
 

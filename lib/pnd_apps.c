@@ -149,7 +149,7 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
 	// -s startdir
 	// -b name for the appdir
 
-	if ( ( strcmp ( argv [ i ], "-a" ) == 0 ) || 
+	if ( ( strcmp ( argv [ i ], "-a" ) == 0 ) ||
 	     ( strcmp ( argv [ i ], "-p" ) == 0 ) ||
 	     ( strcmp ( argv [ i ], "-e" ) == 0 ) ||
 	     ( strcmp ( argv [ i ], "-s" ) == 0 ) ||
@@ -181,7 +181,7 @@ unsigned char pnd_apps_exec_disco ( char *pndrun, pnd_disco_t *app,
   } else {
     // child, do it
     execv ( pndrun, argv );
-  } 
+  }
 
   // by definition, either error occurred or we are the original application.
 

@@ -9,7 +9,7 @@
 //Used like a unit test, almost
 int main (int argc, char **argv)
 {
-	if (argc != 2) 
+	if (argc != 2)
 	{
 		printf("Wrong nr of args.\nUsage: %s <pxml filename>\n", argv[0]);
 		return 1;

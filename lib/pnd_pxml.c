@@ -211,7 +211,7 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
 }
 
 void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v ) {
-  /* 
+  /*
    * Please do not use this function if it can be avoided; it is only here for compatibility.
    * The function might fail on low memory, and there's no way for the user to know when this happens.
    */

@@ -151,7 +151,7 @@ int main ( int argc, char *argv[] ) {
 
     // umask
     umask ( 022 ); // emitted files can be rwxr-xr-x
-    
+
   } // set up daemon
 
   // check frontend

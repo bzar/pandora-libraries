@@ -3434,7 +3434,7 @@ void ui_menu_context ( mm_appref_t *a ) {
 	  context_alive = 0; // nolonger visible, so lets just get out
 
 	}
-    
+
 	break;
 
       case context_app_recategorize:
@@ -3862,7 +3862,7 @@ unsigned char ui_menu_get_text_line ( char *title, char *footer, char *initialva
     } // while waiting for input
 
   } // while
-  
+
   return ( 0 );
 }
 

@@ -272,7 +272,7 @@ then
 		cecho "ERROR: Your squashfs version is older then version 4, please upgrade to 4.0 or later" $red
 		exit 1
 	fi
-	mksquashfs $FOLDER $PNDNAME.iso -nopad -no-recovery
+	mksquashfs $FOLDER $PNDNAME.iso # -nopad -no-recovery
 else
 	check_for_tool mkisofs
 	mkisofs -o $PNDNAME.iso -R $FOLDER
