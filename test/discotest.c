@@ -184,10 +184,16 @@ int main ( int argc, char *argv[] ) {
 	}
       }
 
+      // free current disco <o/
+      pnd_disco_destroy( d );
+
       // next!
       d = pnd_box_get_next ( d );
 
     } // while applist
+
+    // delete our search
+    pnd_box_delete( applist );
 
   } else {
     printf ( "No applications found in search path\n" );
@@ -242,7 +248,8 @@ int main ( int argc, char *argv[] ) {
   printf ( "Unrelated test..\n" );
   char *p = strdup ( "~/.applications" );
   printf ( "Tilde substitution: in '%s'\n", p );
-  printf ( "                   out '%s'\n", pnd_expand_tilde ( p ) );
+  char *expand = pnd_expand_tilde ( p );
+  printf ( "                   out '%s'\n", expand ); free(expand);
 
   return ( 0 );
 }
