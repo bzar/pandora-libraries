@@ -204,6 +204,18 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
   if ( p -> execargs ) {
     free ( p -> execargs );
   }
+  if ( p -> package_version_major ) {
+    free ( p -> package_version_major );
+  }
+  if ( p -> package_version_minor ) {
+    free ( p -> package_version_minor );
+  }
+  if ( p -> package_version_release ) {
+    free ( p -> package_version_release );
+  }
+  if ( p -> package_version_build ) {
+    free ( p -> package_version_build );
+  }
 
   free(p); /*very important!*/
 
@@ -583,6 +595,26 @@ char *pnd_pxml_get_startdir ( pnd_pxml_handle h ) {
 char *pnd_pxml_get_mkdir ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> mkdir_sp );
+}
+
+char *pnd_pxml_get_package_version_major ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_major );
+}
+
+char *pnd_pxml_get_package_version_minor ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_minor );
+}
+
+char *pnd_pxml_get_package_version_release ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_release );
+}
+
+char *pnd_pxml_get_package_version_build ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_build );
 }
 
 unsigned char pnd_pxml_is_affirmative ( char *v ) {

@@ -53,6 +53,14 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> info_filename ) {  free ( p -> info_filename );       }
   if ( p -> preview_pic1 )  {  free ( p -> preview_pic1 );     }
   if ( p -> preview_pic2 )  {  free ( p -> preview_pic2 );     }
+  if ( p -> version_major ) {  free ( p -> version_major );    }
+  if ( p -> version_minor ) {  free ( p -> version_minor );    }
+  if ( p -> version_release ) {free ( p -> version_release );  }
+  if ( p -> version_build ) {  free ( p -> version_build );    }
+  if ( p -> package_version_major ) { free ( p -> package_version_major ); }
+  if ( p -> package_version_minor ) { free ( p -> package_version_minor ); }
+  if ( p -> package_version_release ) { free ( p -> package_version_release ); }
+  if ( p -> package_version_build ) { free ( p -> package_version_build ); }
   return;
 }
 
@@ -302,6 +310,30 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( pnd_pxml_get_info_type ( pxmlh ) ) {
 	p -> info_type = strdup ( pnd_pxml_get_info_type ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_major ( pxmlh ) ) {
+   p -> version_major = strdup ( pnd_pxml_get_version_major ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_minor ( pxmlh ) ) {
+   p -> version_minor = strdup ( pnd_pxml_get_version_minor ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_release ( pxmlh ) ) {
+   p -> version_release = strdup ( pnd_pxml_get_version_release ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_build ( pxmlh ) ) {
+   p -> version_build = strdup ( pnd_pxml_get_version_build ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_major ( pxmlh ) ) {
+	p -> package_version_major = strdup ( pnd_pxml_get_package_version_major ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_minor ( pxmlh ) ) {
+   p -> package_version_minor = strdup ( pnd_pxml_get_package_version_minor ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_release ( pxmlh ) ) {
+   p -> package_version_release = strdup ( pnd_pxml_get_package_version_release ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_build ( pxmlh ) ) {
+   p -> package_version_build = strdup ( pnd_pxml_get_package_version_build ( pxmlh ) );
       }
 
       // look for any PXML overrides, if requested

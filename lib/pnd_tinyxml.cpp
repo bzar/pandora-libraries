@@ -225,9 +225,21 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
   // workaround for package ID's used by some package managers
   // get the package ID and store it for each application
   char* package_id = NULL;
+  char* package_version_major = NULL;
+  char* package_version_minor = NULL;
+  char* package_version_release = NULL;
+  char* package_version_build = NULL;
   pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
   if ( pElem ) {
 	package_id = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_ID );
+   TiXmlHandle pRoot = TiXmlHandle( pElem );
+   if ( (pElem = pRoot.FirstChild(PND_PXML_ENAME_VERSION).Element()) )
+   {
+      package_version_major   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERMAJOR);
+      package_version_minor   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERMINOR);
+      package_version_release = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERREL);
+      package_version_build   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERBUILD);
+   }
   }
 
   // move to applications element then
@@ -257,6 +269,14 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     // give application the package id, if there is one
     if( package_id )
       app -> package_id               = strdup(package_id);
+    if( package_version_major )
+      app -> package_version_major    = strdup(package_version_major);
+    if( package_version_minor )
+      app -> package_version_minor    = strdup(package_version_minor);
+    if( package_version_release )
+      app -> package_version_release  = strdup(package_version_release);
+    if( package_version_build )
+      app -> package_version_build    = strdup(package_version_build);
 
     //Get unique ID first.
     if ( appwrappermode ) {
@@ -508,6 +528,14 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 
   if( package_id )
      free(package_id);
+  if( package_version_major )
+     free(package_version_major);
+  if( package_version_minor )
+     free(package_version_minor);
+  if( package_version_release )
+     free(package_version_release);
+  if( package_version_build )
+     free(package_version_build);
 
   return (1);
 }

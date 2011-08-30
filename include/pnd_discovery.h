@@ -80,6 +80,14 @@ typedef struct {
   char *info_name;      // should be a struct..
   char *info_filename;
   char *info_type;
+  char *version_major;
+  char *version_minor;
+  char *version_release;
+  char *version_build;
+  char *package_version_major;
+  char *package_version_minor;
+  char *package_version_release;
+  char *package_version_build;
 } pnd_disco_t;
 
 void pnd_disco_destroy ( pnd_disco_t *p ); // a function name that simply could not be avoided
