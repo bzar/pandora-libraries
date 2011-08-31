@@ -16,6 +16,7 @@ pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
   FILE *f;
   char *b;
   unsigned int len;
+  pnd_pxml_handle *h;
 
   f = fopen ( fullpath, "r" );
 
@@ -44,7 +45,10 @@ pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
 
   fclose ( f );
 
-  return ( pnd_pxml_fetch_buffer ( fullpath, b ) );
+  h = pnd_pxml_fetch_buffer ( fullpath, b );
+  free ( b );
+
+  return ( h );
 }
 
 pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
@@ -203,6 +207,9 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
   }
   if ( p -> execargs ) {
     free ( p -> execargs );
+  }
+  if ( p -> mkdir_sp ) {
+    free ( p -> mkdir_sp );
   }
   if ( p -> package_version_major ) {
     free ( p -> package_version_major );

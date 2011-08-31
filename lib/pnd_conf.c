@@ -79,6 +79,7 @@ pnd_conf_handle pnd_conf_fetch_by_name ( char *filename, char *searchpath ) {
     conf = pnd_conf_fetch_by_path ( buffer );
 
     if ( conf ) {
+      wordfree ( &_p );
       return ( conf );
     }
 

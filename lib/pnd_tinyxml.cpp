@@ -423,7 +423,13 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	char *filetype = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCFTYPE);
 	char *paramter = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCARGS);
 
-	if (!(name && filetype && paramter)) continue;
+	if (!(name && filetype && paramter))
+       {
+         if(name)     free(name);
+         if(filetype) free(filetype);
+         if(paramter) free(paramter);
+         continue;
+       }
 
 	switch(i) //TODO: same problem here: only 3 associations supported
 	{
@@ -448,6 +454,9 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	  app->associationitem3_parameter = paramter;
 	}
 	}
+       if(name)     free(name);
+       if(filetype) free(filetype);
+       if(paramter) free(paramter);
       }
     }
 
@@ -475,6 +484,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
 	  // first <dir>, so just replace it wholesale; we use strdup so we can free() easily later, consistently. Mmm, leak seems imminent.
 	  app -> mkdir_sp = strdup ( t );
+         free(t); // free this attribute
 	}
 
 	while ( ( pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_MKDIR ) ) ) {
@@ -488,6 +498,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	      app -> mkdir_sp = foo;
 	    } // assuming we got ram, lets cat it all together
 
+           free(t); // free this attribute
 	  } // got another elem?
 
 	} // while
