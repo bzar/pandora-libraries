@@ -682,7 +682,7 @@ unsigned char conf_write ( pnd_conf_handle h, char *fullpath ) {
     // does item begin with app or tab tag?
     char *k = pnd_box_get_key ( v );
 
-    if ( k && 
+    if ( k &&
 	 ( strncasecmp ( k, "appshow.", 8 ) == 0 ||
 	   strncasecmp ( k, "tabshow.", 8 ) == 0 )
        )
@@ -818,7 +818,7 @@ void conf_reset_to_default ( pnd_conf_handle h ) {
     // does item begin with app or tab tag?
     char *k = pnd_box_get_key ( v );
 
-    if ( k && 
+    if ( k &&
 	 ( strncasecmp ( k, "appshow.", 8 ) == 0 ||
 	   strncasecmp ( k, "tabshow.", 8 ) == 0 )
        )

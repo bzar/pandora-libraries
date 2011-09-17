@@ -114,7 +114,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
   app->descriptions_alloc_c = 4; //TODO: adjust this based on how many descriptions a PXML usually has. Power of 2.
 
   app->descriptions = (pnd_localized_string_t *)malloc(sizeof(pnd_localized_string_t) * app->descriptions_alloc_c);
-  if (!app->descriptions) 
+  if (!app->descriptions)
   {
     app->descriptions_alloc_c = 0;
     return (0); //errno = NOMEM
@@ -136,6 +136,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       }
 
       if ( ! ( lang = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_DESCRLANG ) ) ) {
+       if(text) free(text); text = NULL;
 	continue;
       }
 
@@ -144,7 +145,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       {
 	app->descriptions_alloc_c <<= 1;
 	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	if (!app->descriptions) return (0); //errno = ENOMEM
+	if (!app->descriptions) { if(text) free(text); if(lang) free(lang); return (0); } //errno = ENOMEM
       }
 
       pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
@@ -159,7 +160,7 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
   } else {
     // fallback to older approach
 
-    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem; 
+    for (pElem = hRoot.FirstChild(PND_PXML_ENAME_DESCRIPTION).Element(); pElem;
 	 pElem = pElem->NextSiblingElement(PND_PXML_ENAME_DESCRIPTION))
     {
 
@@ -171,14 +172,14 @@ unsigned char pnd_pxml_parse_descriptions(const TiXmlHandle hRoot, pnd_pxml_t *a
       if (!text) continue;
 
       char *lang = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_DESCRLANG);
-      if (!lang) continue;
+      if (!lang) { if(text) free(text); text = NULL;  continue; }
 
       app->descriptions_c++;
       if (app->descriptions_c > app->descriptions_alloc_c) //we don't have enough strings allocated
       {
 	app->descriptions_alloc_c <<= 1;
 	app->descriptions = (pnd_localized_string_t*)realloc((void*)app->descriptions, app->descriptions_alloc_c * sizeof(pnd_localized_string_t) );
-	if (!app->descriptions) return (0); //errno = ENOMEM
+	if (!app->descriptions) { if(text) free(text); if(lang) free(lang); return (0); } //errno = ENOMEM
       }
 
       pnd_localized_string_t *description = &app->descriptions[app->descriptions_c - 1];
@@ -224,9 +225,21 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
   // workaround for package ID's used by some package managers
   // get the package ID and store it for each application
   char* package_id = NULL;
+  char* package_version_major = NULL;
+  char* package_version_minor = NULL;
+  char* package_version_release = NULL;
+  char* package_version_build = NULL;
   pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
   if ( pElem ) {
 	package_id = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_ID );
+   TiXmlHandle pRoot = TiXmlHandle( pElem );
+   if ( (pElem = pRoot.FirstChild(PND_PXML_ENAME_VERSION).Element()) )
+   {
+      package_version_major   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERMAJOR);
+      package_version_minor   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERMINOR);
+      package_version_release = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERREL);
+      package_version_build   = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_VERBUILD);
+   }
   }
 
   // move to applications element then
@@ -252,9 +265,18 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     } else {
       app -> subapp_number = 0;
     }
-    
+
     // give application the package id, if there is one
-    app -> package_id = package_id;
+    if( package_id )
+      app -> package_id               = strdup(package_id);
+    if( package_version_major )
+      app -> package_version_major    = strdup(package_version_major);
+    if( package_version_minor )
+      app -> package_version_minor    = strdup(package_version_minor);
+    if( package_version_release )
+      app -> package_version_release  = strdup(package_version_release);
+    if( package_version_build )
+      app -> package_version_build    = strdup(package_version_build);
 
     //Get unique ID first.
     if ( appwrappermode ) {
@@ -308,7 +330,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	{
 	  app->previewpic2 = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_PREVPICSRC);
 	}
-      }	
+      }
     } //previewpic
 
     //The author info:
@@ -345,7 +367,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
       i = 0;
 
       //Goes through all the top-level categories and their sub-categories. i helps limit these to 2.
-      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2; 
+      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_CAT); pElem && i < 2;
 	   pElem = pElem->NextSiblingElement(PND_PXML_ENAME_CAT), i++)
       {
 	//TODO: Fix pnd_pxml_t so that there can be more than 2 category 'trees' and more than 2 subcategories. Then this can be removed.
@@ -394,14 +416,20 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     {
       i = 0;
       //Go through all associations. i serves as index; since the format only supports 3 associations we need to keep track of the number.
-      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3; 
+      for (pElem = pElem->FirstChildElement(PND_PXML_ENAME_ASSOC); pElem && i < 3;
 	   pElem = pElem->NextSiblingElement(PND_PXML_ENAME_ASSOC), i++)
       {
 	char *name = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCNAME);
 	char *filetype = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCFTYPE);
 	char *paramter = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_ASSOCARGS);
 
-	if (!(name && filetype && paramter)) continue;
+	if (!(name && filetype && paramter))
+       {
+         if(name)     free(name);
+         if(filetype) free(filetype);
+         if(paramter) free(paramter);
+         continue;
+       }
 
 	switch(i) //TODO: same problem here: only 3 associations supported
 	{
@@ -426,19 +454,22 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	  app->associationitem3_parameter = paramter;
 	}
 	}
+       if(name)     free(name);
+       if(filetype) free(filetype);
+       if(paramter) free(paramter);
       }
     }
 
     //Performance related things (aka: Clockspeed XD):
     pElem = hRoot.FirstChild(PND_PXML_ENAME_CLOCK).Element();
     if (pElem)
-    {	
+    {
       app->clockspeed = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_CLOCKFREQ);
     }
 
     // Package
     pElem = hRoot.FirstChild ( PND_PXML_ENAME_PACKAGE ).Element();
-    if ( pElem ) {	
+    if ( pElem ) {
       app -> package_name = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_NAME );
       app -> package_release_date = pnd_pxml_get_attribute ( pElem, PND_PXML_ATTRNAME_PACKAGE_DATE );
     }
@@ -453,10 +484,11 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
 	  // first <dir>, so just replace it wholesale; we use strdup so we can free() easily later, consistently. Mmm, leak seems imminent.
 	  app -> mkdir_sp = strdup ( t );
+         free(t); // free this attribute
 	}
 
 	while ( ( pElem = pElem -> NextSiblingElement ( PND_PXML_ENAME_MKDIR ) ) ) {
-	      
+
 	  if ( ( t = pnd_pxml_get_attribute(pElem, PND_PXML_ATTRNAME_MKDIRPATH) ) ) {
 	    char *foo = (char*) malloc ( strlen ( app -> mkdir_sp ) + strlen ( t ) + 1 /*:*/ + 1 /*\0*/ );
 
@@ -466,6 +498,7 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
 	      app -> mkdir_sp = foo;
 	    } // assuming we got ram, lets cat it all together
 
+           free(t); // free this attribute
 	  } // got another elem?
 
 	} // while
@@ -503,6 +536,17 @@ unsigned char pnd_pxml_parse ( const char *pFilename, char *buffer, unsigned int
     }
 
   } // while finding apps
+
+  if( package_id )
+     free(package_id);
+  if( package_version_major )
+     free(package_version_major);
+  if( package_version_minor )
+     free(package_version_minor);
+  if( package_version_release )
+     free(package_version_release);
+  if( package_version_build )
+     free(package_version_build);
 
   return (1);
 }

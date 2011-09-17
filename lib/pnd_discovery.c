@@ -30,6 +30,7 @@ static char *disco_overrides = NULL;
 void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> package_id ) {     free ( p -> package_id);   }
   if ( p -> title_en ) {       free ( p -> title_en );    }
+  if ( p -> desc_en ) {        free ( p -> desc_en );    }
   if ( p -> unique_id ) {      free ( p -> unique_id );   }
   if ( p -> appdata_dirname ) { free ( p -> appdata_dirname );   }
   if ( p -> icon )     {       free ( p -> icon );        }
@@ -44,11 +45,22 @@ void pnd_disco_destroy ( pnd_disco_t *p ) {
   if ( p -> alt_category ) {   free ( p -> alt_category );   }
   if ( p -> alt_category1 ) {  free ( p -> alt_category1 );  }
   if ( p -> alt_category2 ) {  free ( p -> alt_category2 );  }
+  if ( p -> object_filename ) { free ( p -> object_filename ); }
+  if ( p -> object_path )     { free ( p -> object_path ); }
   if ( p -> mkdir_sp )      {  free ( p -> mkdir_sp );       }
   if ( p -> info_name )     {  free ( p -> info_name );       }
   if ( p -> info_type )     {  free ( p -> info_type );       }
   if ( p -> info_filename ) {  free ( p -> info_filename );       }
-
+  if ( p -> preview_pic1 )  {  free ( p -> preview_pic1 );     }
+  if ( p -> preview_pic2 )  {  free ( p -> preview_pic2 );     }
+  if ( p -> version_major ) {  free ( p -> version_major );    }
+  if ( p -> version_minor ) {  free ( p -> version_minor );    }
+  if ( p -> version_release ) {free ( p -> version_release );  }
+  if ( p -> version_build ) {  free ( p -> version_build );    }
+  if ( p -> package_version_major ) { free ( p -> package_version_major ); }
+  if ( p -> package_version_minor ) { free ( p -> package_version_minor ); }
+  if ( p -> package_version_release ) { free ( p -> package_version_release ); }
+  if ( p -> package_version_build ) { free ( p -> package_version_build ); }
   return;
 }
 
@@ -227,11 +239,13 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       if ( pnd_pxml_get_package_id ( pxmlh ) ) {
 	p -> package_id = strdup ( pnd_pxml_get_package_id ( pxmlh ) );
       }
-      if ( pnd_pxml_get_app_name_en ( pxmlh ) ) {
-	p -> title_en = strdup ( pnd_pxml_get_app_name_en ( pxmlh ) );
+      char *name_en = pnd_pxml_get_app_name_en ( pxmlh );
+      if (name_en) {
+	p -> title_en = name_en; /* already strdupped */
       }
-      if ( pnd_pxml_get_description_en ( pxmlh ) ) {
-	p -> desc_en = strdup ( pnd_pxml_get_description_en ( pxmlh ) );
+      char *desc_en = pnd_pxml_get_description_en ( pxmlh );
+      if ( desc_en ) {
+	p -> desc_en = desc_en; /* already strdupped */
       }
       if ( pnd_pxml_get_icon ( pxmlh ) ) {
 	p -> icon = strdup ( pnd_pxml_get_icon ( pxmlh ) );
@@ -252,10 +266,10 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
 	p -> appdata_dirname = strdup ( pnd_pxml_get_appdata_dirname ( pxmlh ) );
       }
       if ( pnd_pxml_get_clockspeed ( pxmlh ) ) {
-	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) ); 
+	p -> clockspeed = strdup ( pnd_pxml_get_clockspeed ( pxmlh ) );
       }
       if ( pnd_pxml_get_startdir ( pxmlh ) ) {
-	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) ); 
+	p -> startdir = strdup ( pnd_pxml_get_startdir ( pxmlh ) );
       }
       // category kruft
       if ( pnd_pxml_get_main_category ( pxmlh ) ) {
@@ -296,6 +310,30 @@ static int pnd_disco_callback ( const char *fpath, const struct stat *sb,
       }
       if ( pnd_pxml_get_info_type ( pxmlh ) ) {
 	p -> info_type = strdup ( pnd_pxml_get_info_type ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_major ( pxmlh ) ) {
+   p -> version_major = strdup ( pnd_pxml_get_version_major ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_minor ( pxmlh ) ) {
+   p -> version_minor = strdup ( pnd_pxml_get_version_minor ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_release ( pxmlh ) ) {
+   p -> version_release = strdup ( pnd_pxml_get_version_release ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_version_build ( pxmlh ) ) {
+   p -> version_build = strdup ( pnd_pxml_get_version_build ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_major ( pxmlh ) ) {
+	p -> package_version_major = strdup ( pnd_pxml_get_package_version_major ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_minor ( pxmlh ) ) {
+   p -> package_version_minor = strdup ( pnd_pxml_get_package_version_minor ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_release ( pxmlh ) ) {
+   p -> package_version_release = strdup ( pnd_pxml_get_package_version_release ( pxmlh ) );
+      }
+      if ( pnd_pxml_get_package_version_build ( pxmlh ) ) {
+   p -> package_version_build = strdup ( pnd_pxml_get_package_version_build ( pxmlh ) );
       }
 
       // look for any PXML overrides, if requested

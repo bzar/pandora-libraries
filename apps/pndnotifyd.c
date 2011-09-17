@@ -197,7 +197,7 @@ int main ( int argc, char *argv[] ) {
 
     // umask
     umask ( 022 ); // emitted files can be rwxr-xr-x
-    
+
   } // set up daemon
 
   // wait for a user to be logged in - we should probably get hupped when a user logs in, so we can handle

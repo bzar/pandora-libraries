@@ -25,6 +25,7 @@ char *pnd_locate_filename ( char *searchpath, char *filename ) {
 
     if ( stat ( buffer, &foo ) == 0 ) {
       strcpy ( pnd_locate_buffer, buffer );
+      wordfree( &_p );
       return ( pnd_locate_buffer );
     }
 

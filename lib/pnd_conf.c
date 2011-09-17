@@ -79,6 +79,7 @@ pnd_conf_handle pnd_conf_fetch_by_name ( char *filename, char *searchpath ) {
     conf = pnd_conf_fetch_by_path ( buffer );
 
     if ( conf ) {
+      wordfree ( &_p );
       return ( conf );
     }
 
@@ -233,7 +234,7 @@ pnd_conf_handle pnd_conf_fetch_by_path ( char *fullpath ) {
       } // key or key/value?
 
     } // section or key/value line?
-    
+
   } // while
 
   // clean up a trifle

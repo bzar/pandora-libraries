@@ -424,7 +424,7 @@ unsigned char category_meta_push ( char *catname, char *parentcatname, pnd_disco
   if ( parentcatname ) {
     if ( ( ! fdcat -> parent_cat ) ||
 	 ( ! fdpcat ) )
-    { 
+    {
       // child cat points to a different parent than requested parent!
       cat_is_clean = 0;
       pnd_log ( pndn_warning, "PXML Fail %s: Cat request %s (parent %s) -> cat wants to be child of a cat which FD says is the wrong parent (1)\n", app -> title_en ? app -> title_en : "no name?", catname, parentcatname ? parentcatname : "n/a" );
@@ -853,15 +853,15 @@ unsigned int category_count ( unsigned int filter_mask ) {
 
 int category_index ( char *catname ) {
   unsigned char i;
- 
+
   for ( i = 0; i < g_categorycount; i++ ) {
- 
+
     if ( strcasecmp ( g_categories [ i ] -> catname, catname ) == 0 ) {
       return ( i );
     }
- 
+
   }
- 
+
   return ( -1 );
 }
 

@@ -204,7 +204,7 @@ static unsigned char pnd_pnd_mountie ( char *pndrun, char *fullpath, char *uniqu
   } else {
     // child, do it
     execv ( pndrun, argv );
-  } 
+  }
 
   // wait until mountscript actually completes
   int status = 0;

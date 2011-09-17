@@ -230,7 +230,7 @@ int main ( int argc, char *argv[] ) {
 
     // umask
     umask ( 022 ); // emitted files can be rwxr-xr-x
-    
+
   } // set up daemon
 
   /* hmm, seems to not like working right after boot.. do we depend on another daemon or
@@ -861,7 +861,7 @@ unsigned char set_next_alarm ( unsigned int secs, unsigned int usecs ) {
     // sucks
     return ( 0 );
   }
-  
+
   return ( 1 );
 }
 
@@ -869,8 +869,11 @@ void sigalrm_handler ( int n ) {
 
   pnd_log ( pndn_debug, "---[ SIGALRM ]---\n" );
 
+  static time_t last_charge_check, last_charge_worka;
   int batlevel = pnd_device_get_battery_gauge_perc();
   int uamps = 0;
+  time_t now;
+
   pnd_device_get_charge_current ( &uamps );
 
   if ( batlevel < 0 ) {
@@ -916,7 +919,8 @@ void sigalrm_handler ( int n ) {
   }
 
   // charge monitoring
-  if ( bc_enable && bc_charge_device != NULL ) {
+  now = time(NULL);
+  if ( bc_enable && bc_charge_device != NULL && (unsigned int)(now - last_charge_check) > 60 ) {
 
     int charge_enabled = pnd_device_get_charger_enable ( bc_charge_device );
     if ( charge_enabled < 0 )
@@ -931,7 +935,18 @@ void sigalrm_handler ( int n ) {
         pnd_log ( pndn_debug, "Charge start conditions reached, enabling charging\n" );
         pnd_device_set_charger_enable ( bc_charge_device, 1 );
       }
+
+      // for some unknown reason it just stops charging randomly (happens once per week or so),
+      // and does not restart, resulting in a flat battery if machine is unattended.
+      // What seems to help here is writing to chip registers, we can do it here indirectly
+      // by writing to enable. Doing it occasionally should do no harm even with missing charger.
+      if ( batlevel <= bc_startcap && (unsigned int)(now - last_charge_worka) > 20*60 ) {
+        pnd_log ( pndn_debug, "Charge workaround trigger\n" );
+        pnd_device_set_charger_enable ( bc_charge_device, 1 );
+        last_charge_worka = now;
+      }
     }
+    last_charge_check = now;
   }
 
   // is battery warning already active?
@@ -940,7 +955,7 @@ void sigalrm_handler ( int n ) {
 
     // is user charging up? if so, stop blinking.
     // perhaps we shoudl check if charger is connected, and not blink at all in that case..
-    if ( batlevel > b_threshold + 1 /* allow for error in read */ ) {
+    if ( uamps > 0 ) {
       //Re-arm warning
       b_warned = 0;
       pnd_log ( pndn_debug, "Battery is high again, flipping to non-blinker mode\n" );
@@ -970,7 +985,7 @@ void sigalrm_handler ( int n ) {
   }
 
   // warning is off..
-  if ( batlevel <= b_threshold ) {
+  if ( batlevel <= b_threshold && uamps < 0 ) {
     // battery seems low, go to active mode
     pnd_log ( pndn_debug, "Battery is low, flipping to blinker mode\n" );
     b_active = 1;

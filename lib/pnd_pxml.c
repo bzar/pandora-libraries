@@ -16,6 +16,7 @@ pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
   FILE *f;
   char *b;
   unsigned int len;
+  pnd_pxml_handle *h;
 
   f = fopen ( fullpath, "r" );
 
@@ -44,7 +45,10 @@ pnd_pxml_handle *pnd_pxml_fetch ( char *fullpath ) {
 
   fclose ( f );
 
-  return ( pnd_pxml_fetch_buffer ( fullpath, b ) );
+  h = pnd_pxml_fetch_buffer ( fullpath, b );
+  free ( b );
+
+  return ( h );
 }
 
 pnd_pxml_handle *pnd_pxml_fetch_buffer ( char *filename, char *buffer ) {
@@ -81,6 +85,12 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
     free(p->descriptions);
   }
 
+  if ( p -> unique_id ) {
+     free ( p -> unique_id );
+  }
+  if ( p -> package_id ) {
+     free ( p -> package_id );
+  }
   if ( p -> standalone ) {
     free ( p -> standalone );
   }
@@ -183,6 +193,36 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
   if ( p -> appdata_dirname ) {
     free ( p -> appdata_dirname );
   }
+  if ( p -> info_name ) {
+    free ( p -> info_name );
+  }
+  if ( p -> info_filename ) {
+    free ( p -> info_filename );
+  }
+  if ( p -> info_type ) {
+    free ( p -> info_type );
+  }
+  if ( p -> exec_no_x11 ) {
+    free ( p -> exec_no_x11 );
+  }
+  if ( p -> execargs ) {
+    free ( p -> execargs );
+  }
+  if ( p -> mkdir_sp ) {
+    free ( p -> mkdir_sp );
+  }
+  if ( p -> package_version_major ) {
+    free ( p -> package_version_major );
+  }
+  if ( p -> package_version_minor ) {
+    free ( p -> package_version_minor );
+  }
+  if ( p -> package_version_release ) {
+    free ( p -> package_version_release );
+  }
+  if ( p -> package_version_build ) {
+    free ( p -> package_version_build );
+  }
 
   free(p); /*very important!*/
 
@@ -190,7 +230,7 @@ void pnd_pxml_delete ( pnd_pxml_handle h ) {
 }
 
 void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v ) {
-  /* 
+  /*
    * Please do not use this function if it can be avoided; it is only here for compatibility.
    * The function might fail on low memory, and there's no way for the user to know when this happens.
    */
@@ -562,6 +602,26 @@ char *pnd_pxml_get_startdir ( pnd_pxml_handle h ) {
 char *pnd_pxml_get_mkdir ( pnd_pxml_handle h ) {
   pnd_pxml_t *p = (pnd_pxml_t*) h;
   return ( p -> mkdir_sp );
+}
+
+char *pnd_pxml_get_package_version_major ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_major );
+}
+
+char *pnd_pxml_get_package_version_minor ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_minor );
+}
+
+char *pnd_pxml_get_package_version_release ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_release );
+}
+
+char *pnd_pxml_get_package_version_build ( pnd_pxml_handle h ) {
+   pnd_pxml_t *p = (pnd_pxml_t*) h;
+   return ( p -> package_version_build );
 }
 
 unsigned char pnd_pxml_is_affirmative ( char *v ) {

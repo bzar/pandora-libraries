@@ -526,7 +526,7 @@ int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsi
   {
     match = pnd_map_dotdesktop_category ( c, t );
   }
-  
+
   if ( match ) {
     strncat ( target_buffer, match, len );
     len -= strlen ( target_buffer );
@@ -552,7 +552,7 @@ int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsi
   {
     match = pnd_map_dotdesktop_category ( c, t );
   }
-  
+
   if ( match ) {
     if ( target_buffer [ 0 ] != '\0' && len > 0 ) {
       strcat ( target_buffer, ";" );
@@ -581,7 +581,7 @@ int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsi
   {
     match = pnd_map_dotdesktop_category ( c, t );
   }
-  
+
   if ( match ) {
     strncat ( target_buffer, match, len );
     len -= strlen ( target_buffer );
@@ -607,7 +607,7 @@ int pnd_map_dotdesktop_categories ( pnd_conf_handle c, char *target_buffer, unsi
   {
     match = pnd_map_dotdesktop_category ( c, t );
   }
-  
+
   if ( match ) {
     if ( target_buffer [ 0 ] != '\0' && len > 0 ) {
       strcat ( target_buffer, ";" );

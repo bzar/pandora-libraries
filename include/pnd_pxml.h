@@ -96,6 +96,10 @@ char *pnd_pxml_get_mkdir ( pnd_pxml_handle h );
 char *pnd_pxml_get_info_name ( pnd_pxml_handle h );
 char *pnd_pxml_get_info_type ( pnd_pxml_handle h );
 char *pnd_pxml_get_info_src ( pnd_pxml_handle h );
+char *pnd_pxml_get_package_version_major ( pnd_pxml_handle h );
+char *pnd_pxml_get_package_version_minor ( pnd_pxml_handle h );
+char *pnd_pxml_get_package_version_release ( pnd_pxml_handle h );
+char *pnd_pxml_get_package_version_build ( pnd_pxml_handle h );
 
 // for 'set' functions, pass NULL value to delete existing value without setting new one
 void pnd_pxml_set_app_name ( pnd_pxml_handle h, char *v );
@@ -172,6 +176,10 @@ typedef struct
         char *info_name;      // should be a struct..
         char *info_filename;
         char *info_type;
+        char *package_version_major;
+        char *package_version_minor;
+        char *package_version_release;
+        char *package_version_build;
 
 }  pnd_pxml_t;
 
